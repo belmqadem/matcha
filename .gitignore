@@ -1,0 +1,65 @@
+# ========================
+# Environment & secrets
+# ========================
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ========================
+# Dependencies
+# ========================
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# ========================
+# Build outputs
+# ========================
+client/dist/
+client/build/
+server/dist/
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# Runtime & OS
+# ========================
+.DS_Store
+Thumbs.db
+*.pid
+*.seed
+*.pid.lock
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Editor
+# ========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# ========================
+# Testing
+# ========================
+coverage/
+client/coverage/
+server/coverage/
+
+# ========================
+# Uploads (user files — never commit)
+# ========================
+server/uploads/
