@@ -1,7 +1,10 @@
 # Matcha — API contract
 
-This document is the contract between frontend and backend.
-Every endpoint must be documented here before it is built.
+> This document is the contract between frontend and backend.
+> Every endpoint must be documented here before it is built.
+> Last updated: initial scaffold
+
+---
 
 ## Conventions
 
