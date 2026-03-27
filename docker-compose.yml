@@ -1,4 +1,15 @@
 services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: matcha_server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+
   client:
     build:
       context: ./client
@@ -6,7 +17,7 @@ services:
     container_name: matcha_client
     restart: unless-stopped
     ports:
-      - '5173:5173'
+      - "5173:5173"
     volumes:
       - ./client:/app
       - /app/node_modules
