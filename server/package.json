@@ -1,25 +1,26 @@
 {
   "name": "matcha-server",
-  "version": "1.0.0",
-  "description": "Matcha backend — Express + PostgreSQL",
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "db:migrate": "node src/db/migrate.js"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
+    "envalid": "^8.1.1",
     "express": "^5.2.1",
     "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.20.0",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0"
   },
   "devDependencies": {
     "eslint": "^10.1.0",
