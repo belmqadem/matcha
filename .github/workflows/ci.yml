@@ -56,5 +56,3 @@ jobs:
       - name: Build check
         run: npm run build
         working-directory: client
-        env:
-          VITE_API_URL: http://localhost:3000

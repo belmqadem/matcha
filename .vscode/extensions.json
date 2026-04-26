@@ -2,9 +2,6 @@
   "recommendations": [
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
-    "eamodio.gitlens",
-    "humao.rest-client",
-    "cweijan.vscode-postgresql-client2",
     "ms-azuretools.vscode-docker",
     "bradlc.vscode-tailwindcss",
     "dsznajder.es7-react-js-snippets",

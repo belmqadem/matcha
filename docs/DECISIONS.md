@@ -20,6 +20,6 @@
 - **Real-time:** Socket.io
   - Handles WebSocket + fallback transports
   - Used for chat, notifications, and WebRTC signaling in one connection
-- **Auth:** JWT stored in localStorage with Bearer header
-  - Simple, stateless, works well with our SPA setup
-  - _Alternative considered:_ HttpOnly cookies — more secure but requires CSRF handling
+- **Auth:** JWT stored in HttpOnly cookie
+  - Better protection against token theft via XSS (token is not readable from JS)
+  - Still stateless on the backend when using signed/verified JWTs

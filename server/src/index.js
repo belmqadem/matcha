@@ -11,6 +11,7 @@ import errorHandler from "./middleware/errorHandler.js";
 const app = express();
 const httpServer = createServer(app);
 
+// Middleware
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(httpLogger);
@@ -28,7 +29,7 @@ pool
     process.exit(1);
   });
 
-app.get("/api/health", (req, res) => {
+app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
@@ -41,7 +42,7 @@ app.use(errorHandler);
 
 const PORT = env.PORT;
 httpServer.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`);
+  logger.info(`Matcha Server running on http://localhost:${PORT}`);
 });
 
 export default app;
