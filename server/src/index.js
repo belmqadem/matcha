@@ -2,6 +2,7 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import { createServer } from "http";
+import { rateLimit } from "express-rate-limit";
 import env from "./config/env.js";
 import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
@@ -17,6 +18,14 @@ app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
 
 // Test DB connection on startup
 pool

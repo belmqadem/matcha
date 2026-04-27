@@ -1,3 +1,4 @@
+import logger from "../utils/logger.js";
 import { query } from "./pool.js";
 
 const schema = `
@@ -23,8 +24,20 @@ CREATE TABLE IF NOT EXISTS users (
   is_online         BOOLEAN       NOT NULL DEFAULT FALSE,
   last_seen         TIMESTAMP     WITH TIME ZONE,
 
+	oauth_provider    VARCHAR(30),
+	oauth_id          VARCHAR(100),
+
   created_at        TIMESTAMP     WITH TIME ZONE DEFAULT NOW(),
   updated_at        TIMESTAMP     WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS email_tokens (
+  id         SERIAL       PRIMARY KEY,
+  user_id    UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token      VARCHAR(255) UNIQUE NOT NULL,
+  type       VARCHAR(30)  NOT NULL, -- 'verification' or 'reset'
+  expires_at TIMESTAMP    WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP    WITH TIME ZONE DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS photos (
@@ -97,19 +110,11 @@ CREATE TABLE IF NOT EXISTS notifications (
   created_at TIMESTAMP   WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS email_tokens (
-  id         SERIAL       PRIMARY KEY,
-  user_id    UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token      VARCHAR(255) UNIQUE NOT NULL,
-  type       VARCHAR(20)  NOT NULL, -- 'verification' or 'reset'
-  expires_at TIMESTAMP    WITH TIME ZONE NOT NULL,
-  created_at TIMESTAMP    WITH TIME ZONE DEFAULT NOW()
-);
-
+-- === Bonus: Dates table for scheduling meetups ===
 CREATE TABLE IF NOT EXISTS dates (
   id           SERIAL      PRIMARY KEY,
   proposer_id  UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  proposee_id  UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  receiver_id  UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   scheduled_at TIMESTAMP   WITH TIME ZONE NOT NULL,
   location     VARCHAR(255),
   status       VARCHAR(20) NOT NULL DEFAULT 'pending',
@@ -130,10 +135,10 @@ CREATE INDEX IF NOT EXISTS idx_users_fame             ON users(fame_rating DESC)
 (async () => {
   try {
     await query(schema);
-    console.log("Migration complete.");
+    logger.info("Database migration completed successfully");
     process.exit(0);
   } catch (err) {
-    console.error("Migration failed:", err);
+    logger.error({ err }, "Database migration failed");
     process.exit(1);
   }
 })();

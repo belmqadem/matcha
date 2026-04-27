@@ -4,6 +4,12 @@ up:
 migrate:
 	@docker compose exec -T matcha_server npm run db:migrate
 
+seed:
+	@docker compose exec -T matcha_server npm run db:seed
+
+reset:
+	@docker compose exec -T matcha_server npm run db:reset
+
 down:
 	@docker compose down
 

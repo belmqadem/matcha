@@ -7,6 +7,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,6 +24,8 @@ services:
     depends_on:
       matcha_db:
         condition: service_healthy
+      matcha_mailhog:
+        condition: service_started
     env_file:
       - .env
     ports:
@@ -29,11 +33,12 @@ services:
     volumes:
       - ./server:/app
       - /app/node_modules
+      - uploads_data:/app/uploads
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          'node -e "fetch(''http://127.0.0.1:3000/health'').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
+          'node -e "fetch(''http://127.0.0.1:3000/health'').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"',
         ]
       interval: 10s
       timeout: 5s
@@ -46,10 +51,22 @@ services:
     restart: unless-stopped
     ports:
       - "5173:5173"
+    depends_on:
+      matcha_server:
+        condition: service_healthy
     volumes:
       - ./client:/app
       - /app/node_modules
     command: npm run dev -- --host
 
+  matcha_mailhog:
+    image: mailhog/mailhog:latest
+    container_name: matcha_mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP — your server sends emails here
+      - "8025:8025" # Web UI — open http://localhost:8025 to read emails
+
 volumes:
   postgres_data:
+  uploads_data:

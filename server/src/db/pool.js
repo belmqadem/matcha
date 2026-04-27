@@ -1,5 +1,6 @@
 import pg from "pg";
 import env from "../config/env.js";
+import logger from "../utils/logger.js";
 
 const { Pool } = pg;
 
@@ -12,10 +13,12 @@ const pool = new Pool({
 });
 
 pool.on("error", (err) => {
-  console.error("Unexpected database error:", err);
+  logger.error({ err }, "Unexpected error on idle PostgreSQL client");
   process.exit(1);
 });
 
 export const query = (text, params) => pool.query(text, params);
+
 export const getClient = () => pool.connect();
+
 export default pool;
