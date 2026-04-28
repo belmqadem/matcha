@@ -8,7 +8,7 @@ seed:
 	@docker compose exec -T matcha_server npm run db:seed
 
 reset:
-	@docker compose exec -T matcha_server npm run db:reset
+	@read -p "WARNING: This will reset the database. Are you sure? [y/N] " ans && [ "${ans:-N}" = "y" ] && docker compose exec -T matcha_server npm run db:reset
 
 down:
 	@docker compose down
@@ -16,7 +16,9 @@ down:
 down-volumes:
 	@docker compose down -v
 
-restart: down up
+restart:
+	@docker compose down
+	@docker compose up -d --build
 
 restart-server:
 	@docker compose restart matcha_server
@@ -42,4 +44,4 @@ format-client-check:
 psql:
 	@docker compose exec matcha_db sh -lc 'psql -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"'
 
-.PHONY: up down restart logs down-volumes restart-server psql migrate format-client format-client-check logs-server logs-db logs-client
+.PHONY: up down restart logs down-volumes restart-server psql migrate seed reset format-client format-client-check logs-server logs-db logs-client

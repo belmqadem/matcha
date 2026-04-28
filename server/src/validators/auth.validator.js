@@ -5,6 +5,15 @@ const usernameRegex = /^[A-Za-z0-9_]{3,30}$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 const nameRegex = /^\p{L}+$/u;
 
+const passwordSchema = z
+  .string()
+  .min(8)
+  .regex(
+    passwordRegex,
+    "Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
+  )
+  .refine((pwd) => !isCommonPassword(pwd), "Password is too common");
+
 export const registerSchema = z.object({
   username: z
     .string()
@@ -15,16 +24,7 @@ export const registerSchema = z.object({
       "Username must be 3-30 characters and contain only letters, numbers, or underscores",
     ),
   email: z.string().email(),
-  password: z
-    .string()
-    .min(8)
-    .regex(
-      passwordRegex,
-      "Password must have upper, lower, number, and special character",
-    )
-    .refine((v) => !isCommonPassword(v), {
-      message: "Password is too common. Please choose a more unique password.",
-    }),
+  password: passwordSchema,
   first_name: z
     .string()
     .min(1)
@@ -48,14 +48,5 @@ export const forgotSchema = z.object({
 
 export const resetSchema = z.object({
   token: z.string().min(1),
-  password: z
-    .string()
-    .min(8)
-    .regex(
-      passwordRegex,
-      "Password must have upper, lower, number, and special character",
-    )
-    .refine((v) => !isCommonPassword(v), {
-      message: "Password is too common. Please choose a more unique password.",
-    }),
+  password: passwordSchema,
 });

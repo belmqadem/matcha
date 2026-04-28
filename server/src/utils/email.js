@@ -41,10 +41,14 @@ export async function sendVerificationEmail(to, token) {
   try {
     if (transporter) {
       const info = await transporter.sendMail(mail);
-      logger.info({ to, info }, "Sent verification email");
+      logger.info(
+        { messageId: info && info.messageId },
+        "Sent verification email",
+      );
     }
   } catch (err) {
     logger.error({ err }, "Failed to send verification email");
+    throw err;
   }
 
   logEmailFallback(url);
@@ -65,10 +69,14 @@ export async function sendPasswordResetEmail(to, token) {
   try {
     if (transporter) {
       const info = await transporter.sendMail(mail);
-      logger.info({ to, info }, "Sent password reset email");
+      logger.info(
+        { messageId: info && info.messageId },
+        "Sent password reset email",
+      );
     }
   } catch (err) {
     logger.error({ err }, "Failed to send password reset email");
+    throw err;
   }
 
   logEmailFallback(url);

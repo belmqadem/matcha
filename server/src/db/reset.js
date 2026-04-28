@@ -5,6 +5,7 @@ import { query } from "./pool.js";
   try {
     await query("DROP SCHEMA public CASCADE");
     await query("CREATE SCHEMA public");
+    await query("GRANT ALL ON SCHEMA public TO public");
     logger.info(
       "Database reset successfully — run db:migrate to recreate tables.",
     );

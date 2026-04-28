@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail,
 } from "../utils/email.js";
 import { isCommonPassword } from "../utils/commonPasswords.js";
+import env from "../config/env.js";
 
 const SALT_ROUNDS = 12;
 
@@ -51,7 +52,7 @@ export const register = async ({
     [userId, token, "verification"],
   );
 
-  void sendVerificationEmail(email, token);
+  await sendVerificationEmail(email, token);
 
   return { id: userId };
 };
@@ -106,7 +107,7 @@ export const login = async ({ username, password }) => {
   );
 
   const payload = { id: user.id, username: user.username, email: user.email };
-  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "7d" });
+  const token = jwt.sign(payload, env.JWT_SECRET, { expiresIn: "7d" });
 
   const safeUser = {
     id: user.id,
@@ -150,7 +151,7 @@ export const forgotPassword = async (email) => {
     [userId, token, "reset"],
   );
 
-  void sendPasswordResetEmail(email, token);
+  await sendPasswordResetEmail(email, token);
   return true;
 };
 

@@ -8,20 +8,43 @@ import {
   forgotSchema,
   resetSchema,
 } from "../validators/auth.validator.js";
+import {
+  registerLimiter,
+  loginLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter,
+} from "../middleware/rateLimiter.js";
 
 const router = Router();
 
-router.post("/register", validate(registerSchema), authController.register);
+router.post(
+  "/register",
+  registerLimiter,
+  validate(registerSchema),
+  authController.register,
+);
+
 router.get("/verify/:token", authController.verifyEmail);
-router.post("/login", validate(loginSchema), authController.login);
+
+router.post(
+  "/login",
+  loginLimiter,
+  validate(loginSchema),
+  authController.login,
+);
+
 router.post("/logout", authenticate, authController.logout);
+
 router.post(
   "/forgot-password",
+  forgotPasswordLimiter,
   validate(forgotSchema),
   authController.forgotPassword,
 );
+
 router.post(
   "/reset-password",
+  resetPasswordLimiter,
   validate(resetSchema),
   authController.resetPassword,
 );

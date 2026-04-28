@@ -4,7 +4,7 @@
 
 This repository contains the source code for a dating website project named "Matcha".
 The project is structured as a monorepo with separate directories for the frontend (client/)
-and backend (server/). The frontend is built with React + Vite (JavaScript, not TypeScript).
+and backend (server/). The frontend is built with React + Vite (TypeScript).
 The backend is built with Express.js and Node.js. PostgreSQL is used for data storage.
 Real-time features (chat, notifications, WebRTC signaling) are handled via Socket.io.
 
@@ -225,7 +225,7 @@ client/src/
 ### Frontend Rules
 
 - Use .jsx extension for all React files. No .tsx or .ts.
-- Do not use TypeScript anywhere in the frontend.
+- Use TypeScript anywhere in the frontend.
 - Use Tailwind CSS v4 exclusively for styling — no plain CSS, no CSS modules, no inline styles.
 - All color and design tokens are CSS variables in :root (index.css).
 - Never use hardcoded Tailwind color values — always use the custom token classes (e.g. text-text-muted not text-gray-500).

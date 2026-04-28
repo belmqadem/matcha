@@ -30,16 +30,22 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Test DB connection on startup
-pool
-  .query("SELECT NOW()")
-  .then(() => {
+const startServer = async () => {
+  try {
+    await pool.query("SELECT NOW()");
     logger.info("Database connected");
-  })
-  .catch((err) => {
+  } catch (err) {
     logger.error({ err }, "Database connection failed");
     process.exit(1);
+  }
+
+  const PORT = env.PORT;
+  httpServer.listen(PORT, () => {
+    logger.info(`Matcha Server running on http://localhost:${PORT}`);
   });
+};
+
+startServer();
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -49,10 +55,5 @@ app.use("/api/auth", authRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
-
-const PORT = env.PORT;
-httpServer.listen(PORT, () => {
-  logger.info(`Matcha Server running on http://localhost:${PORT}`);
-});
 
 export default app;
