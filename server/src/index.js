@@ -9,7 +9,7 @@ import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
-import authRoutes from "./routes/auth.js";
+import authRoutes from "./routes/auth.route.js";
 
 const app = express();
 const httpServer = createServer(app);

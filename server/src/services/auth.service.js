@@ -132,7 +132,6 @@ export const logout = async (userId) => {
 export const forgotPassword = async (email) => {
   const uRes = await query("SELECT id FROM users WHERE email = $1", [email]);
   if (!uRes.rows.length) {
-    // avoid leaking which emails exist
     return true;
   }
 
