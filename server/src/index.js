@@ -1,5 +1,6 @@
 import express from "express";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import { createServer } from "http";
 import { rateLimit } from "express-rate-limit";
@@ -8,6 +9,7 @@ import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -18,6 +20,7 @@ app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -42,9 +45,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.get("/", (req, res) => {
-  res.send("Welcome to the Matcha API!");
-});
+app.use("/api/auth", authRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
