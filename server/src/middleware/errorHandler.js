@@ -6,12 +6,16 @@ const errorHandler = (err, req, res, next) => {
     return next(err);
   }
 
-  const statusCode = Number.isInteger(err.statusCode)
-    ? err.statusCode
+  const isOperational = err && err.isOperational === true;
+  const statusCode = isOperational
+    ? Number.isInteger(err.statusCode)
+      ? err.statusCode
+      : HTTP_STATUS.BAD_REQUEST
     : HTTP_STATUS.INTERNAL_SERVER_ERROR;
-  const message = err.message || "Internal server error";
 
-  if (statusCode >= HTTP_STATUS.INTERNAL_SERVER_ERROR) {
+  const message = isOperational ? err.message : "Internal server error";
+
+  if (!isOperational) {
     logger.error(
       {
         err,
@@ -32,9 +36,7 @@ const errorHandler = (err, req, res, next) => {
     );
   }
 
-  const payload = { message };
-
-  res.status(statusCode).json(payload);
+  res.status(statusCode).json({ error: message });
 };
 
 export default errorHandler;
