@@ -64,10 +64,10 @@ export const updateProfile = async (userId, updates) => {
     setField("biography", updates.biography);
   }
   if (updates.latitude !== undefined) {
-    setField("latitude", updates.latitude);
+    setField("latitude", Math.round(updates.latitude * 100) / 100);
   }
   if (updates.longitude !== undefined) {
-    setField("longitude", updates.longitude);
+    setField("longitude", Math.round(updates.longitude * 100) / 100);
   }
   if (updates.location_city !== undefined) {
     setField("location_city", updates.location_city);
