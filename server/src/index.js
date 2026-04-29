@@ -10,6 +10,8 @@ import logger, { httpLogger } from "./utils/logger.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.route.js";
+import usersRoutes from "./routes/users.route.js";
+import profileRoutes from "./routes/profile.route.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -51,6 +53,8 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
