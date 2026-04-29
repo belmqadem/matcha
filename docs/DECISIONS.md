@@ -23,8 +23,11 @@
 - **Auth:** JWT stored in HttpOnly cookie
   - Better protection against token theft via XSS (token is not readable from JS)
   - Still stateless on the backend when using signed/verified JWTs
-- **Webserver:** Nginx
-- **Containerization:** Docker with docker compose
+- **Web server:** Nginx
+	- Nginx handles reverse proxying, static assets, and SSL termination efficiently
+- **Containerization:** Docker + docker-compose
+	- Docker ensures consistent environments across dev and production
+	- Docker Compose simplifies multi-service setup
 
 ## Understanding Subject
 
