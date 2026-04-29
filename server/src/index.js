@@ -14,7 +14,6 @@ import authRoutes from "./routes/auth.route.js";
 const app = express();
 const httpServer = createServer(app);
 
-// Middleware
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(httpLogger);
