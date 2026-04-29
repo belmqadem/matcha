@@ -296,9 +296,31 @@ server/src/
 
 ## Fame Rating
 
-Fame rating is a score (0–100) stored on each user and recalculated on relevant events.
-Formula: (likes*received * 3) + (visits*received * 1) - (blocks*received * 5) + (profile*complete_bonus * 10)
-Clamped between 0 and 100. Recalculate after: like, unlike, visit, block, profile completion.
+Fame rating is a decimal score (0–100) stored on users.fame_rating.
+It is recalculated by calling recalculateFameRating(userId) from server/src/utils/fameRating.js.
+
+Formula (runs as a single SQL UPDATE):
+  likes_received    * 3   (each like someone gave this user)
+  visits_received   * 1   (each profile view this user received)
+  blocks_received   * -5  (each block this user received)
+  profile_complete  ? +10 : 0
+
+Profile is complete when ALL are true:
+  - gender is not null
+  - biography is not null and not empty
+  - latitude and longitude are not null
+  - at least 1 row in user_tags for this user
+  - at least 1 row in photos for this user
+
+Result is clamped: LEAST(100, GREATEST(0, score))
+
+Call recalculateFameRating(targetUserId) after:
+  - like given or removed      → recalculate liked user
+  - visit recorded             → recalculate visited user
+  - block added                → recalculate blocked user
+  - profile fields updated     → recalculate that user
+  - tags added or removed      → recalculate that user
+  - photo uploaded or deleted  → recalculate that user
 
 ---
 

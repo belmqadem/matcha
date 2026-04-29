@@ -3,7 +3,7 @@ import { isCommonPassword } from "../utils/commonPasswords.js";
 
 const usernameRegex = /^[A-Za-z0-9_]{3,30}$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-const nameRegex = /^\p{L}+$/u;
+const nameRegex = /^[\p{L}\p{M}]+(?:[ '\-\.][\p{L}\p{M}]+)*$/u;
 
 const passwordSchema = z
   .string()
@@ -29,12 +29,18 @@ export const registerSchema = z.object({
     .string()
     .min(1)
     .max(50)
-    .regex(nameRegex, "First name must contain only letters"),
+    .regex(
+      nameRegex,
+      "First name may contain letters, spaces, apostrophes, hyphens, or periods",
+    ),
   last_name: z
     .string()
     .min(1)
     .max(50)
-    .regex(nameRegex, "Last name must contain only letters"),
+    .regex(
+      nameRegex,
+      "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
+    ),
 });
 
 export const loginSchema = z.object({

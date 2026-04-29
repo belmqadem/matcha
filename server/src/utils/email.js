@@ -27,6 +27,105 @@ const logEmailFallback = (url) => {
   }
 };
 
+const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: #1A1A2E;
+      }
+      .container {
+        width: 100%;
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 18px;
+      }
+      .card {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      .header {
+        background: #e94057;
+        padding: 24px;
+        text-align: center;
+        color: #ffffff;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 26px;
+        letter-spacing: -0.04em;
+      }
+      .body {
+        padding: 24px;
+      }
+      .body p {
+        margin: 0 0 10px;
+        color: #3f3f46;
+      }
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e94057;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .footer {
+        padding: 0 24px 32px;
+        color: #6b7280;
+        font-size: 12px;
+      }
+      .footer a {
+        color: #e94057;
+        text-decoration: none;
+      }
+      .code {
+        display: block;
+        margin: 18px 0;
+        padding: 16px;
+        background: #f5f5f7;
+        border-radius: 12px;
+        font-family: monospace;
+        color: #111827;
+        word-break: break-all;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="header">
+          <h1>Matcha</h1>
+        </div>
+        <div class="body">
+          <h2>${heading}</h2>
+          <p>${message}</p>
+          <p style="margin: 32px 0;">
+            <a href="${actionUrl}" class="button">${actionText}</a>
+          </p>
+          <p>Thanks for being part of Matcha — we&apos;re excited to help you find a real connection.</p>
+        </div>
+        <div class="footer">
+          <p>Love,</p>
+          <p>The Matcha Team</p>
+          <p><a href="${CORS_ORIGIN}">matcha.1337</a></p>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>
+`;
+
 export async function sendVerificationEmail(to, token) {
   const url = `${CORS_ORIGIN}/verify-email/${token}`;
 
@@ -35,7 +134,13 @@ export async function sendVerificationEmail(to, token) {
     to,
     subject: "Verify your email",
     text: `Please verify your email by visiting: ${url}`,
-    html: `<p>Please verify your email by clicking <a href="${url}">this link</a></p>`,
+    html: createEmailHtml({
+      heading: "Verify your email",
+      message:
+        "A quick step to make your Matcha account official and keep your matches secure.",
+      actionText: "Verify email",
+      actionUrl: url,
+    }),
   };
 
   try {
@@ -63,7 +168,13 @@ export async function sendPasswordResetEmail(to, token) {
     to,
     subject: "Reset your password",
     text: `Reset your password by visiting: ${url}`,
-    html: `<p>Reset your password by clicking <a href="${url}">this link</a></p>`,
+    html: createEmailHtml({
+      heading: "Reset your password",
+      message:
+        "No worries — use the button below to create a new password and get back to your conversations.",
+      actionText: "Reset password",
+      actionUrl: url,
+    }),
   };
 
   try {
