@@ -59,3 +59,59 @@ GET /api/auth/google
 GET /api/auth/google/callback
 
 **Response 501:** `{ error: "Not implemented" }`
+
+---
+
+## Users
+
+GET /api/users/me
+
+**Response 200:** `{ user }`
+**Notes:** `user` includes `tags: string[]` and `photos: { id, url, order_index, created_at }[]`
+
+PATCH /api/users/me
+
+**Body:** `{ first_name?, last_name?, email?, username? }`
+**Response 200:** `{ user }`
+**Notes:** If email changes, `is_verified` is reset and a new verification email is sent
+**Errors:** 400 validation, 409 username/email taken
+
+---
+
+## Profile
+
+PATCH /api/profile/me
+
+**Body:** `{ gender?, sexual_preference?, biography?, latitude?, longitude?, location_city? }`
+**Response 200:** `{ user }`
+**Errors:** 400 validation
+
+POST /api/profile/me/tags
+
+**Body:** `{ tags: string[] }`
+**Response 200:** `{ tags }`
+**Errors:** 400 validation
+
+POST /api/profile/me/photos
+
+**Body:** `multipart/form-data` with field `photo`
+**Response 201:** `{ photo }`
+**Errors:** 400 validation, 400 photo limit reached, 400 invalid file type
+
+DELETE /api/profile/me/photos/:photoId
+
+**Response 200:** `{ message: "Photo deleted." }`
+**Errors:** 404 not found
+
+PATCH /api/profile/me/photos/:photoId/set-main
+
+**Response 200:** `{ message: "Profile picture updated." }`
+**Errors:** 404 not found
+
+GET /api/profile/me/visitors
+
+**Response 200:** `{ visitors }`
+
+GET /api/profile/me/liked-by
+
+**Response 200:** `{ likers }`

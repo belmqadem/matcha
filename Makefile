@@ -8,7 +8,7 @@ seed:
 	@docker compose exec -T matcha_server npm run db:seed
 
 reset:
-	@read -p "WARNING: This will reset the database. Are you sure? [y/N] " ans && [ "${ans:-N}" = "y" ] && docker compose exec -T matcha_server npm run db:reset
+	@printf "WARNING: This will reset the database. Are you sure? [y/N] " && read ans && [ "$${ans:-N}" = "y" ] && docker compose exec matcha_server npm run db:reset
 
 down:
 	@docker compose down

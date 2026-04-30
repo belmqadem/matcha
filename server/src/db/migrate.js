@@ -122,7 +122,6 @@ CREATE TABLE IF NOT EXISTS dates (
   updated_at   TIMESTAMP   WITH TIME ZONE DEFAULT NOW()
 );
 
--- indexes for performance
 CREATE INDEX IF NOT EXISTS idx_photos_user_id         ON photos(user_id);
 CREATE INDEX IF NOT EXISTS idx_likes_liked_id         ON likes(liked_id);
 CREATE INDEX IF NOT EXISTS idx_visits_visited_id      ON visits(visited_id);

@@ -7,6 +7,9 @@ RUN npm ci --omit=dev
 
 COPY src ./src
 
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+USER nodejs
+
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \

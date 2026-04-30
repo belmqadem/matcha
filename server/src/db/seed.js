@@ -26,7 +26,7 @@ const TAGS = [
   "swimming",
   "dancing",
 ];
-const GENDERS = ["male", "female", "non-binary"];
+const GENDERS = ["male", "female", "non-binary", "other"];
 const PREFERENCES = ["heterosexual", "homosexual", "bisexual"];
 
 async function seed() {
