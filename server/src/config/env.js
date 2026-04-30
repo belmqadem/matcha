@@ -8,6 +8,7 @@ const env = cleanEnv(process.env, {
     default: "development",
   }),
   CORS_ORIGIN: str(),
+  CLIENT_URL: str(),
 
   POSTGRES_HOST: str(),
   POSTGRES_PORT: port(),
@@ -23,6 +24,10 @@ const env = cleanEnv(process.env, {
   SMTP_USER: str(),
   SMTP_PASSWORD: str(),
   EMAIL_FROM: str(),
+
+  GOOGLE_CLIENT_ID: str(),
+  GOOGLE_CLIENT_SECRET: str(),
+  GOOGLE_CALLBACK_URL: str(),
 });
 
 export default env;

@@ -3,6 +3,7 @@ import authenticate from "../middleware/authenticate.js";
 import validate from "../middleware/validate.js";
 import uploadSinglePhoto from "../middleware/upload.js";
 import * as profileController from "../controllers/profile.controller.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import {
   updateProfileSchema,
   tagsSchema,
@@ -14,36 +15,44 @@ router.patch(
   "/me",
   authenticate,
   validate(updateProfileSchema),
-  profileController.updateProfile,
+  asyncHandler(profileController.updateProfile),
 );
 
 router.post(
   "/me/tags",
   authenticate,
   validate(tagsSchema),
-  profileController.updateTags,
+  asyncHandler(profileController.updateTags),
 );
 
 router.post(
   "/me/photos",
   authenticate,
   uploadSinglePhoto,
-  profileController.uploadPhoto,
+  asyncHandler(profileController.uploadPhoto),
 );
 
 router.delete(
   "/me/photos/:photoId",
   authenticate,
-  profileController.deletePhoto,
+  asyncHandler(profileController.deletePhoto),
 );
 
 router.patch(
   "/me/photos/:photoId/set-main",
   authenticate,
-  profileController.setMainPhoto,
+  asyncHandler(profileController.setMainPhoto),
 );
 
-router.get("/me/visitors", authenticate, profileController.getVisitors);
-router.get("/me/liked-by", authenticate, profileController.getLikedBy);
+router.get(
+  "/me/visitors",
+  authenticate,
+  asyncHandler(profileController.getVisitors),
+);
+router.get(
+  "/me/liked-by",
+  authenticate,
+  asyncHandler(profileController.getLikedBy),
+);
 
 export default router;
