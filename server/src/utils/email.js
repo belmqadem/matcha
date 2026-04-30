@@ -8,7 +8,7 @@ const {
   SMTP_USER,
   SMTP_PASSWORD,
   EMAIL_FROM,
-  CORS_ORIGIN,
+  CLIENT_URL,
 } = env;
 
 const transporter = nodemailer.createTransport({
@@ -22,7 +22,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const logEmailFallback = (url) => {
-  if (process.env.NODE_ENV !== "production") {
+  if (env.NODE_ENV !== "production") {
     logger.info({ url }, "Email content (development mode)");
   }
 };
@@ -118,7 +118,7 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
         <div class="footer">
           <p>Love,</p>
           <p>The Matcha Team</p>
-          <p><a href="${CORS_ORIGIN}">matcha.1337</a></p>
+          <p><a href="${CLIENT_URL}">matcha.1337.dev</a></p>
         </div>
       </div>
     </div>
@@ -127,7 +127,7 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
 `;
 
 export async function sendVerificationEmail(to, token) {
-  const url = `${CORS_ORIGIN}/verify-email/${token}`;
+  const url = `${CLIENT_URL}/verify-email/${token}`;
 
   const mail = {
     from: EMAIL_FROM,
@@ -161,7 +161,7 @@ export async function sendVerificationEmail(to, token) {
 }
 
 export async function sendPasswordResetEmail(to, token) {
-  const url = `${CORS_ORIGIN}/reset-password/${token}`;
+  const url = `${CLIENT_URL}/reset-password/${token}`;
 
   const mail = {
     from: EMAIL_FROM,

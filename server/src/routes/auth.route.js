@@ -2,6 +2,7 @@ import { Router } from "express";
 import validate from "../middleware/validate.js";
 import authenticate from "../middleware/authenticate.js";
 import * as authController from "../controllers/auth.controller.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import {
   registerSchema,
   loginSchema,
@@ -23,36 +24,36 @@ router.post(
   "/register",
   // registerLimiter,
   validate(registerSchema),
-  authController.register,
+  asyncHandler(authController.register),
 );
 
-router.get("/verify/:token", authController.verifyEmail);
+router.get("/verify/:token", asyncHandler(authController.verifyEmail));
 
 router.post(
   "/login",
   // loginLimiter,
   validate(loginSchema),
-  authController.login,
+  asyncHandler(authController.login),
 );
 
-router.post("/logout", authenticate, authController.logout);
+router.post("/logout", authenticate, asyncHandler(authController.logout));
 
 router.post(
   "/forgot-password",
   // forgotPasswordLimiter,
   validate(forgotSchema),
-  authController.forgotPassword,
+  asyncHandler(authController.forgotPassword),
 );
 
 router.post(
   "/reset-password",
   // resetPasswordLimiter,
   validate(resetSchema),
-  authController.resetPassword,
+  asyncHandler(authController.resetPassword),
 );
 
 // OAuth (placeholders)
-router.get("/google", authController.googleAuth);
-router.get("/google/callback", authController.googleCallback);
+router.get("/google", asyncHandler(authController.googleAuth));
+router.get("/google/callback", asyncHandler(authController.googleCallback));
 
 export default router;
