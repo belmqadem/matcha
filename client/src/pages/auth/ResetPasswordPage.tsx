@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  AuthLayout, MatchaLogo, AuthInput, AuthButton, LockIcon
-} from '../../components/auth/AuthLayout';
+import AuthLayout from '@/layout/AuthLayout';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import ShowPasswordButton from '@/components/ui/ ShowPasswordButton';
+import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
+import { Lock } from 'lucide-react';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -11,9 +14,11 @@ const ResetPasswordPage = () => {
 
   const [form, setForm] = useState({ password: '', confirm: '' });
   const [error, setError] = useState('');
+  const passwordVisibility = usePasswordVisibility();
+  const confirmVisibility = usePasswordVisibility();
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(prev => ({ ...prev, [field]: e.target.value }));
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
     setError('');
   };
 
@@ -33,43 +38,37 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <AuthLayout>
-      <MatchaLogo />
-
-      <div className="text-center mb-8">
-        <p className="text-lg font-bold text-gray-800" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Reset your password
-        </p>
-      </div>
-
+    <AuthLayout header="Reset your Password">
       <form onSubmit={handleSubmit}>
-        <AuthInput
-          type="password"
+        <Input
+          type={passwordVisibility.inputType}
           placeholder="New Password"
           value={form.password}
           onChange={handleChange('password')}
-          icon={<LockIcon />}
+          required
+          icon={Lock}
+          showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
         />
-        <AuthInput
-          type="password"
+        <Input
+          type={confirmVisibility.inputType}
           placeholder="Confirm Password"
           value={form.confirm}
           onChange={handleChange('confirm')}
-          icon={<LockIcon />}
+          required
+          icon={Lock}
+          showPasswordIcon={<ShowPasswordButton password={confirmVisibility} />}
         />
 
-        {error && (
-          <p className="text-xs text-[#C4364A] mb-3 text-center">{error}</p>
-        )}
+        {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
         <div className="mt-6">
-          <AuthButton type="submit">Reset</AuthButton>
+          <Button type="submit">Reset</Button>
         </div>
       </form>
 
-      <p className="text-center text-xs text-gray-500 mt-5">
+      <p className="text-center text-xs text-(--color-text)/80 mt-5">
         Back to{' '}
-        <Link to="/login" className="text-[#C4364A] font-semibold hover:underline">
+        <Link to="/login" className="text-(--color-primary) font-semibold hover:underline">
           Login
         </Link>
       </p>

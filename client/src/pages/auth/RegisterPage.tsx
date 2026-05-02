@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  AuthLayout, MatchaLogo, AuthInput, AuthButton, OrDivider,
-  UserIcon, LockIcon, MailIcon
-} from '../../components/auth/AuthLayout';
+import AuthLayout from '@/layout/AuthLayout';
+import Button from '@/components/ui/Button';
+import Divider from '@/components/ui/Divider';
+import Input from '@/components/ui/Input';
+import ShowPasswordButton from '@/components/ui/ ShowPasswordButton';
+import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
+import { Lock, Mail, User } from 'lucide-react';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -14,9 +17,11 @@ const RegisterPage = () => {
     lastName: '',
     password: '',
   });
+  const passwordVisibility = usePasswordVisibility();
+  const [error, setError] = useState('');
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm(prev => ({ ...prev, [field]: e.target.value }));
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   const handleGoogleSignup = () => {
@@ -26,69 +31,75 @@ const RegisterPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!form.email || !form.username || !form.firstName || !form.lastName || !form.password) {
+      setError('Please fill in all fields.');
+      return;
+    }
+
     // TODO: call register API
     console.log('Register:', form);
     navigate('/verify-email');
   };
 
   return (
-    <AuthLayout>
-      <MatchaLogo />
-
-      <div className="text-center mb-5">
-        <p className="text-lg font-bold text-gray-800 leading-snug" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Create your account<br />Find your person
-        </p>
-      </div>
-
-      <AuthButton variant="google" onClick={handleGoogleSignup}>
+    <AuthLayout header="Create your account and find your person">
+      <Button variant="google" onClick={handleGoogleSignup}>
         Signup with Google
-      </AuthButton>
+      </Button>
 
-      <OrDivider />
+      <Divider />
 
       <form onSubmit={handleSubmit}>
-        <AuthInput
+        <Input
           type="email"
           placeholder="Email"
           value={form.email}
           onChange={handleChange('email')}
-          icon={<MailIcon />}
+          required
+          icon={Mail}
         />
-        <AuthInput
+        <Input
           placeholder="Username"
           value={form.username}
           onChange={handleChange('username')}
-          icon={<UserIcon />}
+          required
+          icon={User}
         />
-        <AuthInput
+        <Input
           placeholder="First Name"
           value={form.firstName}
           onChange={handleChange('firstName')}
-          icon={<UserIcon />}
+          required
+          icon={User}
         />
-        <AuthInput
+        <Input
           placeholder="Last Name"
           value={form.lastName}
           onChange={handleChange('lastName')}
-          icon={<UserIcon />}
+          required
+          icon={User}
         />
-        <AuthInput
-          type="password"
+        <Input
+          type={passwordVisibility.inputType}
           placeholder="Password"
           value={form.password}
           onChange={handleChange('password')}
-          icon={<LockIcon />}
+          required
+          icon={Lock}
+          showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
         />
 
+        {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
+
         <div className="mt-6">
-          <AuthButton type="submit">Register</AuthButton>
+          <Button type="submit">Register</Button>
         </div>
       </form>
 
-      <p className="text-center text-xs text-gray-500 mt-5">
+      <p className="text-xs text-(--color-text)/80 text-center mt-5">
         Already have an account?{' '}
-        <Link to="/login" className="text-[#C4364A] font-semibold hover:underline">
+        <Link to="/login" className="text-(--color-primary) font-semibold hover:underline">
           Login
         </Link>
       </p>

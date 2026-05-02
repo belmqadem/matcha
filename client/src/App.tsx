@@ -14,18 +14,19 @@ import EditProfilePage from './pages/EditProfilePage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import MapPage from './pages/MapPage.jsx';
+import LandingPage from './pages/auth/LandingPage.js';
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        <Route path="/" element={<Navigate to="/browse" replace />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
