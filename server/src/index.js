@@ -12,11 +12,13 @@ import errorHandler from "./middleware/errorHandler.js";
 import authRoutes from "./routes/auth.route.js";
 import usersRoutes from "./routes/users.route.js";
 import profileRoutes from "./routes/profile.route.js";
+import locationRoutes from "./routes/location.route.js";
 
 const app = express();
 const httpServer = createServer(app);
 
 app.use(helmet());
+app.set("trust proxy", 1);
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
@@ -55,6 +57,7 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/profile", locationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
