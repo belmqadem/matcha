@@ -129,6 +129,21 @@ CREATE INDEX IF NOT EXISTS idx_messages_receiver      ON messages(receiver_id, i
 CREATE INDEX IF NOT EXISTS idx_notifications_user     ON notifications(user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_users_location         ON users(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_users_fame             ON users(fame_rating DESC);
+
+CREATE OR REPLACE FUNCTION haversine_km(
+  lat1 DECIMAL, lng1 DECIMAL,
+  lat2 DECIMAL, lng2 DECIMAL
+) RETURNS DECIMAL AS $$
+DECLARE
+  r DECIMAL := 6371;
+  dlat DECIMAL := radians(lat2 - lat1);
+  dlng DECIMAL := radians(lng2 - lng1);
+  a DECIMAL;
+BEGIN
+  a := sin(dlat/2)^2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlng/2)^2;
+  RETURN r * 2 * asin(sqrt(a));
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 `;
 
 (async () => {
