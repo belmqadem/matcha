@@ -4,7 +4,7 @@
 
 This repository contains the source code for a dating website project named "Matcha".
 The project is structured as a monorepo with separate directories for the frontend (client/)
-and backend (server/). The frontend is built with React + Vite (JavaScript, not TypeScript).
+and backend (server/). The frontend is built with React + Vite (TypeScript).
 The backend is built with Express.js and Node.js. PostgreSQL is used for data storage.
 Real-time features (chat, notifications, WebRTC signaling) are handled via Socket.io.
 
@@ -224,8 +224,8 @@ client/src/
 
 ### Frontend Rules
 
-- Use .jsx extension for all React files. No .tsx or .ts.
-- Do not use TypeScript anywhere in the frontend.
+- Use .tsx extension for React component files and .ts for other TypeScript files.
+- Use TypeScript for all frontend code.
 - Use Tailwind CSS v4 exclusively for styling — no plain CSS, no CSS modules, no inline styles.
 - All color and design tokens are CSS variables in :root (index.css).
 - Never use hardcoded Tailwind color values — always use the custom token classes (e.g. text-text-muted not text-gray-500).
@@ -296,9 +296,33 @@ server/src/
 
 ## Fame Rating
 
-Fame rating is a score (0–100) stored on each user and recalculated on relevant events.
-Formula: (likes*received * 3) + (visits*received * 1) - (blocks*received * 5) + (profile*complete_bonus * 10)
-Clamped between 0 and 100. Recalculate after: like, unlike, visit, block, profile completion.
+Fame rating is a decimal score (0–100) stored on users.fame_rating.
+It is recalculated by calling recalculateFameRating(userId) from server/src/utils/fameRating.js.
+
+Formula (runs as a single SQL UPDATE):
+likes*received * 3 (each like someone gave this user)
+visits*received * 1 (each profile view this user received)
+blocks_received \* -5 (each block this user received)
+profile_complete ? +10 : 0
+
+Profile is complete when ALL are true:
+
+- gender is not null
+- biography is not null and not empty
+- latitude and longitude are not null
+- at least 1 row in user_tags for this user
+- at least 1 row in photos for this user
+
+Result is clamped: LEAST(100, GREATEST(0, score))
+
+Call recalculateFameRating(targetUserId) after:
+
+- like given or removed → recalculate liked user
+- visit recorded → recalculate visited user
+- block added → recalculate blocked user
+- profile fields updated → recalculate that user
+- tags added or removed → recalculate that user
+- photo uploaded or deleted → recalculate that user
 
 ---
 
@@ -330,7 +354,7 @@ The following bonus features are planned. Do not use stubs — implement fully w
 
 ### Do
 
-- Use TypeScript only in the frontend..
+- Use TypeScript only in the frontend.
 - Use Tailwind CSS v4 exclusively for all styling in the frontend.
 - Write readable, minimalistic, scalable code.
 - Keep functions short and focused.
@@ -345,7 +369,7 @@ The following bonus features are planned. Do not use stubs — implement fully w
 
 - Use TypeScript in the backend.
 - Use plain CSS, CSS modules, styled-components, or any styling method other than Tailwind.
-- Use hardcoded Tailwind color values — always use the custom CSS variable token classes.
+- Use hardcoded Tailwind color values (e.g., text-red-500). Always use custom CSS variable token classes instead (e.g., text-primary).
 - Use inline styles.
 - Use any ORM (Sequelize, Prisma, TypeORM, etc.).
 - Use localStorage for JWT — use http-only cookies.

@@ -1,5 +1,6 @@
 import express from "express";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import { createServer } from "http";
 import { rateLimit } from "express-rate-limit";
@@ -8,16 +9,19 @@ import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.route.js";
+import usersRoutes from "./routes/users.route.js";
+import profileRoutes from "./routes/profile.route.js";
 
 const app = express();
 const httpServer = createServer(app);
 
-// Middleware
 app.use(helmet());
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
 app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -27,31 +31,32 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// Test DB connection on startup
-pool
-  .query("SELECT NOW()")
-  .then(() => {
+const startServer = async () => {
+  try {
+    await pool.query("SELECT NOW()");
     logger.info("Database connected");
-  })
-  .catch((err) => {
+  } catch (err) {
     logger.error({ err }, "Database connection failed");
     process.exit(1);
+  }
+
+  const PORT = env.PORT;
+  httpServer.listen(PORT, () => {
+    logger.info(`Matcha Server running on http://localhost:${PORT}`);
   });
+};
+
+startServer();
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.get("/", (req, res) => {
-  res.send("Welcome to the Matcha API!");
-});
+app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
-
-const PORT = env.PORT;
-httpServer.listen(PORT, () => {
-  logger.info(`Matcha Server running on http://localhost:${PORT}`);
-});
 
 export default app;

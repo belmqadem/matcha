@@ -26,13 +26,14 @@ const TAGS = [
   "swimming",
   "dancing",
 ];
-const GENDERS = ["male", "female", "non-binary"];
+const GENDERS = ["male", "female", "non-binary", "other"];
 const PREFERENCES = ["heterosexual", "homosexual", "bisexual"];
 
 async function seed() {
   logger.info("Starting database seeding...");
-
   const client = await getClient();
+
+  let exitCode = 0;
 
   try {
     await client.query("BEGIN");
@@ -106,11 +107,17 @@ async function seed() {
   } catch (err) {
     await client.query("ROLLBACK");
     logger.error({ err }, "Seeding failed — transaction rolled back.");
-    process.exit(1);
+    exitCode = 1;
   } finally {
     client.release();
-    process.exit(0);
   }
+
+  return exitCode;
 }
 
-seed();
+seed()
+  .then((code) => process.exit(code))
+  .catch((err) => {
+    logger.error({ err }, "Seeding failed unexpectedly");
+    process.exit(1);
+  });

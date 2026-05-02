@@ -1,8 +1,9 @@
 import pino from "pino";
 import pinoHttp from "pino-http";
+import env from "../config/env.js";
 
 const logger = pino({
-  level: process.env.NODE_ENV === "production" ? "info" : "debug",
+  level: env.NODE_ENV === "production" ? "info" : "debug",
   base: undefined,
   timestamp: pino.stdTimeFunctions.isoTime,
 });
@@ -38,6 +39,15 @@ export const httpLogger = pinoHttp({
   },
   customErrorMessage(req, res, err) {
     return `${req.method} ${req.url} ${res.statusCode} - ${err.message}`;
+  },
+  customLogLevel(req, res, err) {
+    if (err || res.statusCode >= 500) {
+      return "error";
+    }
+    if (res.statusCode >= 400) {
+      return "warn";
+    }
+    return "info";
   },
 });
 

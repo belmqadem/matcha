@@ -24,8 +24,8 @@ CREATE TABLE IF NOT EXISTS users (
   is_online         BOOLEAN       NOT NULL DEFAULT FALSE,
   last_seen         TIMESTAMP     WITH TIME ZONE,
 
-	oauth_provider    VARCHAR(30),
-	oauth_id          VARCHAR(100),
+  oauth_provider    VARCHAR(30),
+  oauth_id          VARCHAR(100),
 
   created_at        TIMESTAMP     WITH TIME ZONE DEFAULT NOW(),
   updated_at        TIMESTAMP     WITH TIME ZONE DEFAULT NOW()
@@ -122,7 +122,6 @@ CREATE TABLE IF NOT EXISTS dates (
   updated_at   TIMESTAMP   WITH TIME ZONE DEFAULT NOW()
 );
 
--- indexes for performance
 CREATE INDEX IF NOT EXISTS idx_photos_user_id         ON photos(user_id);
 CREATE INDEX IF NOT EXISTS idx_likes_liked_id         ON likes(liked_id);
 CREATE INDEX IF NOT EXISTS idx_visits_visited_id      ON visits(visited_id);
