@@ -17,10 +17,14 @@ export const setLocationFromCoords = async (
     throw new AppError("Invalid coordinates", 400);
   }
 
-  await query(
+  const result = await query(
     "UPDATE users SET latitude = $1, longitude = $2, location_city = $3, updated_at = NOW() WHERE id = $4",
     [latitude, longitude, locationCity, userId],
   );
+
+  if (result.rowCount === 0) {
+    throw new AppError("User not found", 404);
+  }
 
   await recalculateFameRating(userId);
 
