@@ -38,8 +38,6 @@ export const setLocationFromCoords = async (
 export const setLocationFromIp = async (userId, ip) => {
   const location = await getLocationFromIp(ip);
 
-  console.log("Determined location from IP:", location); // Debug log for determined location
-
   if (!location) {
     throw new AppError("Could not determine location from IP", 400);
   }

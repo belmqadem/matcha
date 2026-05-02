@@ -115,3 +115,24 @@ GET /api/profile/me/visitors
 GET /api/profile/me/liked-by
 
 **Response 200:** `{ likers }`
+
+---
+
+## Location
+
+PATCH /api/profile/me/location
+
+**Body:** `{ latitude, longitude, location_city? }`
+**Response 200:** `{ latitude, longitude, location_city }`
+**Errors:** 400 validation
+
+POST /api/profile/me/location/gps
+
+**Body:** `{ latitude, longitude }`
+**Response 200:** `{ latitude, longitude, location_city }`
+**Errors:** 400 validation
+
+POST /api/profile/me/location/ip
+
+**Response 200:** `{ latitude, longitude, location_city }`
+**Errors:** 400 could not determine location
