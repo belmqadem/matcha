@@ -95,7 +95,10 @@ const parseTags = (tags) => {
 
 const buildSort = (sort, order) => {
   const normalizedSort = sort || "distance";
-  const normalizedOrder = order || (normalizedSort === "fame" ? "desc" : "asc");
+  const defaultOrder = normalizedSort === "fame" ? "desc" : "asc";
+  const normalizedOrder = ["asc", "desc"].includes(order?.toLowerCase())
+    ? order.toLowerCase()
+    : defaultOrder;
 
   if (normalizedSort === "distance") {
     return `distance_km ${normalizedOrder.toUpperCase()} NULLS LAST`;
