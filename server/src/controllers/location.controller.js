@@ -32,9 +32,14 @@ export const setFromGps = async (req, res, next) => {
 
 export const setFromIp = async (req, res, next) => {
   try {
+    const overrideIp =
+      process.env.NODE_ENV !== "production" && typeof req.query.ip === "string"
+        ? req.query.ip
+        : null;
+
     const location = await locationService.setLocationFromIp(
       req.user.id,
-      req.ip,
+      overrideIp || req.ip,
     );
     return res.status(200).json(location);
   } catch (err) {

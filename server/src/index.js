@@ -13,6 +13,7 @@ import authRoutes from "./routes/auth.route.js";
 import usersRoutes from "./routes/users.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import locationRoutes from "./routes/location.route.js";
+import browseRoutes from "./routes/browse.route.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,6 +59,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/profile", locationRoutes);
+app.use("/api/browse", browseRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

@@ -1,4 +1,6 @@
 import * as authService from "../services/auth.service.js";
+import { setLocationFromIp } from "../services/location.service.js";
+import logger from "../utils/logger.js";
 import env from "../config/env.js";
 
 const COOKIE_NAME = "token";
@@ -24,9 +26,22 @@ export const verifyEmail = async (req, res) => {
 
 export const login = async (req, res) => {
   const { username, password } = req.body;
-  const { user, token } = await authService.login({ username, password });
+  const { user, token, hasLocation } = await authService.login({
+    username,
+    password,
+  });
 
   res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+
+  if (!hasLocation) {
+    setLocationFromIp(user.id, req.ip).catch((err) =>
+      logger.warn(
+        { err, userId: user.id },
+        "Could not auto-set location on login",
+      ),
+    );
+  }
+
   return res.status(200).json({ user });
 };
 
