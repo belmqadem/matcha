@@ -26,7 +26,7 @@ const App = () => {
         {/* <Route path="/verify-email" element={<VerifyEmailPage />} /> */}
           <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
-        {/* <Route path="/verify-email" element={<VerifyEmailPage />} />  for post-register landing */}
+        <Route path="/verify-email" element={<VerifyEmailPage />} />  {/* for post-register landing */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
@@ -12,26 +12,24 @@ const VerifyEmailPage = () => {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
   const [resent, setResent] = useState(false);
+  const didVerify = useRef(false);
 
-  // If the page loads with a token in the URL, verify automatically
   useEffect(() => {
-    if (token) {
-      handleVerify();
-    }
-  }, [token]);
+    if (!token || didVerify.current) return;
+    didVerify.current = true;
 
-  const handleVerify = async () => {
-    if (!token) return;
     setStatus('loading');
-    try {
-      await authApi.verifyEmail(token);
-      setStatus('success');
-      setTimeout(() => navigate('/login'), 2000);
-    } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err.message : 'Verification failed.');
-    }
-  };
+    authApi
+      .verifyEmail(token)
+      .then(() => {
+        setStatus('success');
+        setTimeout(() => navigate('/login'), 2000);
+      })
+      .catch((err) => {
+        setStatus('error');
+        setError(err instanceof Error ? err.message : 'Verification failed.');
+      });
+  }, [token]);
 
   const handleResend = () => {
     // TODO: call resend-verification API
@@ -71,10 +69,7 @@ const VerifyEmailPage = () => {
       )}
 
       {status === 'error' && (
-        <>
-          <p className="text-center text-sm text-(--color-error) mb-4">{error}</p>
-          <Button onClick={handleVerify}>Try again</Button>
-        </>
+        <p className="text-center text-sm text-(--color-error) mb-4">{error}</p>
       )}
 
       {status === 'idle' && !token && (
