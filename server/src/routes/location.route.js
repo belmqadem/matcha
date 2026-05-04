@@ -24,7 +24,7 @@ router.post(
   asyncHandler(locationController.setFromGps),
 );
 
-router.post(
+router.get(
   "/me/location/ip",
   authenticate,
   asyncHandler(locationController.setFromIp),

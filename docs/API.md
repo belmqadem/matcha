@@ -132,7 +132,37 @@ POST /api/profile/me/location/gps
 **Response 200:** `{ latitude, longitude, location_city }`
 **Errors:** 400 validation
 
-POST /api/profile/me/location/ip
+GET /api/profile/me/location/ip
 
 **Response 200:** `{ latitude, longitude, location_city }`
 **Errors:** 400 could not determine location
+
+---
+
+## Browse
+
+GET /api/browse
+
+**Query params:**
+`sort` = distance|age|fame|tags (default distance)
+`order` = asc|desc (default asc for distance, desc for fame)
+`age_min`, `age_max` (ints)
+`fame_min`, `fame_max` (0-100)
+`max_km` (decimal)
+`tags` (comma-separated string)
+`page` (default 1)
+`limit` (default 20, max 50)
+
+**Response 200:** `{ users, total, page, limit }`
+**Errors:**
+
+- `400` invalid query parameters
+  - Triggered by invalid `sort`/`order` values
+  - `age_min`/`age_max` out of range or non-integer
+  - `fame_min`/`fame_max` out of range (must be 0-100)
+  - non-numeric `max_km`, `page`, or `limit`
+  - `limit > 50`
+  - malformed `tags` value
+
+**Example 400 payload:**
+`{ "error": "invalid query parameters", "details": ["sort: Invalid option", "limit: Too big"] }`

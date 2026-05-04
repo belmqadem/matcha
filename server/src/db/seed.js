@@ -63,9 +63,9 @@ async function seed() {
       const { rows } = await client.query(
         `INSERT INTO users
           (username, email, password_hash, first_name, last_name,
-           gender, sexual_preference, biography, fame_rating,
+           gender, sexual_preference, biography, birth_date, fame_rating,
            latitude, longitude, location_city, is_verified, is_online)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,true,false)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,true,false)
          ON CONFLICT DO NOTHING
          RETURNING id`,
         [
@@ -77,6 +77,7 @@ async function seed() {
           gender,
           preference,
           faker.lorem.sentences(2),
+          faker.date.birthdate({ min: 18, max: 60, mode: "age" }),
           fame,
           latitude,
           longitude,

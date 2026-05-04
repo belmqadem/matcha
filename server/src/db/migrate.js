@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   gender            VARCHAR(20),
   sexual_preference VARCHAR(20)   NOT NULL DEFAULT 'bisexual',
   biography         TEXT,
+  birth_date        DATE,
 
   fame_rating       DECIMAL(5,2)  NOT NULL DEFAULT 0,
 
