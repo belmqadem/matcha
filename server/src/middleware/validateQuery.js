@@ -15,7 +15,7 @@ const validateQuery = (schema) => (req, res, next) => {
     return next(new AppError(messages || "Invalid query params", 400));
   }
 
-  req.query = result.data;
+  req.validatedQuery = result.data;
   return next();
 };
 

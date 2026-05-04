@@ -9,6 +9,10 @@ const buildOrientationFilter = (currentUser, addParam) => {
     return { clause: "1=1" };
   }
 
+  if (!["male", "female"].includes(gender)) {
+    return { clause: "1=1" };
+  }
+
   if (pref === "heterosexual") {
     if (gender === "male") {
       const g = addParam("female");
@@ -62,7 +66,6 @@ const buildOrientationFilter = (currentUser, addParam) => {
         )`,
       };
     }
-
     if (gender === "female") {
       const male = addParam("male");
       const female = addParam("female");
@@ -83,10 +86,7 @@ const buildOrientationFilter = (currentUser, addParam) => {
 };
 
 const parseTags = (tags) => {
-  if (!tags || typeof tags !== "string") {
-    return [];
-  }
-
+  if (!tags || typeof tags !== "string") return [];
   return tags
     .split(",")
     .map((t) => t.trim())
@@ -100,18 +100,12 @@ const buildSort = (sort, order) => {
     ? order.toLowerCase()
     : defaultOrder;
 
-  if (normalizedSort === "distance") {
+  if (normalizedSort === "distance")
     return `distance_km ${normalizedOrder.toUpperCase()} NULLS LAST`;
-  }
-
-  if (normalizedSort === "age") {
+  if (normalizedSort === "age")
     return `age_years ${normalizedOrder.toUpperCase()} NULLS LAST`;
-  }
-
-  if (normalizedSort === "tags") {
+  if (normalizedSort === "tags")
     return `shared_tags ${normalizedOrder.toUpperCase()}`;
-  }
-
   return `u.fame_rating ${normalizedOrder.toUpperCase()}`;
 };
 
@@ -126,6 +120,8 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   }
 
   const currentUser = userRes.rows[0];
+  const hasCurrentLocation =
+    currentUser.latitude !== null && currentUser.longitude !== null;
 
   const params = [];
   const addParam = (value) => {
@@ -134,91 +130,99 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   };
 
   const currentUserIdParam = addParam(currentUserId);
-  const currentLatParam = addParam(currentUser.latitude);
-  const currentLngParam = addParam(currentUser.longitude);
 
+  // Use SQL literals for NULL to avoid untyped params in count query
+  const currentLatSQL = hasCurrentLocation
+    ? `${addParam(Number(currentUser.latitude))}::numeric`
+    : `NULL::numeric`;
+  const currentLngSQL = hasCurrentLocation
+    ? `${addParam(Number(currentUser.longitude))}::numeric`
+    : `NULL::numeric`;
+
+  // ── WHERE clauses ────────────────────────────────────────────────────────────
   const whereClauses = [
     `u.id != ${currentUserIdParam}`,
     "u.is_verified = true",
     "u.gender IS NOT NULL",
     `NOT EXISTS (
       SELECT 1 FROM blocks b
-      WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam})
-         OR (b.blocker_id = ${currentUserIdParam} AND b.blocked_id = u.id)
+  		WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam}::uuid)
+      OR (b.blocker_id = ${currentUserIdParam}::uuid AND b.blocked_id = u.id)
     )`,
   ];
 
   const orientation = buildOrientationFilter(currentUser, addParam);
-  if (orientation && orientation.clause) {
+  if (orientation?.clause) {
     whereClauses.push(orientation.clause);
   }
 
   if (queryParams.fame_min !== undefined) {
-    const fameMin = addParam(queryParams.fame_min);
-    whereClauses.push(`u.fame_rating >= ${fameMin}`);
+    whereClauses.push(`u.fame_rating >= ${addParam(queryParams.fame_min)}`);
   }
 
   if (queryParams.fame_max !== undefined) {
-    const fameMax = addParam(queryParams.fame_max);
-    whereClauses.push(`u.fame_rating <= ${fameMax}`);
+    whereClauses.push(`u.fame_rating <= ${addParam(queryParams.fame_max)}`);
   }
 
   if (queryParams.age_min !== undefined) {
-    const ageMin = addParam(queryParams.age_min);
     whereClauses.push(
-      `u.birth_date IS NOT NULL AND date_part('year', age(u.birth_date)) >= ${ageMin}`,
+      `u.birth_date IS NOT NULL AND date_part('year', age(u.birth_date)) >= ${addParam(queryParams.age_min)}`,
     );
   }
 
   if (queryParams.age_max !== undefined) {
-    const ageMax = addParam(queryParams.age_max);
     whereClauses.push(
-      `u.birth_date IS NOT NULL AND date_part('year', age(u.birth_date)) <= ${ageMax}`,
+      `u.birth_date IS NOT NULL AND date_part('year', age(u.birth_date)) <= ${addParam(queryParams.age_max)}`,
     );
   }
 
-  if (
-    queryParams.max_km !== undefined &&
-    currentUser.latitude !== null &&
-    currentUser.longitude !== null
-  ) {
-    const maxKm = addParam(queryParams.max_km);
+  if (queryParams.max_km !== undefined && hasCurrentLocation) {
     whereClauses.push(
-      `u.latitude IS NOT NULL AND u.longitude IS NOT NULL AND haversine_km(${currentLatParam}, ${currentLngParam}, u.latitude, u.longitude) <= ${maxKm}`,
+      `u.latitude IS NOT NULL
+       AND u.longitude IS NOT NULL
+       AND haversine_km(${currentLatSQL}, ${currentLngSQL}, u.latitude, u.longitude) <= ${addParam(queryParams.max_km)}`,
     );
   }
 
   const tagList = parseTags(queryParams.tags);
   if (tagList.length > 0) {
-    const tagsParam = addParam(tagList);
     whereClauses.push(
       `EXISTS (
         SELECT 1 FROM user_tags ut
         JOIN tags t ON t.id = ut.tag_id
-        WHERE ut.user_id = u.id AND t.name = ANY(${tagsParam}::text[])
+        WHERE ut.user_id = u.id AND t.name = ANY(${addParam(tagList)}::text[])
       )`,
     );
   }
 
+  // ── Build query parts ────────────────────────────────────────────────────────
   const orderBy = buildSort(queryParams.sort, queryParams.order);
-  const limit = queryParams.limit || 20;
-  const page = queryParams.page || 1;
+  const limit = queryParams.limit;
+  const page = queryParams.page;
   const offset = (page - 1) * limit;
+  const baseWhere = `WHERE ${whereClauses.join(" AND ")}`;
 
-  const baseWhere = whereClauses.length
-    ? `WHERE ${whereClauses.join(" AND ")}`
-    : "";
-
+  // ── Count query — snapshot params before adding limit/offset ─────────────────
+  const countParams = [...params];
   const countRes = await query(
-    `SELECT COUNT(*)::int AS total
-     FROM users u
-     ${baseWhere}`,
-    params,
+    `SELECT COUNT(*)::int AS total FROM users u ${baseWhere}`,
+    countParams,
   );
 
+  // ── Add limit/offset after count ─────────────────────────────────────────────
   const limitParam = addParam(limit);
   const offsetParam = addParam(offset);
 
+  // ── Distance select ──────────────────────────────────────────────────────────
+  const distanceSelect = `
+    CASE
+      WHEN ${currentLatSQL} IS NOT NULL AND u.latitude IS NOT NULL
+      THEN haversine_km(${currentLatSQL}, ${currentLngSQL}, u.latitude, u.longitude)
+      ELSE NULL
+    END AS distance_km
+  `;
+
+  // ── Data query ───────────────────────────────────────────────────────────────
   const dataRes = await query(
     `SELECT
       u.id,
@@ -229,17 +233,11 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
       u.sexual_preference,
       u.biography,
       u.fame_rating,
-      u.latitude,
-      u.longitude,
       u.location_city,
       u.is_online,
       u.last_seen,
       u.profile_picture_id,
-      CASE
-        WHEN u.latitude IS NOT NULL AND ${currentLatParam} IS NOT NULL
-        THEN haversine_km(${currentLatParam}, ${currentLngParam}, u.latitude, u.longitude)
-        ELSE NULL
-      END AS distance_km,
+      ${distanceSelect},
       CASE
         WHEN u.birth_date IS NOT NULL THEN date_part('year', age(u.birth_date))
         ELSE NULL
@@ -252,26 +250,17 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
           AND ut2.user_id = u.id
       ) AS shared_tags,
       COALESCE(
-        (
-          SELECT json_agg(p ORDER BY p.order_index)
-          FROM photos p
-          WHERE p.user_id = u.id
-        ),
+        (SELECT json_agg(p ORDER BY p.order_index) FROM photos p WHERE p.user_id = u.id),
         '[]'
       ) AS photos,
       COALESCE(
-        (
-          SELECT json_agg(t.name)
-          FROM user_tags ut
-          JOIN tags t ON ut.tag_id = t.id
-          WHERE ut.user_id = u.id
-        ),
+        (SELECT json_agg(t.name) FROM user_tags ut JOIN tags t ON ut.tag_id = t.id WHERE ut.user_id = u.id),
         '[]'
       ) AS tags
-     FROM users u
-     ${baseWhere}
-     ORDER BY ${orderBy}
-     LIMIT ${limitParam} OFFSET ${offsetParam}`,
+    FROM users u
+    ${baseWhere}
+    ORDER BY ${orderBy}
+    LIMIT ${limitParam} OFFSET ${offsetParam}`,
     params,
   );
 
@@ -283,6 +272,4 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   };
 };
 
-export default {
-  getSuggestedProfiles,
-};
+export default { getSuggestedProfiles };

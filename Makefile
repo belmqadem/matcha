@@ -1,5 +1,6 @@
 up:
 	@docker compose up -d --build
+	@docker compose exec -T matcha_server npm run db:migrate
 
 migrate:
 	@docker compose exec -T matcha_server npm run db:migrate
