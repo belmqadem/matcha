@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import ShowPasswordButton from '@/components/ui/ ShowPasswordButton';
 import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
 import { Lock, Mail, User } from 'lucide-react';
+import { authApi } from '@/api/authApi';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const RegisterPage = () => {
   });
   const passwordVisibility = usePasswordVisibility();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -29,17 +31,30 @@ const RegisterPage = () => {
     console.log('Google signup');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
     if (!form.email || !form.username || !form.firstName || !form.lastName || !form.password) {
       setError('Please fill in all fields.');
       return;
     }
 
-    // TODO: call register API
-    console.log('Register:', form);
-    navigate('/verify-email');
+    setLoading(true);
+    try {
+      await authApi.register({
+        email: form.email,
+        username: form.username,
+        password: form.password,
+        first_name: form.firstName,
+        last_name: form.lastName,
+      });
+      navigate('/verify-email');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,7 +108,9 @@ const RegisterPage = () => {
         {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
         <div className="mt-6">
-          <Button type="submit">Register</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Registering…' : 'Register'}
+          </Button>
         </div>
       </form>
 

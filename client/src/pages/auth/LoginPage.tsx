@@ -7,12 +7,14 @@ import Input from '@/components/ui/Input';
 import ShowPasswordButton from '@/components/ui/ ShowPasswordButton';
 import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
 import { Lock, User } from 'lucide-react';
+import { authApi } from '@/api/authApi';
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const passwordVisibility = usePasswordVisibility();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
@@ -23,17 +25,24 @@ const LoginPage = () => {
     console.log('Google login');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
     if (form.username.trim() === '' || form.password.trim() === '') {
       setError('Please enter both username and password.');
       return;
     }
-    // TODO: call login API
-    console.log('Login:', form);
 
-    navigate('/browse');
+    setLoading(true);
+    try {
+      await authApi.login({ username: form.username, password: form.password });
+      navigate('/browse');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,7 +75,9 @@ const LoginPage = () => {
         {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
         <div className="mt-6">
-          <Button type="submit">Log In</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Logging in…' : 'Log In'}
+          </Button>
         </div>
       </form>
 

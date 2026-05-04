@@ -1,13 +1,37 @@
-import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
+import { authApi } from '@/api/authApi';
+
+type Status = 'idle' | 'loading' | 'success' | 'error';
 
 const VerifyEmailPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const { token } = useParams<{ token: string }>();
+  const [status, setStatus] = useState<Status>('idle');
+  const [error, setError] = useState('');
   const [resent, setResent] = useState(false);
+
+  // If the page loads with a token in the URL, verify automatically
+  useEffect(() => {
+    if (token) {
+      handleVerify();
+    }
+  }, [token]);
+
+  const handleVerify = async () => {
+    if (!token) return;
+    setStatus('loading');
+    try {
+      await authApi.verifyEmail(token);
+      setStatus('success');
+      setTimeout(() => navigate('/login'), 2000);
+    } catch (err) {
+      setStatus('error');
+      setError(err instanceof Error ? err.message : 'Verification failed.');
+    }
+  };
 
   const handleResend = () => {
     // TODO: call resend-verification API
@@ -15,15 +39,8 @@ const VerifyEmailPage = () => {
     setResent(true);
   };
 
-  const handleVerify = () => {
-    // TODO: call verify-email API with token
-    console.log('Verifying token:', token);
-    navigate('/browse');
-  };
-
   return (
     <AuthLayout header="Verify your Email">
-      {/* Email illustration */}
       <div className="flex justify-center mb-6">
         <div
           className="w-20 h-20 rounded-2xl flex items-center justify-center shadow-md"
@@ -43,28 +60,44 @@ const VerifyEmailPage = () => {
         </div>
       </div>
 
-      <p className="text-center text-sm text-gray-600 mb-6 leading-relaxed">
-        We've sent a verification link to your email address. Please check your inbox and click the
-        link to activate your account.
-      </p>
+      {status === 'loading' && (
+        <p className="text-center text-sm text-gray-600 mb-6">Verifying your email…</p>
+      )}
 
-      {token ? (
-        <Button onClick={handleVerify}>Verify Email</Button>
-      ) : (
-        <div className="space-y-3">
-          {resent ? (
-            <p className="text-center text-sm text-(--color-primary) font-medium">
-              ✓ Verification email resent!
-            </p>
-          ) : (
-            <button
-              onClick={handleResend}
-              className="w-full text-sm text-(--color-primary) font-semibold py-2 hover:underline transition-colors"
-            >
-              Resend verification email
-            </button>
-          )}
-        </div>
+      {status === 'success' && (
+        <p className="text-center text-sm text-(--color-primary) font-medium mb-6">
+          ✓ Email verified! Redirecting to login…
+        </p>
+      )}
+
+      {status === 'error' && (
+        <>
+          <p className="text-center text-sm text-(--color-error) mb-4">{error}</p>
+          <Button onClick={handleVerify}>Try again</Button>
+        </>
+      )}
+
+      {status === 'idle' && !token && (
+        <>
+          <p className="text-center text-sm text-gray-600 mb-6 leading-relaxed">
+            We've sent a verification link to your email address. Please check your inbox and click
+            the link to activate your account.
+          </p>
+          <div className="space-y-3">
+            {resent ? (
+              <p className="text-center text-sm text-(--color-primary) font-medium">
+                ✓ Verification email resent!
+              </p>
+            ) : (
+              <button
+                onClick={handleResend}
+                className="w-full text-sm text-(--color-primary) font-semibold py-2 hover:underline transition-colors"
+              >
+                Resend verification email
+              </button>
+            )}
+          </div>
+        </>
       )}
 
       <p className="text-center text-xs text-gray-500 mt-5">
