@@ -29,13 +29,14 @@ app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use("/uploads", express.static(uploadsDir));
 
 const globalLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 200,
 });
 app.use(globalLimiter);
+
+app.use("/uploads", express.static(uploadsDir));
 
 const startServer = async () => {
   try {

@@ -60,33 +60,31 @@ export const updateProfileSchema = z
     location_city: z.string().max(100).optional(),
     birth_date: z
       .string()
-      .refine((value) => parseIsoDateOnly(value) !== null, {
-        message: "birth_date must be a valid ISO date (YYYY-MM-DD)",
+      .superRefine((value, ctx) => {
+        const date = parseIsoDateOnly(value);
+
+        if (!date) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "birth_date must be a valid ISO date (YYYY-MM-DD)",
+          });
+          return;
+        }
+
+        if (date > getTodayUtc()) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "birth_date cannot be in the future",
+          });
+        }
+
+        if (!isAtLeastAge(date, 18)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "birth_date requires age 18+",
+          });
+        }
       })
-      .refine(
-        (value) => {
-          const date = parseIsoDateOnly(value);
-          if (!date) {
-            return false;
-          }
-          return date <= getTodayUtc();
-        },
-        {
-          message: "birth_date cannot be in the future",
-        },
-      )
-      .refine(
-        (value) => {
-          const date = parseIsoDateOnly(value);
-          if (!date) {
-            return false;
-          }
-          return isAtLeastAge(date, 18);
-        },
-        {
-          message: "birth_date requires age 18+",
-        },
-      )
       .optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {

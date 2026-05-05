@@ -84,6 +84,7 @@ PATCH /api/profile/me
 
 **Body:** `{ gender?, sexual_preference?, biography?, birth_date?, latitude?, longitude?, location_city? }`
 **Response 200:** `{ user }`
+**Notes:** `birth_date` must be a valid ISO 8601 date in the past; user must be at least 18 years old.
 **Errors:** 400 validation
 
 POST /api/profile/me/tags
