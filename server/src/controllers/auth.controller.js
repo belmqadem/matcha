@@ -2,6 +2,8 @@ import * as authService from "../services/auth.service.js";
 import { setLocationFromIp } from "../services/location.service.js";
 import logger from "../utils/logger.js";
 import env from "../config/env.js";
+import AppError from "../utils/AppError.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
@@ -66,12 +68,12 @@ export const resetPassword = async (req, res) => {
 };
 
 // OAuth placeholders
-export const googleAuth = async (req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+export const googleAuth = async (_req, _res) => {
+  throw new AppError("Not implemented", HTTP_STATUS.NOT_IMPLEMENTED);
 };
 
-export const googleCallback = async (req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+export const googleCallback = async (_req, _res) => {
+  throw new AppError("Not implemented", HTTP_STATUS.NOT_IMPLEMENTED);
 };
 
 export default {
