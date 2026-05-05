@@ -3,6 +3,8 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { createServer } from "http";
+import path from "path";
+import { fileURLToPath } from "url";
 import env from "./config/env.js";
 import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
@@ -17,6 +19,8 @@ import browseRoutes from "./routes/browse.route.js";
 
 const app = express();
 const httpServer = createServer(app);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.resolve(__dirname, "uploads");
 
 app.use(helmet());
 app.set("trust proxy", 1);
@@ -25,6 +29,7 @@ app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use("/uploads", express.static(uploadsDir));
 
 const globalLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
