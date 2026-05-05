@@ -1,5 +1,45 @@
 import { z } from "zod";
 
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const parseIsoDateOnly = (value) => {
+  if (!ISO_DATE_REGEX.test(value)) {
+    return null;
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+};
+
+const getTodayUtc = () => {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+};
+
+const isAtLeastAge = (birthDateUtc, years) => {
+  const todayUtc = getTodayUtc();
+  const cutoff = new Date(
+    Date.UTC(
+      todayUtc.getUTCFullYear() - years,
+      todayUtc.getUTCMonth(),
+      todayUtc.getUTCDate(),
+    ),
+  );
+  return birthDateUtc <= cutoff;
+};
+
 const toNumber = (val) => {
   if (val === null || val === undefined || val === "") {
     return undefined;
@@ -18,6 +58,36 @@ export const updateProfileSchema = z
     latitude: z.preprocess(toNumber, z.number()).optional(),
     longitude: z.preprocess(toNumber, z.number()).optional(),
     location_city: z.string().max(100).optional(),
+    birth_date: z
+      .string()
+      .refine((value) => parseIsoDateOnly(value) !== null, {
+        message: "birth_date must be a valid ISO date (YYYY-MM-DD)",
+      })
+      .refine(
+        (value) => {
+          const date = parseIsoDateOnly(value);
+          if (!date) {
+            return false;
+          }
+          return date <= getTodayUtc();
+        },
+        {
+          message: "birth_date cannot be in the future",
+        },
+      )
+      .refine(
+        (value) => {
+          const date = parseIsoDateOnly(value);
+          if (!date) {
+            return false;
+          }
+          return isAtLeastAge(date, 18);
+        },
+        {
+          message: "birth_date requires age 18+",
+        },
+      )
+      .optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",
