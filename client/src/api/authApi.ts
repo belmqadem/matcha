@@ -25,7 +25,7 @@ export interface AuthUser {
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   const body = text ? JSON.parse(text) : {};
-  if (!res.ok) throw new Error(body.error ?? `Request failed (${res.status})`);
+  if (!res.ok) throw new Error(body.error ?? body.message ?? body.detail ?? body.msg ?? `Request failed (${res.status})`);
   return body as T;
 }
 
