@@ -8,24 +8,31 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
 
 import BrowsePage from './pages/BrowsePage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
-import ProfilePage from './pages/ProfilePage.jsx';
+import ProfilePage from './pages/Profilesetuppage.js';
 import MyProfilePage from './pages/MyProfilePage.jsx';
 import EditProfilePage from './pages/EditProfilePage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
 import NotificationsPage from './pages/NotificationsPage.jsx';
 import MapPage from './pages/MapPage.jsx';
+import LandingPage from './pages/auth/LandingPage.js';
+import ProfileSetupPage from './pages/Profilesetuppage.jsx';
+// ...
+
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        {/* <Route path="/verify-email" element={<VerifyEmailPage />} /> */}
+          <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+
+        <Route path="/verify-email" element={<VerifyEmailPage />} />  {/* for post-register landing */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-        <Route path="/" element={<Navigate to="/browse" replace />} />
+        <Route path="/profile/setup" element={<ProfileSetupPage />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
