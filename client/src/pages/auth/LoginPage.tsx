@@ -37,7 +37,8 @@ const LoginPage = () => {
     setLoading(true);
     try {
       await authApi.login({ username: form.username, password: form.password });
-      navigate('/browse');
+      // navigate('/browse');
+      navigate('/profile/setup');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
     } finally {
