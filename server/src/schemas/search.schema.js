@@ -16,4 +16,29 @@ export const searchQuerySchema = z
   })
   .refine((data) => !(data.max_km !== undefined && data.city !== undefined), {
     message: "Cannot filter by both max_km and city at the same time",
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.age_min !== undefined &&
+      data.age_max !== undefined &&
+      data.age_min > data.age_max
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "age_min must be less than or equal to age_max",
+        path: ["age_min"],
+      });
+    }
+
+    if (
+      data.fame_min !== undefined &&
+      data.fame_max !== undefined &&
+      data.fame_min > data.fame_max
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "fame_min must be less than or equal to fame_max",
+        path: ["fame_min"],
+      });
+    }
   });

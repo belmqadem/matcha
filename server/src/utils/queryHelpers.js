@@ -102,8 +102,8 @@ export const buildSort = (sort, order) => {
   if (normalizedSort === "age")
     return `age_years ${normalizedOrder.toUpperCase()} NULLS LAST`;
   if (normalizedSort === "tags")
-    return `shared_tags ${normalizedOrder.toUpperCase()}`;
-  return `u.fame_rating ${normalizedOrder.toUpperCase()}`;
+    return `shared_tags ${normalizedOrder.toUpperCase()} NULLS LAST`;
+  return `u.fame_rating ${normalizedOrder.toUpperCase()} NULLS LAST`;
 };
 
 export default {
