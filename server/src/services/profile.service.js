@@ -72,6 +72,9 @@ export const updateProfile = async (userId, updates) => {
   if (updates.location_city !== undefined) {
     setField("location_city", updates.location_city);
   }
+  if (updates.birth_date !== undefined) {
+    setField("birth_date", updates.birth_date);
+  }
 
   if (setClauses.length > 0) {
     values.push(userId);

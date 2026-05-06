@@ -67,13 +67,13 @@ GET /api/auth/google/callback
 GET /api/users/me
 
 **Response 200:** `{ user }`
-**Notes:** `user` includes `tags: string[]` and `photos: { id, url, order_index, created_at }[]`
+**Notes:** `user` includes `birth_date`, `tags: string[]`, and `photos: { id, url, order_index, created_at }[]`
 
 PATCH /api/users/me
 
 **Body:** `{ first_name?, last_name?, email?, username? }`
 **Response 200:** `{ user }`
-**Notes:** If email changes, `is_verified` is reset and a new verification email is sent
+**Notes:** If email changes, `is_verified` is reset and a new verification email is sent.
 **Errors:** 400 validation, 409 username/email taken
 
 ---
@@ -82,8 +82,9 @@ PATCH /api/users/me
 
 PATCH /api/profile/me
 
-**Body:** `{ gender?, sexual_preference?, biography?, latitude?, longitude?, location_city? }`
+**Body:** `{ gender?, sexual_preference?, biography?, birth_date?, latitude?, longitude?, location_city? }`
 **Response 200:** `{ user }`
+**Notes:** `birth_date` must be a valid ISO 8601 date in the past; user must be at least 18 years old.
 **Errors:** 400 validation
 
 POST /api/profile/me/tags

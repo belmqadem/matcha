@@ -3,12 +3,14 @@ import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { createServer } from "http";
-import { rateLimit } from "express-rate-limit";
+import path from "path";
+import { fileURLToPath } from "url";
 import env from "./config/env.js";
 import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
+import { createRateLimiter } from "./middleware/rateLimiter.js";
 import authRoutes from "./routes/auth.route.js";
 import usersRoutes from "./routes/users.route.js";
 import profileRoutes from "./routes/profile.route.js";
@@ -17,6 +19,8 @@ import browseRoutes from "./routes/browse.route.js";
 
 const app = express();
 const httpServer = createServer(app);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.resolve(__dirname, "uploads");
 
 app.use(helmet());
 app.set("trust proxy", 1);
@@ -26,13 +30,13 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const globalLimiter = rateLimit({
+const globalLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false,
+  limit: 200,
 });
 app.use(globalLimiter);
+
+app.use("/uploads", express.static(uploadsDir));
 
 const startServer = async () => {
   try {
