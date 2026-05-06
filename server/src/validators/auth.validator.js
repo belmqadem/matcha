@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isCommonPassword } from "../utils/commonPasswords.js";
 
-const usernameRegex = /^[A-Za-z0-9_]{3,30}$/;
+const usernameRegex = /^[a-zA-Z0-9._-]{3,30}$/;
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 const nameRegex = /^[\p{L}\p{M}]+(?:[ '\-\.][\p{L}\p{M}]+)*$/u;
 
@@ -21,7 +21,7 @@ export const registerSchema = z.object({
     .max(30)
     .regex(
       usernameRegex,
-      "Username must be 3-30 characters and contain only letters, numbers, or underscores",
+      "Username can only contain letters, numbers, dots, underscores, or hyphens",
     ),
   email: z.string().email(),
   password: passwordSchema,

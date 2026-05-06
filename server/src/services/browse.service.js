@@ -132,12 +132,13 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   const currentUserIdParam = addParam(currentUserId);
 
   // Use SQL literals for NULL to avoid untyped params in count query
-  const currentLatSQL = hasCurrentLocation
-    ? `${addParam(Number(currentUser.latitude))}::numeric`
-    : `NULL::numeric`;
-  const currentLngSQL = hasCurrentLocation
-    ? `${addParam(Number(currentUser.longitude))}::numeric`
-    : `NULL::numeric`;
+  let currentLatSQL = "NULL::numeric";
+  let currentLngSQL = "NULL::numeric";
+
+  if (hasCurrentLocation && queryParams.max_km !== undefined) {
+    currentLatSQL = `${addParam(Number(currentUser.latitude))}::numeric`;
+    currentLngSQL = `${addParam(Number(currentUser.longitude))}::numeric`;
+  }
 
   // ── WHERE clauses ────────────────────────────────────────────────────────────
   const whereClauses = [
@@ -208,6 +209,11 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     `SELECT COUNT(*)::int AS total FROM users u ${baseWhere}`,
     countParams,
   );
+
+  if (hasCurrentLocation && queryParams.max_km === undefined) {
+    currentLatSQL = `${addParam(Number(currentUser.latitude))}::numeric`;
+    currentLngSQL = `${addParam(Number(currentUser.longitude))}::numeric`;
+  }
 
   // ── Add limit/offset after count ─────────────────────────────────────────────
   const limitParam = addParam(limit);
