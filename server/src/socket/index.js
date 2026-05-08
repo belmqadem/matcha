@@ -1,13 +1,16 @@
 import { Server } from "socket.io";
+import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import env from "../config/env.js";
 import logger from "../utils/logger.js";
 import { setIo } from "./notifications.js";
 
 const onlineUsers = new Map();
+const cookieParserMiddleware = cookieParser();
 
 const authenticateSocket = (socket, next) => {
-  const token = socket.handshake.auth?.token;
+  const token =
+    socket.handshake.auth?.token || socket.request?.cookies?.token || null;
   if (!token) {
     return next(new Error("Authentication required"));
   }
@@ -31,17 +34,26 @@ export const initSocket = (httpServer) => {
   });
 
   setIo(io);
+  io.use((socket, next) => cookieParserMiddleware(socket.request, {}, next));
   io.use(authenticateSocket);
 
   io.on("connection", (socket) => {
     const userId = socket.userId;
     if (userId) {
       socket.join(`user:${userId}`);
-      onlineUsers.set(userId, socket.id);
+      const sockets = onlineUsers.get(userId) || new Set();
+      sockets.add(socket.id);
+      onlineUsers.set(userId, sockets);
     }
 
     socket.on("disconnect", () => {
-      if (userId && onlineUsers.get(userId) === socket.id) {
+      if (!userId) return;
+
+      const sockets = onlineUsers.get(userId);
+      if (!sockets) return;
+
+      sockets.delete(socket.id);
+      if (sockets.size === 0) {
         onlineUsers.delete(userId);
       }
     });

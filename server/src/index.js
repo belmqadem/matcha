@@ -27,8 +27,6 @@ const httpServer = createServer(app);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.resolve(__dirname, "uploads");
 
-initSocket(httpServer);
-
 app.use(helmet());
 app.set("trust proxy", 1);
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
@@ -52,6 +50,13 @@ const startServer = async () => {
   } catch (err) {
     logger.error({ err }, "Database connection failed");
     process.exit(1);
+  }
+
+  try {
+    initSocket(httpServer);
+    logger.info("Socket.io initialized");
+  } catch (err) {
+    logger.error({ err }, "Socket initialization failed");
   }
 
   const PORT = env.PORT;

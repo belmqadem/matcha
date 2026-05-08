@@ -9,6 +9,7 @@ import path from "path";
 import fs from "fs/promises";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
+import logger from "../utils/logger.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.resolve(__dirname, "..", "uploads");
@@ -68,9 +69,18 @@ const getBlockStatus = async (viewerId, targetId) => {
   return { isBlocked, isBlockedByMe };
 };
 
-const notifyUser = async (toUserId, type, fromUserId) => {
-  emitNotification(toUserId, type, fromUserId);
-  await query(
+const runQuery = (client, text, params) =>
+  client ? client.query(text, params) : query(text, params);
+
+const notifyUser = async (toUserId, type, fromUserId, client = null) => {
+  emitNotification(toUserId, type, fromUserId).catch((err) => {
+    logger.error(
+      { err, toUserId, type, fromUserId },
+      "Failed to emit notification",
+    );
+  });
+  await runQuery(
+    client,
     `INSERT INTO notifications (user_id, type, from_id)
      VALUES ($1, $2, $3)`,
     [toUserId, type, fromUserId],
@@ -513,26 +523,38 @@ export const likeUser = async (likerId, likedId) => {
     throw new AppError("Already liked", 409);
   }
 
-  await query("INSERT INTO likes (liker_id, liked_id) VALUES ($1, $2)", [
-    likerId,
-    likedId,
-  ]);
+  const client = await getClient();
 
-  await recalculateFameRating(likedId);
-  await notifyUser(likedId, "like", likerId);
+  try {
+    await client.query("BEGIN");
 
-  const mutualRes = await query(
-    "SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2",
-    [likedId, likerId],
-  );
+    await client.query(
+      "INSERT INTO likes (liker_id, liked_id) VALUES ($1, $2)",
+      [likerId, likedId],
+    );
 
-  const isConnected = mutualRes.rows.length > 0;
-  if (isConnected) {
-    await notifyUser(likedId, "match", likerId);
-    await notifyUser(likerId, "match", likedId);
+    await recalculateFameRating(likedId, client);
+    await notifyUser(likedId, "like", likerId, client);
+
+    const mutualRes = await client.query(
+      "SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2",
+      [likedId, likerId],
+    );
+
+    const isConnected = mutualRes.rows.length > 0;
+    if (isConnected) {
+      await notifyUser(likedId, "match", likerId, client);
+      await notifyUser(likerId, "match", likedId, client);
+    }
+
+    await client.query("COMMIT");
+    return { liked: true, connected: isConnected };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
   }
-
-  return { liked: true, connected: isConnected };
 };
 
 export const unlikeUser = async (likerId, likedId) => {

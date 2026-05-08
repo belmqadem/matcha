@@ -1,7 +1,9 @@
 import { query } from "../db/pool.js";
 
-export async function recalculateFameRating(userId) {
-  await query(
+export async function recalculateFameRating(userId, client = null) {
+  const runQuery = client ? client.query.bind(client) : query;
+
+  await runQuery(
     `
     UPDATE users
     SET fame_rating = LEAST(100, GREATEST(0,

@@ -40,7 +40,7 @@ export const getPublicProfile = async (req, res) => {
     req.user.id,
     req.params.id,
   );
-  return res.status(200).json(profile);
+  return res.status(200).json({ profile });
 };
 
 export const likeUser = async (req, res) => {
