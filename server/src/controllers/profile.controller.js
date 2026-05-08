@@ -35,6 +35,43 @@ export const getLikedBy = async (req, res) => {
   return res.status(200).json({ likers });
 };
 
+export const getPublicProfile = async (req, res) => {
+  const profile = await profileService.getPublicProfile(
+    req.user.id,
+    req.params.id,
+  );
+  return res.status(200).json(profile);
+};
+
+export const likeUser = async (req, res) => {
+  const result = await profileService.likeUser(req.user.id, req.params.id);
+  return res.status(200).json(result);
+};
+
+export const unlikeUser = async (req, res) => {
+  const result = await profileService.unlikeUser(req.user.id, req.params.id);
+  return res.status(200).json(result);
+};
+
+export const blockUser = async (req, res) => {
+  const result = await profileService.blockUser(req.user.id, req.params.id);
+  return res.status(200).json(result);
+};
+
+export const unblockUser = async (req, res) => {
+  const result = await profileService.unblockUser(req.user.id, req.params.id);
+  return res.status(200).json(result);
+};
+
+export const reportUser = async (req, res) => {
+  const result = await profileService.reportUser(
+    req.user.id,
+    req.params.id,
+    req.body?.reason,
+  );
+  return res.status(200).json(result);
+};
+
 export default {
   updateProfile,
   updateTags,
@@ -43,4 +80,10 @@ export default {
   setMainPhoto,
   getVisitors,
   getLikedBy,
+  getPublicProfile,
+  likeUser,
+  unlikeUser,
+  blockUser,
+  unblockUser,
+  reportUser,
 };
