@@ -16,6 +16,7 @@ import usersRoutes from "./routes/users.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import locationRoutes from "./routes/location.route.js";
 import browseRoutes from "./routes/browse.route.js";
+import searchRoutes from "./routes/search.route.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -64,6 +65,7 @@ app.use("/api/users", usersRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/profile", locationRoutes);
 app.use("/api/browse", browseRoutes);
+app.use("/api/search", searchRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

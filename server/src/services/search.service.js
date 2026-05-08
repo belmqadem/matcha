@@ -6,7 +6,7 @@ import {
   buildSort,
 } from "../utils/queryHelpers.js";
 
-export const getSuggestedProfiles = async (currentUserId, queryParams) => {
+export const searchProfiles = async (currentUserId, queryParams) => {
   const userRes = await query(
     "SELECT id, gender, sexual_preference, latitude, longitude FROM users WHERE id = $1",
     [currentUserId],
@@ -37,14 +37,13 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     currentLngSQL = `${addParam(Number(currentUser.longitude))}::numeric`;
   }
 
-  // ── WHERE clauses ────────────────────────────────────────────────────────────
   const whereClauses = [
     `u.id != ${currentUserIdParam}`,
     "u.is_verified = true",
     "u.gender IS NOT NULL",
     `NOT EXISTS (
       SELECT 1 FROM blocks b
-  		WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam}::uuid)
+      WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam}::uuid)
       OR (b.blocker_id = ${currentUserIdParam}::uuid AND b.blocked_id = u.id)
     )`,
   ];
@@ -74,6 +73,12 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     );
   }
 
+  if (queryParams.city) {
+    whereClauses.push(
+      `u.location_city ILIKE ${addParam(`%${queryParams.city}%`)}`,
+    );
+  }
+
   if (queryParams.max_km !== undefined && hasCurrentLocation) {
     whereClauses.push(
       `u.latitude IS NOT NULL
@@ -93,14 +98,12 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     );
   }
 
-  // ── Build query parts ────────────────────────────────────────────────────────
-  const orderBy = buildSort(queryParams.sort, queryParams.order);
+  const orderBy = buildSort(queryParams.sort ?? "fame", queryParams.order);
   const limit = queryParams.limit;
   const page = queryParams.page;
   const offset = (page - 1) * limit;
   const baseWhere = `WHERE ${whereClauses.join(" AND ")}`;
 
-  // ── Count query — snapshot params before adding limit/offset ─────────────────
   const countParams = [...params];
   const countRes = await query(
     `SELECT COUNT(*)::int AS total FROM users u ${baseWhere}`,
@@ -112,11 +115,9 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     currentLngSQL = `${addParam(Number(currentUser.longitude))}::numeric`;
   }
 
-  // ── Add limit/offset after count ─────────────────────────────────────────────
   const limitParam = addParam(limit);
   const offsetParam = addParam(offset);
 
-  // ── Distance select ──────────────────────────────────────────────────────────
   const distanceSelect = `
     CASE
       WHEN ${currentLatSQL} IS NOT NULL AND u.latitude IS NOT NULL
@@ -125,7 +126,6 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     END AS distance_km
   `;
 
-  // ── Data query ───────────────────────────────────────────────────────────────
   const dataRes = await query(
     `SELECT
       u.id,
@@ -145,6 +145,27 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
         WHEN u.birth_date IS NOT NULL THEN date_part('year', age(u.birth_date))
         ELSE NULL
       END AS age_years,
+      EXISTS (
+        SELECT 1 FROM likes
+        WHERE liker_id = ${currentUserIdParam}::uuid
+          AND liked_id = u.id
+      ) AS liked_by_me,
+      EXISTS (
+        SELECT 1 FROM likes
+        WHERE liker_id = u.id
+          AND liked_id = ${currentUserIdParam}::uuid
+      ) AS liked_me,
+      (
+        EXISTS (
+          SELECT 1 FROM likes
+          WHERE liker_id = ${currentUserIdParam}::uuid
+            AND liked_id = u.id
+        ) AND EXISTS (
+          SELECT 1 FROM likes
+          WHERE liker_id = u.id
+            AND liked_id = ${currentUserIdParam}::uuid
+        )
+      ) AS is_connected,
       (
         SELECT COUNT(*)
         FROM user_tags ut1
@@ -175,4 +196,4 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   };
 };
 
-export default { getSuggestedProfiles };
+export default { searchProfiles };
