@@ -73,12 +73,14 @@ const runQuery = (client, text, params) =>
   client ? client.query(text, params) : query(text, params);
 
 const notifyUser = async (toUserId, type, fromUserId, client = null) => {
-  emitNotification(toUserId, type, fromUserId).catch((err) => {
+  try {
+    emitNotification(toUserId, type, fromUserId);
+  } catch (err) {
     logger.error(
       { err, toUserId, type, fromUserId },
       "Failed to emit notification",
     );
-  });
+  }
   await runQuery(
     client,
     `INSERT INTO notifications (user_id, type, from_id)
