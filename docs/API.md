@@ -76,6 +76,41 @@ PATCH /api/users/me
 **Notes:** If email changes, `is_verified` is reset and a new verification email is sent.
 **Errors:** 400 validation, 409 username/email taken
 
+GET /api/users/:id
+
+**Response 200:**
+
+```
+{
+  "user": {
+    "id",
+    "username",
+    "first_name",
+    "last_name",
+    "gender",
+    "sexual_preference",
+    "biography",
+    "fame_rating",
+    "location_city",
+    "is_online",
+    "last_seen",
+    "profile_picture_id",
+    "birth_date",
+    "created_at",
+    "distance_km",
+    "photos": [{ "id", "url", "order_index", "created_at" }],
+    "tags": ["tag"],
+    "liked_by_me",
+    "liked_me",
+    "is_connected",
+    "is_blocked_by_me"
+  }
+}
+```
+
+**Notes:** Records a visit unless the user requests their own profile. Returns 404 if either user blocked the other.
+**Errors:** 400 invalid user id, 404 not found, 401 unauthenticated
+
 ---
 
 ## Profile
@@ -116,6 +151,47 @@ GET /api/profile/me/visitors
 GET /api/profile/me/liked-by
 
 **Response 200:** `{ likers }`
+
+---
+
+## Likes
+
+POST /api/likes/:id
+
+**Response 200:** `{ liked: true, connected: boolean }`
+**Notes:** Requires a profile picture. A mutual like sets `connected` to true.
+**Errors:** 400 cannot like yourself, 403 profile picture required, 404 not found/blocked, 409 already liked
+
+DELETE /api/likes/:id
+
+**Response 200:** `{ liked: false, connected: false }`
+**Errors:** 400 cannot unlike yourself, 404 not liked
+
+---
+
+## Blocks
+
+POST /api/blocks/:id
+
+**Response 200:** `{ blocked: true }`
+**Notes:** Removes likes in both directions.
+**Errors:** 400 cannot block yourself, 404 not found, 409 already blocked
+
+DELETE /api/blocks/:id
+
+**Response 200:** `{ blocked: false }`
+**Errors:** 404 not blocked
+
+---
+
+## Reports
+
+POST /api/reports/:id
+
+**Body:** `{ reason? }`
+**Response 200:** `{ reported: true }`
+**Notes:** Reports are reviewed manually; no automatic action.
+**Errors:** 400 cannot report yourself, 404 not found/blocked, 409 already reported
 
 ---
 

@@ -1,12 +1,15 @@
 import { query, getClient } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
 import { recalculateFameRating } from "../utils/fameRating.js";
+import { emitNotification } from "../socket/notifications.js";
+import { haversineKm } from "../utils/haversine.js";
 import { getMe } from "./users.service.js";
 import crypto from "crypto";
 import path from "path";
 import fs from "fs/promises";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
+import logger from "../utils/logger.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.resolve(__dirname, "..", "uploads");
@@ -43,6 +46,69 @@ const mapPhotoFormat = (mimetype) => {
     return { ext: "webp", format: "webp" };
   }
   return null;
+};
+
+const assertUserExists = async (userId) => {
+  const { rows } = await query("SELECT 1 FROM users WHERE id = $1", [userId]);
+  if (!rows.length) {
+    throw new AppError("User not found", 404);
+  }
+};
+
+const getBlockStatus = async (viewerId, targetId) => {
+  const { rows } = await query(
+    `SELECT blocker_id, blocked_id
+     FROM blocks
+     WHERE (blocker_id = $1 AND blocked_id = $2)
+        OR (blocker_id = $2 AND blocked_id = $1)`,
+    [viewerId, targetId],
+  );
+
+  const isBlocked = rows.length > 0;
+  const isBlockedByMe = rows.some((row) => row.blocker_id === viewerId);
+  return { isBlocked, isBlockedByMe };
+};
+
+const runQuery = (client, text, params) =>
+  client ? client.query(text, params) : query(text, params);
+
+const notifyUser = async (toUserId, type, fromUserId, client = null) => {
+  try {
+    emitNotification(toUserId, type, fromUserId);
+  } catch (err) {
+    logger.error(
+      { err, toUserId, type, fromUserId },
+      "Failed to emit notification",
+    );
+  }
+  await runQuery(
+    client,
+    `INSERT INTO notifications (user_id, type, from_id)
+     VALUES ($1, $2, $3)`,
+    [toUserId, type, fromUserId],
+  );
+};
+
+const toNumberOrNull = (value) =>
+  value === null || value === undefined ? null : Number(value);
+
+const calculateDistanceKm = (viewer, target) => {
+  const viewerLat = toNumberOrNull(viewer?.latitude);
+  const viewerLng = toNumberOrNull(viewer?.longitude);
+  const targetLat = toNumberOrNull(target?.latitude);
+  const targetLng = toNumberOrNull(target?.longitude);
+
+  if (
+    viewerLat === null ||
+    viewerLng === null ||
+    targetLat === null ||
+    targetLng === null
+  ) {
+    return null;
+  }
+
+  const distance = haversineKm(viewerLat, viewerLng, targetLat, targetLng);
+  return Math.round(distance * 10) / 10;
 };
 
 export const updateProfile = async (userId, updates) => {
@@ -312,6 +378,294 @@ export const getLikedBy = async (userId) => {
   return rows;
 };
 
+export const getPublicProfile = async (viewerId, targetId) => {
+  const isSelf = viewerId === targetId;
+
+  const userRes = await query(
+    `SELECT id, username, first_name, last_name,
+            gender, sexual_preference, biography, fame_rating,
+            location_city, is_online, last_seen, profile_picture_id,
+            birth_date, created_at, latitude, longitude
+     FROM users
+     WHERE id = $1`,
+    [targetId],
+  );
+
+  if (!userRes.rows.length) {
+    throw new AppError("User not found", 404);
+  }
+
+  const userRow = userRes.rows[0];
+  let isBlockedByMe = false;
+
+  if (!isSelf) {
+    const blockStatus = await getBlockStatus(viewerId, targetId);
+    if (blockStatus.isBlocked) {
+      throw new AppError("User not found", 404);
+    }
+    isBlockedByMe = blockStatus.isBlockedByMe;
+
+    await query(
+      `INSERT INTO visits (visitor_id, visited_id, visited_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (visitor_id, visited_id)
+       DO UPDATE SET visited_at = NOW()`,
+      [viewerId, targetId],
+    );
+
+    await recalculateFameRating(targetId);
+    await notifyUser(targetId, "visit", viewerId);
+
+    const fameRes = await query("SELECT fame_rating FROM users WHERE id = $1", [
+      targetId,
+    ]);
+    if (fameRes.rows.length) {
+      userRow.fame_rating = fameRes.rows[0].fame_rating;
+    }
+  }
+
+  const [photosRes, tagsRes, likesRes, viewerRes] = await Promise.all([
+    query(
+      `SELECT id, url, order_index, created_at
+       FROM photos
+       WHERE user_id = $1
+       ORDER BY order_index`,
+      [targetId],
+    ),
+    query(
+      `SELECT t.name
+       FROM user_tags ut
+       JOIN tags t ON t.id = ut.tag_id
+       WHERE ut.user_id = $1
+       ORDER BY t.name`,
+      [targetId],
+    ),
+    query(
+      `SELECT
+        EXISTS(
+          SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2
+        ) AS liked_by_me,
+        EXISTS(
+          SELECT 1 FROM likes WHERE liker_id = $2 AND liked_id = $1
+        ) AS liked_me`,
+      [viewerId, targetId],
+    ),
+    isSelf
+      ? Promise.resolve({ rows: [] })
+      : query("SELECT latitude, longitude FROM users WHERE id = $1", [
+          viewerId,
+        ]),
+  ]);
+
+  const likedByMe = likesRes.rows[0]?.liked_by_me ?? false;
+  const likedMe = likesRes.rows[0]?.liked_me ?? false;
+  const isConnected = likedByMe && likedMe;
+  const distanceKm = isSelf
+    ? null
+    : calculateDistanceKm(viewerRes.rows[0], userRow);
+
+  return {
+    user: {
+      id: userRow.id,
+      username: userRow.username,
+      first_name: userRow.first_name,
+      last_name: userRow.last_name,
+      gender: userRow.gender,
+      sexual_preference: userRow.sexual_preference,
+      biography: userRow.biography,
+      fame_rating: userRow.fame_rating,
+      location_city: userRow.location_city,
+      is_online: userRow.is_online,
+      last_seen: userRow.last_seen,
+      profile_picture_id: userRow.profile_picture_id,
+      birth_date: userRow.birth_date,
+      created_at: userRow.created_at,
+      distance_km: distanceKm,
+      photos: photosRes.rows,
+      tags: tagsRes.rows.map((row) => row.name),
+      liked_by_me: likedByMe,
+      liked_me: likedMe,
+      is_connected: isConnected,
+      is_blocked_by_me: isBlockedByMe,
+    },
+  };
+};
+
+export const likeUser = async (likerId, likedId) => {
+  if (likerId === likedId) {
+    throw new AppError("Cannot like yourself", 400);
+  }
+
+  const likerRes = await query(
+    "SELECT profile_picture_id FROM users WHERE id = $1",
+    [likerId],
+  );
+
+  if (!likerRes.rows.length) {
+    throw new AppError("User not found", 404);
+  }
+
+  if (!likerRes.rows[0].profile_picture_id) {
+    throw new AppError("You need a profile picture to like someone", 403);
+  }
+
+  await assertUserExists(likedId);
+
+  const blockStatus = await getBlockStatus(likerId, likedId);
+  if (blockStatus.isBlocked) {
+    throw new AppError("User not found", 404);
+  }
+
+  const existingLike = await query(
+    "SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2",
+    [likerId, likedId],
+  );
+
+  if (existingLike.rows.length) {
+    throw new AppError("Already liked", 409);
+  }
+
+  const client = await getClient();
+
+  try {
+    await client.query("BEGIN");
+
+    await client.query(
+      "INSERT INTO likes (liker_id, liked_id) VALUES ($1, $2)",
+      [likerId, likedId],
+    );
+
+    await recalculateFameRating(likedId, client);
+    await notifyUser(likedId, "like", likerId, client);
+
+    const mutualRes = await client.query(
+      "SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2",
+      [likedId, likerId],
+    );
+
+    const isConnected = mutualRes.rows.length > 0;
+    if (isConnected) {
+      await notifyUser(likedId, "match", likerId, client);
+      await notifyUser(likerId, "match", likedId, client);
+    }
+
+    await client.query("COMMIT");
+    return { liked: true, connected: isConnected };
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+};
+
+export const unlikeUser = async (likerId, likedId) => {
+  if (likerId === likedId) {
+    throw new AppError("Cannot unlike yourself", 400);
+  }
+
+  const likeRes = await query(
+    "SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2",
+    [likerId, likedId],
+  );
+
+  if (!likeRes.rows.length) {
+    throw new AppError("Not liked", 404);
+  }
+
+  await query("DELETE FROM likes WHERE liker_id = $1 AND liked_id = $2", [
+    likerId,
+    likedId,
+  ]);
+
+  await recalculateFameRating(likedId);
+  await notifyUser(likedId, "unlike", likerId);
+
+  return { liked: false, connected: false };
+};
+
+export const blockUser = async (blockerId, blockedId) => {
+  if (blockerId === blockedId) {
+    throw new AppError("Cannot block yourself", 400);
+  }
+
+  await assertUserExists(blockedId);
+
+  const existingBlock = await query(
+    "SELECT 1 FROM blocks WHERE blocker_id = $1 AND blocked_id = $2",
+    [blockerId, blockedId],
+  );
+
+  if (existingBlock.rows.length) {
+    throw new AppError("Already blocked", 409);
+  }
+
+  await query("INSERT INTO blocks (blocker_id, blocked_id) VALUES ($1, $2)", [
+    blockerId,
+    blockedId,
+  ]);
+
+  await query(
+    `DELETE FROM likes
+     WHERE (liker_id = $1 AND liked_id = $2)
+        OR (liker_id = $2 AND liked_id = $1)`,
+    [blockerId, blockedId],
+  );
+
+  await recalculateFameRating(blockedId);
+
+  return { blocked: true };
+};
+
+export const unblockUser = async (blockerId, blockedId) => {
+  const blockRes = await query(
+    "SELECT 1 FROM blocks WHERE blocker_id = $1 AND blocked_id = $2",
+    [blockerId, blockedId],
+  );
+
+  if (!blockRes.rows.length) {
+    throw new AppError("Not blocked", 404);
+  }
+
+  await query("DELETE FROM blocks WHERE blocker_id = $1 AND blocked_id = $2", [
+    blockerId,
+    blockedId,
+  ]);
+
+  await recalculateFameRating(blockedId);
+
+  return { blocked: false };
+};
+
+export const reportUser = async (reporterId, reportedId, reason) => {
+  if (reporterId === reportedId) {
+    throw new AppError("Cannot report yourself", 400);
+  }
+
+  await assertUserExists(reportedId);
+
+  const blockStatus = await getBlockStatus(reporterId, reportedId);
+  if (blockStatus.isBlocked) {
+    throw new AppError("User not found", 404);
+  }
+
+  const existingReport = await query(
+    "SELECT 1 FROM reports WHERE reporter_id = $1 AND reported_id = $2",
+    [reporterId, reportedId],
+  );
+
+  if (existingReport.rows.length) {
+    throw new AppError("Already reported", 409);
+  }
+
+  await query(
+    "INSERT INTO reports (reporter_id, reported_id, reason) VALUES ($1, $2, $3)",
+    [reporterId, reportedId, reason ?? null],
+  );
+
+  return { reported: true };
+};
+
 export default {
   updateProfile,
   updateTags,
@@ -320,4 +674,10 @@ export default {
   setMainPhoto,
   getVisitors,
   getLikedBy,
+  getPublicProfile,
+  likeUser,
+  unlikeUser,
+  blockUser,
+  unblockUser,
+  reportUser,
 };

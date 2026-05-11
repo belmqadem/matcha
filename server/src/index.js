@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import env from "./config/env.js";
 import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
+import { initSocket } from "./socket/index.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 import { createRateLimiter } from "./middleware/rateLimiter.js";
@@ -17,6 +18,9 @@ import profileRoutes from "./routes/profile.route.js";
 import locationRoutes from "./routes/location.route.js";
 import browseRoutes from "./routes/browse.route.js";
 import searchRoutes from "./routes/search.route.js";
+import likesRoutes from "./routes/likes.route.js";
+import blocksRoutes from "./routes/blocks.route.js";
+import reportsRoutes from "./routes/reports.route.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -48,6 +52,13 @@ const startServer = async () => {
     process.exit(1);
   }
 
+  try {
+    initSocket(httpServer);
+    logger.info("Socket.io initialized");
+  } catch (err) {
+    logger.error({ err }, "Socket initialization failed");
+  }
+
   const PORT = env.PORT;
   httpServer.listen(PORT, () => {
     logger.info(`Matcha Server running on http://localhost:${PORT}`);
@@ -66,6 +77,9 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/profile", locationRoutes);
 app.use("/api/browse", browseRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/likes", likesRoutes);
+app.use("/api/blocks", blocksRoutes);
+app.use("/api/reports", reportsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
