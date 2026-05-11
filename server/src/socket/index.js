@@ -8,15 +8,21 @@ import { sendMessage } from "../services/chat.service.js";
 
 const onlineUsers = new Map();
 const cookieParserMiddleware = cookieParser();
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const authenticateSocket = (socket, next) => {
   const token =
     socket.handshake.auth?.token || socket.request?.cookies?.token || null;
-  if (!token) {
+  if (!token || typeof token !== "string") {
     return next(new Error("Authentication required"));
   }
 
   try {
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return next(new Error("Authentication failed"));
+    }
     const decoded = jwt.verify(token, env.JWT_SECRET);
     socket.userId = decoded.id;
     return next();
@@ -54,6 +60,11 @@ export const initSocket = (httpServer) => {
       try {
         if (!to || typeof content !== "string" || !content.trim()) {
           socket.emit("chat:error", { message: "Invalid message" });
+          return;
+        }
+
+        if (!UUID_REGEX.test(to)) {
+          socket.emit("chat:error", { message: "Invalid user ID" });
           return;
         }
 
