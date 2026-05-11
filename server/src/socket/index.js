@@ -3,7 +3,8 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import env from "../config/env.js";
 import logger from "../utils/logger.js";
-import { setIo } from "./notifications.js";
+import { setIo, emitNotification } from "./notifications.js";
+import { sendMessage } from "../services/chat.service.js";
 
 const onlineUsers = new Map();
 const cookieParserMiddleware = cookieParser();
@@ -28,7 +29,10 @@ const authenticateSocket = (socket, next) => {
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: env.CORS_ORIGIN,
+      origin:
+        env.NODE_ENV === "development"
+          ? ["http://localhost:5173", "http://localhost:3000", true]
+          : env.CORS_ORIGIN,
       credentials: true,
     },
   });
@@ -45,6 +49,41 @@ export const initSocket = (httpServer) => {
       sockets.add(socket.id);
       onlineUsers.set(userId, sockets);
     }
+
+    socket.on("chat:send", async ({ to, content }) => {
+      try {
+        if (!to || typeof content !== "string" || !content.trim()) {
+          socket.emit("chat:error", { message: "Invalid message" });
+          return;
+        }
+
+        const message = await sendMessage(userId, to, content.trim());
+
+        io.to(`user:${to}`).emit("chat:receive", {
+          id: message.id,
+          from: userId,
+          content: message.content,
+          sentAt: message.sent_at,
+          isRead: false,
+        });
+
+        socket.emit("chat:sent", {
+          id: message.id,
+          to,
+          content: message.content,
+          sentAt: message.sent_at,
+        });
+
+        emitNotification(to, "message", userId);
+      } catch (err) {
+        socket.emit("chat:error", {
+          message: err.isOperational ? err.message : "Failed to send message",
+        });
+        if (!err.isOperational) {
+          logger.error({ err }, "Unexpected error in chat:send handler");
+        }
+      }
+    });
 
     socket.on("disconnect", () => {
       if (!userId) return;

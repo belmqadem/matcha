@@ -21,12 +21,14 @@ import searchRoutes from "./routes/search.route.js";
 import likesRoutes from "./routes/likes.route.js";
 import blocksRoutes from "./routes/blocks.route.js";
 import reportsRoutes from "./routes/reports.route.js";
+import chatRoutes from "./routes/chat.js";
 
 const app = express();
 const httpServer = createServer(app);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.resolve(__dirname, "uploads");
 
+// Middleware
 app.use(helmet());
 app.set("trust proxy", 1);
 app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
@@ -34,39 +36,10 @@ app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-const globalLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  limit: 200,
-});
-app.use(globalLimiter);
-
+app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 200 }));
 app.use("/uploads", express.static(uploadsDir));
 
-const startServer = async () => {
-  try {
-    await pool.query("SELECT NOW()");
-    logger.info("Database connected");
-  } catch (err) {
-    logger.error({ err }, "Database connection failed");
-    process.exit(1);
-  }
-
-  try {
-    initSocket(httpServer);
-    logger.info("Socket.io initialized");
-  } catch (err) {
-    logger.error({ err }, "Socket initialization failed");
-  }
-
-  const PORT = env.PORT;
-  httpServer.listen(PORT, () => {
-    logger.info(`Matcha Server running on http://localhost:${PORT}`);
-  });
-};
-
-startServer();
-
+// Routes
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
@@ -80,8 +53,36 @@ app.use("/api/search", searchRoutes);
 app.use("/api/likes", likesRoutes);
 app.use("/api/blocks", blocksRoutes);
 app.use("/api/reports", reportsRoutes);
+app.use("/api/chat", chatRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
+
+// Start
+const startServer = async () => {
+  // 1. Check DB
+  try {
+    await pool.query("SELECT NOW()");
+    logger.info("Database connected");
+  } catch (err) {
+    logger.error({ err }, "Database connection failed");
+    process.exit(1);
+  }
+
+  // 2. Init Socket.io
+  initSocket(httpServer);
+  logger.info("Socket.io initialized");
+
+  // 3. Start listening
+  const PORT = env.PORT;
+  httpServer.listen(PORT, () => {
+    logger.info(`Matcha Server running on http://localhost:${PORT}`);
+  });
+};
+
+startServer().catch((err) => {
+  logger.error({ err }, "Failed to start server");
+  process.exit(1);
+});
 
 export default app;
