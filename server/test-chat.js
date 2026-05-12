@@ -1,7 +1,8 @@
 // test-chat.js
 import { io } from "socket.io-client";
 
-const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNlYjg1YzM0LWYxNGUtNDA1MC04OWRmLWRiMTFlMGY3NmMwYyIsInVzZXJuYW1lIjoiYWJlbC1tcWEiLCJlbWFpbCI6ImFkaWxAZ21haWwuY29tIiwiaWF0IjoxNzc4NTI2NjM4LCJleHAiOjE3NzkxMzE0Mzh9.Uqm_w3WR14RNFlCWknvNDiC9jskCxhgqgOqvLDvW3CY";
+const TOKEN =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMxMjIxNDcwLTIwMDktNGIxMC04M2E2LTNlN2IyODM0MjNlNSIsInVzZXJuYW1lIjoia2tvdWF6IiwiZW1haWwiOiJrb3VhejA0QGdtYWlsLmNvbSIsImlhdCI6MTc3ODUzOTM2MiwiZXhwIjoxNzc5MTQ0MTYyfQ.4FqJxVfvKWklLT2arlsUM2FGnfE0dfQJdEOAH7__ZIA";
 
 const socket = io("http://localhost:3000", {
   auth: { token: TOKEN },
@@ -12,7 +13,7 @@ socket.on("connect", () => {
   console.log("✅ Connected:", socket.id);
 
   socket.emit("chat:send", {
-    to: "31221470-2009-4b10-83a6-3e7b283423e5",
+    to: "3eb85c34-f14e-4050-89df-db11e0f76c0c",
     content: "Hello from test script!",
   });
 });
