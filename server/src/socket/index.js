@@ -55,22 +55,18 @@ export const initSocket = (httpServer) => {
 
     socket.on("chat:send", async ({ to, content }) => {
       try {
-        if (!to || typeof content !== "string" || !content.trim()) {
+        if (!to || typeof to !== "string" || typeof content !== "string") {
           socket.emit("chat:error", { message: "Invalid message" });
-          return;
-          if (
-            !to ||
-            typeof to !== "string" ||
-            typeof content !== "string" ||
-            !content.trim()
-          ) {
-            socket.emit("chat:error", { message: "Invalid message" });
-            return;
-          }
           return;
         }
 
-        const message = await sendMessage(userId, to, content.trim());
+        const trimmed = content.trim();
+        if (!trimmed || !UUID_REGEX.test(to)) {
+          socket.emit("chat:error", { message: "Invalid message" });
+          return;
+        }
+
+        const message = await sendMessage(userId, to, trimmed);
 
         io.to(`user:${to}`).emit("chat:receive", {
           id: message.id,
