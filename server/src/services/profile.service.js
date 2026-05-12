@@ -69,24 +69,15 @@ const getBlockStatus = async (viewerId, targetId) => {
   return { isBlocked, isBlockedByMe };
 };
 
-const runQuery = (client, text, params) =>
-  client ? client.query(text, params) : query(text, params);
-
-const notifyUser = async (toUserId, type, fromUserId, client = null) => {
+const notifyUser = async (toUserId, type, fromUserId, _client = null) => {
   try {
-    emitNotification(toUserId, type, fromUserId);
+    await emitNotification(toUserId, type, fromUserId);
   } catch (err) {
     logger.error(
       { err, toUserId, type, fromUserId },
       "Failed to emit notification",
     );
   }
-  await runQuery(
-    client,
-    `INSERT INTO notifications (user_id, type, from_id)
-     VALUES ($1, $2, $3)`,
-    [toUserId, type, fromUserId],
-  );
 };
 
 const toNumberOrNull = (value) =>

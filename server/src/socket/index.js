@@ -83,7 +83,7 @@ export const initSocket = (httpServer) => {
           sentAt: message.sent_at,
         });
 
-        emitNotification(to, "message", userId);
+        void emitNotification(to, "message", userId);
       } catch (err) {
         socket.emit("chat:error", {
           message: err.isOperational ? err.message : "Failed to send message",
