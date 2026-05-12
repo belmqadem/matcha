@@ -14,6 +14,11 @@ import usersRoutes from "./routes/users.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import locationRoutes from "./routes/location.route.js";
 import browseRoutes from "./routes/browse.route.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 
 const app = express();
 const httpServer = createServer(app);
@@ -51,6 +56,7 @@ const startServer = async () => {
 
 startServer();
 
+app.use('/uploads', express.static(path.resolve(__dirname, 'uploads')));
 app.get("/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
