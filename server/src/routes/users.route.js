@@ -20,7 +20,7 @@ router.patch(
 router.get(
   "/:id",
   authenticate,
-  validateUUID,
+  validateUUID(),
   asyncHandler(profileController.getPublicProfile),
 );
 

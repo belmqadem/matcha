@@ -1,3 +1,4 @@
+import { query } from "../db/pool.js";
 import logger from "../utils/logger.js";
 
 let io = null;
@@ -11,7 +12,7 @@ export const emitToUser = (userId, event, data) => {
   io.to(`user:${userId}`).emit(event, data);
 };
 
-export const emitNotification = (toUserId, type, fromUserId) => {
+export const emitNotification = async (toUserId, type, fromUserId) => {
   const hasValidTo = typeof toUserId === "string" && toUserId.trim().length > 0;
   const hasValidType = typeof type === "string" && type.trim().length > 0;
   const hasFrom =
@@ -23,6 +24,16 @@ export const emitNotification = (toUserId, type, fromUserId) => {
       "Invalid notification payload",
     );
     return;
+  }
+
+  try {
+    await query(
+      `INSERT INTO notifications (user_id, type, from_id)
+       VALUES ($1, $2, $3)`,
+      [toUserId, type, fromUserId],
+    );
+  } catch (err) {
+    logger.error({ err, toUserId, type }, "Failed to persist notification");
   }
 
   emitToUser(toUserId, "notification:new", {

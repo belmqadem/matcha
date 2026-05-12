@@ -9,13 +9,13 @@ const router = Router();
 router.post(
   "/:id",
   authenticate,
-  validateUUID,
+  validateUUID(),
   asyncHandler(profileController.likeUser),
 );
 router.delete(
   "/:id",
   authenticate,
-  validateUUID,
+  validateUUID(),
   asyncHandler(profileController.unlikeUser),
 );
 

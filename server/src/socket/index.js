@@ -3,19 +3,26 @@ import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import env from "../config/env.js";
 import logger from "../utils/logger.js";
-import { setIo } from "./notifications.js";
+import { setIo, emitNotification } from "./notifications.js";
+import { sendMessage } from "../services/chat.service.js";
 
 const onlineUsers = new Map();
 const cookieParserMiddleware = cookieParser();
+const UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const authenticateSocket = (socket, next) => {
   const token =
     socket.handshake.auth?.token || socket.request?.cookies?.token || null;
-  if (!token) {
+  if (!token || typeof token !== "string") {
     return next(new Error("Authentication required"));
   }
 
   try {
+    const parts = token.split(".");
+    if (parts.length !== 3) {
+      return next(new Error("Authentication failed"));
+    }
     const decoded = jwt.verify(token, env.JWT_SECRET);
     socket.userId = decoded.id;
     return next();
@@ -45,6 +52,47 @@ export const initSocket = (httpServer) => {
       sockets.add(socket.id);
       onlineUsers.set(userId, sockets);
     }
+
+    socket.on("chat:send", async ({ to, content }) => {
+      try {
+        if (!to || typeof to !== "string" || typeof content !== "string") {
+          socket.emit("chat:error", { message: "Invalid message" });
+          return;
+        }
+
+        const trimmed = content.trim();
+        if (!trimmed || !UUID_REGEX.test(to)) {
+          socket.emit("chat:error", { message: "Invalid message" });
+          return;
+        }
+
+        const message = await sendMessage(userId, to, trimmed);
+
+        io.to(`user:${to}`).emit("chat:receive", {
+          id: message.id,
+          from: userId,
+          content: message.content,
+          sentAt: message.sent_at,
+          isRead: false,
+        });
+
+        socket.emit("chat:sent", {
+          id: message.id,
+          to,
+          content: message.content,
+          sentAt: message.sent_at,
+        });
+
+        void emitNotification(to, "message", userId);
+      } catch (err) {
+        socket.emit("chat:error", {
+          message: err.isOperational ? err.message : "Failed to send message",
+        });
+        if (!err.isOperational) {
+          logger.error({ err }, "Unexpected error in chat:send handler");
+        }
+      }
+    });
 
     socket.on("disconnect", () => {
       if (!userId) return;

@@ -195,6 +195,89 @@ POST /api/reports/:id
 
 ---
 
+## Chat
+
+GET /api/chat/unread/count
+
+**Response 200:** `{ unread: number }`
+**Errors:** 401 unauthenticated
+
+GET /api/chat/conversations
+
+**Response 200:**
+
+```
+{
+  "conversations": [
+    {
+      "id",
+      "username",
+      "first_name",
+      "last_name",
+      "profile_picture_id",
+      "is_online",
+      "last_message",
+      "last_message_at",
+      "last_message_sender_id",
+      "unread_count"
+    }
+  ]
+}
+```
+
+**Field notes:**
+
+- `last_message` (string): full message content (not truncated). Plain text only (no HTML/Markdown). Max length 1000 chars (matches chat validation). Example: `"Hey, still up for coffee this week?"`.
+
+**Errors:** 401 unauthenticated
+
+GET /api/chat/:userId
+
+**Query params:** `page` (default 1), `limit` (default 30, max 50)
+**Response 200:** `{ messages, total, page, limit }`
+**Notes:** Only available for mutually connected users.
+**Errors:** 400 invalid user id, 401 unauthenticated, 403 not connected
+
+POST /api/chat/:userId/read
+
+**Response 200:** `{ message: "Messages marked as read" }`
+**Notes:** Marks all unread messages from `userId` as read.
+**Errors:** 400 invalid user id, 401 unauthenticated
+
+---
+
+## WebSocket (Socket.io)
+
+**Endpoint:** same host as API (Socket.io path: `/socket.io`)
+
+**Auth:**
+
+- Pass JWT in `socket.handshake.auth.token`, or
+- Use the `token` http-only cookie (same as REST auth)
+
+**Error on connect:** connection is rejected if no valid token is provided.
+
+### Chat events
+
+| Direction       | Event          | Payload                                         |
+| --------------- | -------------- | ----------------------------------------------- |
+| client → server | `chat:send`    | `{ to: userId, content: string }`               |
+| server → client | `chat:receive` | `{ id, from: userId, content, sentAt, isRead }` |
+| server → client | `chat:sent`    | `{ id, to: userId, content, sentAt }`           |
+| server → client | `chat:error`   | `{ message: string }`                           |
+
+**Notes:** Chat is only available between mutually connected users (mutual like). If a user unlikes or blocks, chat is disabled immediately.
+
+### Notification events
+
+| Direction       | Event              | Payload                             |
+| --------------- | ------------------ | ----------------------------------- |
+| server → client | `notification:new` | `{ type, from: userId, createdAt }` |
+
+**Types:** `like` | `visit` | `message` | `match` | `unlike`
+
+---
+
 ## Location
 
 PATCH /api/profile/me/location
