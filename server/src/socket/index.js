@@ -12,8 +12,7 @@ const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const authenticateSocket = (socket, next) => {
-  const token =
-    socket.handshake.auth?.token || socket.request?.cookies?.token || null;
+  const token = socket.request?.cookies?.token || null;
   if (!token || typeof token !== "string") {
     return next(new Error("Authentication required"));
   }

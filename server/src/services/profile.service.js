@@ -15,6 +15,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.resolve(__dirname, "..", "uploads");
 const MAX_PHOTOS = 5;
 
+const ESCAPE_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+const escapeHtml = (value) =>
+  typeof value === "string"
+    ? value.replace(/[&<>"']/g, (char) => ESCAPE_MAP[char])
+    : value;
+
 const ensureUploadsDir = async () => {
   await fs.mkdir(UPLOADS_DIR, { recursive: true });
 };
@@ -118,7 +131,7 @@ export const updateProfile = async (userId, updates) => {
     setField("sexual_preference", updates.sexual_preference);
   }
   if (updates.biography !== undefined) {
-    setField("biography", updates.biography);
+    setField("biography", escapeHtml(updates.biography));
   }
   if (updates.latitude !== undefined) {
     setField("latitude", Math.round(updates.latitude * 100) / 100);

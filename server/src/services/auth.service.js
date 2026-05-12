@@ -106,7 +106,7 @@ export const login = async ({ username, password }) => {
     [user.id],
   );
 
-  const payload = { id: user.id, username: user.username, email: user.email };
+  const payload = { id: user.id, username: user.username };
   const token = jwt.sign(payload, env.JWT_SECRET, { expiresIn: "7d" });
 
   const safeUser = {
