@@ -7,7 +7,7 @@ const validateUUID =
   (paramName = "id") =>
   (req, res, next) => {
     if (!UUID_REGEX.test(req.params[paramName])) {
-      return next(new AppError("Invalid user ID", 400));
+      return next(new AppError("Invalid UUID format", 400));
     }
     return next();
   };

@@ -1,5 +1,6 @@
 import { query } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
+import logger from "../utils/logger.js";
 
 export const isConnected = async (userAId, userBId) => {
   const { rows } = await query(
@@ -58,6 +59,8 @@ export const sendMessage = async (senderId, receiverId, content) => {
      RETURNING id, sender_id, receiver_id, content, is_read, sent_at`,
     [senderId, receiverId, normalized],
   );
+
+  logger.info({ senderId, receiverId, content: normalized }, "Message sent");
 
   return rows[0];
 };

@@ -225,6 +225,10 @@ GET /api/chat/conversations
 }
 ```
 
+**Field notes:**
+
+- `last_message` (string): full message content (not truncated). Plain text only (no HTML/Markdown). Max length 1000 chars (matches chat validation). Example: `"Hey, still up for coffee this week?"`.
+
 **Errors:** 401 unauthenticated
 
 GET /api/chat/:userId

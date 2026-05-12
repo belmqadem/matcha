@@ -1,8 +1,8 @@
-// test-chat.js
+// This is a simple test script to verify that the chat functionality works.
+// It connects to the Socket.io server, sends a test message, and listens for responses.
 import { io } from "socket.io-client";
 
-const TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMxMjIxNDcwLTIwMDktNGIxMC04M2E2LTNlN2IyODM0MjNlNSIsInVzZXJuYW1lIjoia2tvdWF6IiwiZW1haWwiOiJrb3VhejA0QGdtYWlsLmNvbSIsImlhdCI6MTc3ODUzOTM2MiwiZXhwIjoxNzc5MTQ0MTYyfQ.4FqJxVfvKWklLT2arlsUM2FGnfE0dfQJdEOAH7__ZIA";
+const TOKEN = "your_jwt_token_here";
 
 const socket = io("http://localhost:3000", {
   auth: { token: TOKEN },
@@ -13,7 +13,7 @@ socket.on("connect", () => {
   console.log("✅ Connected:", socket.id);
 
   socket.emit("chat:send", {
-    to: "3eb85c34-f14e-4050-89df-db11e0f76c0c",
+    to: "recipient_user_id_here",
     content: "Hello from test script!",
   });
 });

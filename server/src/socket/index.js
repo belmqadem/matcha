@@ -35,10 +35,7 @@ const authenticateSocket = (socket, next) => {
 export const initSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin:
-        env.NODE_ENV === "development"
-          ? ["http://localhost:5173", "http://localhost:3000", true]
-          : env.CORS_ORIGIN,
+      origin: env.CORS_ORIGIN,
       credentials: true,
     },
   });
@@ -61,10 +58,15 @@ export const initSocket = (httpServer) => {
         if (!to || typeof content !== "string" || !content.trim()) {
           socket.emit("chat:error", { message: "Invalid message" });
           return;
-        }
-
-        if (!UUID_REGEX.test(to)) {
-          socket.emit("chat:error", { message: "Invalid user ID" });
+          if (
+            !to ||
+            typeof to !== "string" ||
+            typeof content !== "string" ||
+            !content.trim()
+          ) {
+            socket.emit("chat:error", { message: "Invalid message" });
+            return;
+          }
           return;
         }
 
