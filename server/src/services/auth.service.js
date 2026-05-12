@@ -82,7 +82,7 @@ export const verifyEmail = async (token) => {
 
 export const login = async ({ username, password }) => {
   const uRes = await query(
-    "SELECT id, username, email, password_hash, is_verified, first_name, last_name, profile_picture_id FROM users WHERE username = $1",
+    "SELECT id, username, email, password_hash, is_verified, first_name, last_name, profile_picture_id, latitude, longitude FROM users WHERE username = $1",
     [username],
   );
 
@@ -118,7 +118,9 @@ export const login = async ({ username, password }) => {
     profile_picture_id: user.profile_picture_id,
   };
 
-  return { user: safeUser, token };
+  const hasLocation = user.latitude !== null && user.longitude !== null;
+
+  return { user: safeUser, token, hasLocation };
 };
 
 export const logout = async (userId) => {
