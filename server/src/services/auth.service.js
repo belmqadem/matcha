@@ -106,7 +106,7 @@ export const login = async ({ username, password }) => {
     [user.id],
   );
 
-  const payload = { id: user.id, username: user.username, email: user.email };
+  const payload = { id: user.id, username: user.username };
   const token = jwt.sign(payload, env.JWT_SECRET, { expiresIn: "7d" });
 
   const safeUser = {
@@ -156,6 +156,37 @@ export const forgotPassword = async (email) => {
   return true;
 };
 
+export const resendVerification = async (email) => {
+  const uRes = await query(
+    "SELECT id, is_verified FROM users WHERE email = $1",
+    [email],
+  );
+
+  if (!uRes.rows.length) {
+    return true;
+  }
+
+  const user = uRes.rows[0];
+  if (user.is_verified) {
+    return true;
+  }
+
+  await query("DELETE FROM email_tokens WHERE user_id = $1 AND type = $2", [
+    user.id,
+    "verification",
+  ]);
+
+  const token = crypto.randomBytes(32).toString("hex");
+  await query(
+    `INSERT INTO email_tokens (user_id, token, type, expires_at)
+     VALUES ($1, $2, $3, NOW() + INTERVAL '24 hours')`,
+    [user.id, token, "verification"],
+  );
+
+  await sendVerificationEmail(email, token);
+  return true;
+};
+
 export const resetPassword = async (token, newPassword) => {
   const tRes = await query(
     "SELECT id, user_id, expires_at FROM email_tokens WHERE token = $1 AND type = $2",
@@ -197,5 +228,6 @@ export default {
   login,
   logout,
   forgotPassword,
+  resendVerification,
   resetPassword,
 };

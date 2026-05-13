@@ -21,7 +21,7 @@ import searchRoutes from "./routes/search.route.js";
 import likesRoutes from "./routes/likes.route.js";
 import blocksRoutes from "./routes/blocks.route.js";
 import reportsRoutes from "./routes/reports.route.js";
-import chatRoutes from "./routes/chat.js";
+import chatRoutes from "./routes/chat.route.js";
 
 const app = express();
 const httpServer = createServer(app);

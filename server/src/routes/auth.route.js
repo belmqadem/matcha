@@ -7,6 +7,7 @@ import {
   registerSchema,
   loginSchema,
   forgotSchema,
+  resendVerificationSchema,
   resetSchema,
 } from "../validators/auth.validator.js";
 // import {
@@ -43,6 +44,12 @@ router.post(
   // forgotPasswordLimiter,
   validate(forgotSchema),
   asyncHandler(authController.forgotPassword),
+);
+
+router.post(
+  "/resend-verification",
+  validate(resendVerificationSchema),
+  asyncHandler(authController.resendVerification),
 );
 
 router.post(
