@@ -46,6 +46,12 @@ POST /api/auth/forgot-password
 **Response 200:** `{ message: "If that email exists, a reset link has been sent." }`
 **Errors:** 400 validation
 
+POST /api/auth/resend-verification
+
+**Body:** `{ email }`
+**Response 200:** `{ message: "If that email exists, a verification link has been sent." }`
+**Errors:** 400 validation
+
 POST /api/auth/reset-password
 
 **Body:** `{ token, password }`

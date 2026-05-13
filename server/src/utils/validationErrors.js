@@ -67,11 +67,11 @@ export const formatZodError = (error, fallbackMessage) => {
     return fallbackMessage;
   }
 
-  const messages = error.issues
+  const message = error.issues
     .map(formatIssue)
-    .filter((msg) => typeof msg === "string" && msg.trim().length > 0);
+    .find((msg) => typeof msg === "string" && msg.trim().length > 0);
 
-  return messages.length > 0 ? messages.join("; ") : fallbackMessage;
+  return message || fallbackMessage;
 };
 
 export default {

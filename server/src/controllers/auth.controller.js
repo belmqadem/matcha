@@ -61,6 +61,14 @@ export const forgotPassword = async (req, res) => {
     .json({ message: "If that email exists, a reset link has been sent." });
 };
 
+export const resendVerification = async (req, res) => {
+  const { email } = req.body;
+  await authService.resendVerification(email);
+  return res.status(200).json({
+    message: "If that email exists, a verification link has been sent.",
+  });
+};
+
 export const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   await authService.resetPassword(token, password);
@@ -82,6 +90,7 @@ export default {
   login,
   logout,
   forgotPassword,
+  resendVerification,
   resetPassword,
   googleAuth,
   googleCallback,

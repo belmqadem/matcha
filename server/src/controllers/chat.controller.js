@@ -5,6 +5,11 @@ export const getConversations = async (req, res) => {
   return res.status(200).json({ conversations });
 };
 
+export const getUnreadCount = async (req, res) => {
+  const unread = await chatService.getUnreadCount(req.user.id);
+  return res.status(200).json({ unread });
+};
+
 export const getMessages = async (req, res) => {
   const { page = 1, limit = 30 } = req.validatedQuery;
   const result = await chatService.getMessages(
@@ -21,4 +26,4 @@ export const markAsRead = async (req, res) => {
   return res.status(200).json({ message: "Messages marked as read" });
 };
 
-export default { getConversations, getMessages, markAsRead };
+export default { getConversations, getUnreadCount, getMessages, markAsRead };
