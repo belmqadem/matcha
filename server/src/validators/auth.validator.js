@@ -15,6 +15,7 @@ const passwordSchema = z
   .refine((pwd) => !isCommonPassword(pwd), "Password is too common");
 
 export const registerSchema = z.object({
+  email: z.string().email(),
   username: z
     .string()
     .min(3)
@@ -23,8 +24,6 @@ export const registerSchema = z.object({
       usernameRegex,
       "Username can only contain letters, numbers, dots, underscores, or hyphens",
     ),
-  email: z.string().email(),
-  password: passwordSchema,
   first_name: z
     .string()
     .min(1)
@@ -41,6 +40,7 @@ export const registerSchema = z.object({
       nameRegex,
       "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
     ),
+  password: passwordSchema,
 });
 
 export const loginSchema = z.object({
