@@ -49,6 +49,7 @@ router.get(
   authenticate,
   asyncHandler(profileController.getVisitors),
 );
+
 router.get(
   "/me/liked-by",
   authenticate,

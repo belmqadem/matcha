@@ -12,6 +12,7 @@ router.post(
   validateUUID(),
   asyncHandler(profileController.likeUser),
 );
+
 router.delete(
   "/:id",
   authenticate,
