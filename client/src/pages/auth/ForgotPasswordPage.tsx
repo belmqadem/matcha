@@ -4,13 +4,15 @@ import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Mail } from 'lucide-react';
+import { authApi } from '@/api/authApi';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email.trim()) {
@@ -18,9 +20,16 @@ const ForgotPasswordPage = () => {
       return;
     }
 
-    // TODO: call forgot-password API
-    console.log('Forgot password for:', email);
-    setSubmitted(true);
+    setIsLoading(true);
+    setError('');
+    try {
+      await authApi.forgotPassword(email);
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,7 +56,7 @@ const ForgotPasswordPage = () => {
             type="email"
             placeholder="Email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setError(''); }}
             required
             icon={Mail}
           />
@@ -55,7 +64,9 @@ const ForgotPasswordPage = () => {
           {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
           <div className="mt-8">
-            <Button type="submit">Submit</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Sending…' : 'Submit'}
+            </Button>
           </div>
         </form>
       )}
