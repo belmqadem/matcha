@@ -20,7 +20,7 @@
 
 POST /api/auth/register
 
-**Body:** `{ username, email, password, first_name, last_name }`
+**Body:** `{ email, username, first_name, last_name, password }`
 **Response 201:** `{ message: "Verification email sent. Please check your inbox." }`
 **Errors:** 400 validation, 409 username/email taken
 
@@ -258,7 +258,6 @@ POST /api/chat/:userId/read
 
 **Auth:**
 
-- Pass JWT in `socket.handshake.auth.token`, or
 - Use the `token` http-only cookie (same as REST auth)
 
 **Error on connect:** connection is rejected if no valid token is provided.

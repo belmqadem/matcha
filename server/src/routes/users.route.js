@@ -10,6 +10,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 const router = Router();
 
 router.get("/me", authenticate, asyncHandler(usersController.getMe));
+
 router.patch(
   "/me",
   authenticate,

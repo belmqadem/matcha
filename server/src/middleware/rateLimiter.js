@@ -44,10 +44,18 @@ const resetPasswordLimiter = createRateLimiter({
   message: "Too many reset password attempts, please try again after 1 hour.",
 });
 
+const resendVerificationLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message:
+    "Too many resend verification attempts, please try again after 1 hour.",
+});
+
 export {
   createRateLimiter,
   loginLimiter,
   registerLimiter,
   forgotPasswordLimiter,
   resetPasswordLimiter,
+  resendVerificationLimiter
 };

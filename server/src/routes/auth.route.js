@@ -15,6 +15,7 @@ import {
 //   loginLimiter,
 //   forgotPasswordLimiter,
 //   resetPasswordLimiter,
+//   resendVerificationLimiter,
 // } from "../middleware/rateLimiter.js";
 
 // TODO: Comment off rate limiters when testing done
@@ -48,6 +49,7 @@ router.post(
 
 router.post(
   "/resend-verification",
+  // resendVerificationLimiter,
   validate(resendVerificationSchema),
   asyncHandler(authController.resendVerification),
 );
