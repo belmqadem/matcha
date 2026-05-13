@@ -28,7 +28,6 @@ const RegisterPage = () => {
 
   const handleGoogleSignup = () => {
     // TODO: integrate Google OAuth
-    console.log('Google signup');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,9 +49,41 @@ const RegisterPage = () => {
         last_name: form.lastName,
       });
       navigate('/verify-email');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed.');
-    } finally {
+    //  }
+    // catch (err: unknown) {
+    //   if (err instanceof Error) {
+    //     setError(err.message);
+    //   } else if (typeof err === 'object' && err !== null && 'response' in err) {
+    //     const axiosErr = err as { response?: { data?: { message?: string; detail?: string; non_field_errors?: string[] } } };
+    //     setError(
+    //       axiosErr.response?.data?.message ??
+    //       axiosErr.response?.data?.detail ??
+    //       axiosErr.response?.data?.non_field_errors?.[0] ??
+    //       'Registration failed.'
+    //     );
+    //   } else {
+    //     setError('Registration failed.');
+    //   }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else if (typeof err === 'object' && err !== null && 'response' in err) {
+        const axiosErr = err as { response?: { data?: Record<string, string | string[]> } };
+        const data = axiosErr.response?.data;
+
+        if (data) {
+          // Pick the first error value from the response object
+          const firstValue = Object.values(data)[0];
+          const message = Array.isArray(firstValue) ? firstValue[0] : firstValue;
+          setError(typeof message === 'string' ? message : 'Registration failed.');
+        } else {
+          setError('Registration failed.');
+        }
+      } else {
+        setError('Registration failed.');
+      }
+    }
+    finally {
       setLoading(false);
     }
   };
