@@ -16,7 +16,7 @@ import NotificationsPage from './pages/NotificationsPage.jsx';
 import MapPage from './pages/MapPage.jsx';
 import MyProfilePage from './pages/MyProfilePage.jsx';
 import EditProfilePage from './pages/EditProfilePage.jsx';
-import ProfilePage from './pages/Profilesetuppage.js';
+import ProfilePage from './pages/ProfilePage';
 import LikesPage from './pages/LikesPage.jsx';
 import VisitorsPage from './pages/VisitorsPage.jsx';
 
@@ -30,35 +30,33 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-
         {/* ── Public / Auth routes (no app header) ── */}
-        <Route path="/"                        element={<LandingPage />} />
-        <Route path="/login"                   element={<LoginPage />} />
-        <Route path="/register"                element={<RegisterPage />} />
-        <Route path="/verify-email"            element={<VerifyEmailPage />} />
-        <Route path="/verify-email/:token"     element={<VerifyEmailPage />} />
-        <Route path="/forgot-password"         element={<ForgotPasswordPage />} />
-        <Route path="/reset-password/:token"   element={<ResetPasswordPage />} />
-        <Route path="/profile/setup"           element={<ProfileSetupPage />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/profile/setup" element={<ProfileSetupPage />} />
 
         {/* ── Authenticated routes (with app header) ── */}
         <Route element={<AppLayout />}>
-          <Route path="/browse"              element={<BrowsePage />} />
-          <Route path="/search"              element={<SearchPage />} />
-          <Route path="/chat"                element={<ChatPage />} />
-          <Route path="/chat/:userid"        element={<ChatPage />} />
-          <Route path="/notifications"       element={<NotificationsPage />} />
-          <Route path="/likes"               element={<LikesPage />} />
-          <Route path="/visitors"            element={<VisitorsPage />} />
-          <Route path="/map"                 element={<MapPage />} />
-          <Route path="/profile/me"          element={<MyProfilePage />} />
-          <Route path="/profile/edit"        element={<EditProfilePage />} />
-          <Route path="/profile/:id"         element={<ProfilePage />} />
+          <Route path="/browse" element={<BrowsePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/chat/:userid" element={<ChatPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/likes" element={<LikesPage />} />
+          <Route path="/visitors" element={<VisitorsPage />} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/profile/me" element={<MyProfilePage />} />
+          <Route path="/profile/edit" element={<EditProfilePage />} />
+          <Route path="/profile/:id" element={<ProfilePage />} />
         </Route>
 
         {/* ── Fallback ── */}
         <Route path="*" element={<Navigate to="/browse" replace />} />
-
       </Routes>
     </BrowserRouter>
   );
