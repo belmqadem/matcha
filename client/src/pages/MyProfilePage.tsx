@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Camera, X, Check, Edit2, Save, MapPin, Tag, User,
-  Heart, Star, Eye, ChevronDown, Loader2, ArrowLeft,
+  Camera, X, Check, Edit2, MapPin,
+  Heart, Star, Eye, ChevronDown, Loader2, ArrowLeft, LogOut,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -105,6 +105,10 @@ const api = {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       credentials: 'include', body: JSON.stringify(body),
     }).then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d; }),
+
+  logout: () =>
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      .then(async r => { if (!r.ok) throw new Error('Logout failed'); }),
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -124,16 +128,16 @@ function timeAgo(iso: string) {
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 
-const inputCls = "w-full rounded-lg border border-stone-200 bg-white px-3 py-2.5 text-sm text-stone-800 placeholder:text-stone-300 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition-all";
-const labelCls = "block text-[10px] font-semibold tracking-widest text-stone-400 uppercase mb-1";
+const inputCls = "w-full rounded-xl border border-(--color-border) bg-white px-3.5 py-2.5 text-sm text-(--color-text) placeholder:text-(--color-text-muted)/40 focus:outline-none focus:border-(--color-primary) focus:ring-2 focus:ring-(--color-primary)/10 transition-all font-(--font-primary)";
+const labelCls = "block text-[10px] font-semibold tracking-widest text-(--color-text-muted) uppercase mb-1.5";
 
 const SaveBar = ({ saving, error, onSave, onCancel }: { saving: boolean; error: string; onSave: () => void; onCancel: () => void }) => (
-  <div className="flex items-center justify-between gap-3 pt-4 mt-4 border-t border-stone-100">
-    {error ? <p className="text-xs text-red-400 flex-1">{error}</p> : <span className="flex-1" />}
-    <button type="button" onClick={onCancel} className="px-4 py-2 text-xs font-medium rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 transition-colors">
+  <div className="flex items-center justify-between gap-3 pt-4 mt-4 border-t border-(--color-border)">
+    {error ? <p className="text-xs text-(--color-error) flex-1">{error}</p> : <span className="flex-1" />}
+    <button type="button" onClick={onCancel} className="px-4 py-2 text-xs font-semibold rounded-xl border border-(--color-border) text-(--color-text-muted) hover:bg-gray-50 transition-colors">
       Cancel
     </button>
-    <button type="button" onClick={onSave} disabled={saving} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-stone-900 text-white hover:bg-stone-700 disabled:opacity-50 transition-colors">
+    <button type="button" onClick={onSave} disabled={saving} className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-(--color-primary) text-white hover:opacity-90 disabled:opacity-50 transition-opacity">
       {saving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Save changes
     </button>
   </div>
@@ -144,8 +148,8 @@ const SaveBar = ({ saving, error, onSave, onCancel }: { saving: boolean; error: 
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[10px] font-bold tracking-widest text-stone-400 uppercase mb-3 px-1">{label}</p>
-      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
+      <p className="text-[10px] font-bold tracking-widest text-(--color-text-muted) uppercase mb-3 px-1">{label}</p>
+      <div className="bg-white rounded-2xl border border-(--color-border) shadow-sm overflow-hidden">
         {children}
       </div>
     </div>
@@ -172,9 +176,9 @@ function BasicInfoSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u:
     <Section label="Identity">
       <div className="p-5">
         <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-stone-400">Name, username & email</p>
+          <p className="text-xs text-(--color-text-muted)">Name, username & email</p>
           {!editing && (
-            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity">
               <Edit2 size={11} /> Edit
             </button>
           )}
@@ -203,17 +207,17 @@ function BasicInfoSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u:
               {[{ label: 'First name', value: user.first_name }, { label: 'Last name', value: user.last_name }].map(({ label, value }) => (
                 <div key={label}>
                   <p className={labelCls}>{label}</p>
-                  <p className="text-sm font-medium text-stone-800">{value}</p>
+                  <p className="text-sm font-medium text-(--color-text)">{value}</p>
                 </div>
               ))}
             </div>
             <div>
               <p className={labelCls}>Username</p>
-              <p className="text-sm font-medium text-stone-800">@{user.username}</p>
+              <p className="text-sm font-medium text-(--color-text)">@{user.username}</p>
             </div>
             <div>
               <p className={labelCls}>Email</p>
-              <p className="text-sm text-stone-500">{user.email}</p>
+              <p className="text-sm text-(--color-text-muted)">{user.email}</p>
             </div>
           </div>
         )}
@@ -245,9 +249,9 @@ function AboutSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: Use
     <Section label="About">
       <div className="p-5">
         <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-stone-400">Gender, preference & bio</p>
+          <p className="text-xs text-(--color-text-muted)">Gender, preference & bio</p>
           {!editing && (
-            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity">
               <Edit2 size={11} /> Edit
             </button>
           )}
@@ -262,27 +266,27 @@ function AboutSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: Use
                     <option value="">Select…</option>
                     {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
-                  <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                  <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-(--color-text-muted) pointer-events-none" />
                 </div>
               </div>
             ))}
             <div>
               <label className={labelCls}>Bio</label>
               <textarea value={form.biography} onChange={e => setForm(p => ({ ...p, biography: e.target.value }))} maxLength={500} rows={4} className={inputCls + ' resize-none'} placeholder="Write something about yourself…" />
-              <p className="text-right text-[10px] text-stone-300 mt-1">{form.biography.length}/500</p>
+              <p className="text-right text-[10px] text-(--color-text-muted)/50 mt-1">{form.biography.length}/500</p>
             </div>
             <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
           </div>
         ) : (
           <div className="space-y-3">
             <div className="flex gap-2 flex-wrap">
-              {genderLabel && <span className="px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-medium">{genderLabel}</span>}
-              {prefLabel && <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-medium border border-amber-100">{prefLabel}</span>}
-              {!genderLabel && !prefLabel && <p className="text-xs text-stone-300 italic">Not filled in yet.</p>}
+              {genderLabel && <span className="px-3 py-1 rounded-full bg-(--color-background) text-(--color-text) text-xs font-medium border border-(--color-border)">{genderLabel}</span>}
+              {prefLabel && <span className="px-3 py-1 rounded-full bg-(--color-primary)/10 text-(--color-primary) text-xs font-medium border border-(--color-primary)/20">{prefLabel}</span>}
+              {!genderLabel && !prefLabel && <p className="text-xs text-(--color-text-muted)/50 italic">Not filled in yet.</p>}
             </div>
             {user.biography
-              ? <p className="text-sm text-stone-600 leading-relaxed">{user.biography}</p>
-              : <p className="text-xs text-stone-300 italic">No bio yet.</p>}
+              ? <p className="text-sm text-(--color-text-muted) leading-relaxed">{user.biography}</p>
+              : <p className="text-xs text-(--color-text-muted)/50 italic">No bio yet.</p>}
           </div>
         )}
       </div>
@@ -316,9 +320,9 @@ function TagsSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
     <Section label="Interests">
       <div className="p-5">
         <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-stone-400">Things you're into</p>
+          <p className="text-xs text-(--color-text-muted)">Things you're into</p>
           {!editing && (
-            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity">
               <Edit2 size={11} /> Edit
             </button>
           )}
@@ -329,14 +333,14 @@ function TagsSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
               <input value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(input.trim()); }}}
                 placeholder="Type a tag and press Enter" className={inputCls} />
-              <button type="button" onClick={() => addTag(input.trim())} className="px-3 py-2 rounded-lg bg-stone-900 text-white text-xs font-semibold hover:bg-stone-700 transition-colors whitespace-nowrap">Add</button>
+              <button type="button" onClick={() => addTag(input.trim())} className="px-3 py-2 rounded-xl bg-(--color-primary) text-white text-xs font-semibold hover:opacity-90 transition-opacity whitespace-nowrap">Add</button>
             </div>
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {tags.map(tag => (
-                  <span key={tag} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-900 text-white text-xs font-medium">
+                  <span key={tag} className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-(--color-primary) text-white text-xs font-medium">
                     {tag}
-                    <button type="button" onClick={() => setTags(t => t.filter(x => x !== tag))} className="opacity-60 hover:opacity-100">
+                    <button type="button" onClick={() => setTags(t => t.filter(x => x !== tag))} className="opacity-70 hover:opacity-100">
                       <X size={9} />
                     </button>
                   </span>
@@ -346,7 +350,7 @@ function TagsSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
             <p className={labelCls + ' mb-2'}>Quick add</p>
             <div className="flex flex-wrap gap-1.5">
               {SUGGESTED_TAGS.filter(t => !tags.includes(t)).map(tag => (
-                <button key={tag} type="button" onClick={() => addTag(tag)} className="px-2.5 py-1 rounded-full border border-stone-200 text-stone-400 text-xs hover:border-stone-900 hover:text-stone-900 transition-colors">
+                <button key={tag} type="button" onClick={() => addTag(tag)} className="px-2.5 py-1 rounded-full border border-(--color-border) text-(--color-text-muted) text-xs hover:border-(--color-primary) hover:text-(--color-primary) transition-colors">
                   {tag}
                 </button>
               ))}
@@ -357,9 +361,9 @@ function TagsSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
           <div className="flex flex-wrap gap-1.5">
             {(user.tags ?? []).length > 0
               ? user.tags.map(tag => (
-                  <span key={tag} className="px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-xs font-medium">{tag}</span>
+                  <span key={tag} className="px-3 py-1 rounded-full bg-(--color-primary)/10 text-(--color-primary) text-xs font-medium border border-(--color-primary)/20">{tag}</span>
                 ))
-              : <p className="text-xs text-stone-300 italic">No interests added yet.</p>}
+              : <p className="text-xs text-(--color-text-muted)/50 italic">No interests added yet.</p>}
           </div>
         )}
       </div>
@@ -410,9 +414,9 @@ function LocationSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: 
     <Section label="Location">
       <div className="p-5">
         <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-stone-400">Used for nearby suggestions</p>
+          <p className="text-xs text-(--color-text-muted)">Used for nearby suggestions</p>
           {!editing && (
-            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors">
+            <button onClick={() => setEditing(true)} className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity">
               <Edit2 size={11} /> Edit
             </button>
           )}
@@ -420,28 +424,28 @@ function LocationSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: 
         {editing ? (
           <div className="space-y-3">
             <button type="button" onClick={useGPS} disabled={gpsLoading}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${gpsCoords ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-stone-200 text-stone-500 hover:border-stone-400'}`}>
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${gpsCoords ? 'border-(--color-primary) bg-(--color-primary)/5 text-(--color-primary)' : 'border-(--color-border) text-(--color-text-muted) hover:border-(--color-primary) hover:text-(--color-primary)'}`}>
               {gpsLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
               {gpsLoading ? 'Detecting…' : gpsCoords ? 'GPS detected ✓' : 'Use my current location'}
             </button>
             <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-stone-100" />
-              <span className="text-[10px] text-stone-300 tracking-widest uppercase">or</span>
-              <div className="flex-1 h-px bg-stone-100" />
+              <div className="flex-1 h-px bg-(--color-border)" />
+              <span className="text-[10px] text-(--color-text-muted)/50 tracking-widest uppercase">or</span>
+              <div className="flex-1 h-px bg-(--color-border)" />
             </div>
             <input value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="Enter your city" className={inputCls} />
             <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
           </div>
         ) : (
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-              <MapPin size={13} className="text-stone-500" />
+            <div className="w-8 h-8 rounded-full bg-(--color-primary)/10 flex items-center justify-center flex-shrink-0">
+              <MapPin size={13} className="text-(--color-primary)" />
             </div>
             {user.location_city
-              ? <span className="text-sm font-medium text-stone-800">{user.location_city}</span>
+              ? <span className="text-sm font-medium text-(--color-text)">{user.location_city}</span>
               : lat
-              ? <span className="text-sm text-stone-500">{lat.toFixed(3)}, {lng?.toFixed(3)}</span>
-              : <span className="text-xs text-stone-300 italic">No location set</span>}
+              ? <span className="text-sm text-(--color-text-muted)">{lat.toFixed(3)}, {lng?.toFixed(3)}</span>
+              : <span className="text-xs text-(--color-text-muted)/50 italic">No location set</span>}
           </div>
         )}
       </div>
@@ -488,24 +492,23 @@ function PhotosSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: Us
     <Section label="Photos">
       <div className="p-5">
         <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-stone-400">{photos.length}/5 photos · hover to manage</p>
+          <p className="text-xs text-(--color-text-muted)">{photos.length}/5 photos · hover to manage</p>
         </div>
 
-        {/* Main photo large + rest small */}
         <div className="flex gap-2 mb-2">
           {/* Main slot */}
-          <div className="relative flex-[2] aspect-[3/4] rounded-xl overflow-hidden bg-stone-100 group">
+          <div className="relative flex-[2] aspect-[3/4] rounded-xl overflow-hidden bg-(--color-background) group">
             {mainPhoto ? (
               <>
                 <img src={mainPhoto.url} alt="" className="w-full h-full object-cover" />
-                <span className="absolute top-2 left-2 text-[9px] bg-white/90 text-stone-600 px-2 py-0.5 rounded-full font-semibold tracking-wide">MAIN</span>
+                <span className="absolute top-2 left-2 text-[9px] bg-(--color-primary) text-white px-2 py-0.5 rounded-full font-semibold tracking-wide">MAIN</span>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                <button onClick={() => handleDelete(mainPhoto.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 text-stone-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => handleDelete(mainPhoto.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-white/90 text-(--color-text) flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <X size={10} />
                 </button>
               </>
             ) : (
-              <button type="button" onClick={() => fileRef.current?.click()} className="w-full h-full flex flex-col items-center justify-center gap-2 text-stone-300 hover:text-stone-400 transition-colors">
+              <button type="button" onClick={() => fileRef.current?.click()} className="w-full h-full flex flex-col items-center justify-center gap-2 text-(--color-text-muted)/40 hover:text-(--color-primary) transition-colors">
                 <Camera size={24} />
                 <span className="text-xs font-medium">Add photo</span>
               </button>
@@ -515,22 +518,22 @@ function PhotosSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: Us
           {/* Side slots */}
           <div className="flex flex-col gap-2 flex-1">
             {[...rest, ...Array(Math.max(0, 4 - rest.length)).fill(null)].slice(0, 4).map((photo, i) => (
-              <div key={photo?.id ?? `empty-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-stone-100 group flex-1">
+              <div key={photo?.id ?? `empty-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-(--color-background) group flex-1">
                 {photo ? (
                   <>
                     <img src={photo.url} alt="" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors" />
                     <div className="absolute inset-0 flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => handleSetMain(photo.id)} title="Set main" className="w-5 h-5 rounded-full bg-white/90 text-amber-500 flex items-center justify-center">
+                      <button onClick={() => handleSetMain(photo.id)} title="Set main" className="w-5 h-5 rounded-full bg-white/90 text-(--color-primary) flex items-center justify-center">
                         <Star size={9} fill="currentColor" />
                       </button>
-                      <button onClick={() => handleDelete(photo.id)} className="w-5 h-5 rounded-full bg-white/90 text-stone-600 flex items-center justify-center">
+                      <button onClick={() => handleDelete(photo.id)} className="w-5 h-5 rounded-full bg-white/90 text-(--color-text) flex items-center justify-center">
                         <X size={9} />
                       </button>
                     </div>
                   </>
                 ) : photos.length < 5 && i === rest.length - rest.length ? (
-                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="w-full h-full flex items-center justify-center text-stone-200 hover:text-stone-400 transition-colors">
+                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="w-full h-full flex items-center justify-center text-(--color-text-muted)/30 hover:text-(--color-primary) transition-colors">
                     {uploading && i === 0 ? <Loader2 size={14} className="animate-spin" /> : <Camera size={14} />}
                   </button>
                 ) : null}
@@ -541,13 +544,13 @@ function PhotosSection({ user, onUpdate }: { user: UserProfile; onUpdate: (u: Us
 
         {photos.length < 5 && (
           <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-            className="w-full py-2.5 rounded-xl border border-dashed border-stone-200 text-xs font-medium text-stone-400 hover:border-stone-400 hover:text-stone-600 transition-colors flex items-center justify-center gap-2 mt-2">
+            className="w-full py-2.5 rounded-xl border border-dashed border-(--color-border) text-xs font-medium text-(--color-text-muted) hover:border-(--color-primary) hover:text-(--color-primary) transition-colors flex items-center justify-center gap-2 mt-2">
             {uploading ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />}
             {uploading ? 'Uploading…' : 'Upload more photos'}
           </button>
         )}
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleUpload} className="hidden" />
-        {error && <p className="text-xs text-red-400 mt-2">{error}</p>}
+        {error && <p className="text-xs text-(--color-error) mt-2">{error}</p>}
       </div>
     </Section>
   );
@@ -572,17 +575,17 @@ function StatsSection({ user }: { user: UserProfile }) {
   const UserRow = ({ item }: { item: Visitor | Liker }) => {
     const time = 'visited_at' in item ? item.visited_at : item.liked_at;
     return (
-      <div className="flex items-center gap-3 py-3 border-b border-stone-50 last:border-0">
-        <div className="w-9 h-9 rounded-full bg-stone-100 overflow-hidden flex-shrink-0">
+      <div className="flex items-center gap-3 py-3 border-b border-(--color-border) last:border-0">
+        <div className="w-9 h-9 rounded-full bg-(--color-background) overflow-hidden flex-shrink-0 border border-(--color-border)">
           {item.profile_picture_url
             ? <img src={item.profile_picture_url} alt="" className="w-full h-full object-cover" />
-            : <div className="w-full h-full flex items-center justify-center text-stone-400 text-xs font-bold">{item.first_name[0]}</div>}
+            : <div className="w-full h-full flex items-center justify-center text-(--color-primary) text-xs font-bold">{item.first_name[0]}</div>}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-stone-700 truncate">{item.first_name} {item.last_name}</p>
-          <p className="text-[10px] text-stone-300">@{item.username}</p>
+          <p className="text-sm font-semibold text-(--color-text) truncate">{item.first_name} {item.last_name}</p>
+          <p className="text-[10px] text-(--color-text-muted)">@{item.username}</p>
         </div>
-        <span className="text-[10px] text-stone-300">{timeAgo(time)}</span>
+        <span className="text-[10px] text-(--color-text-muted)/60">{timeAgo(time)}</span>
       </div>
     );
   };
@@ -593,34 +596,34 @@ function StatsSection({ user }: { user: UserProfile }) {
         {/* Fame bar */}
         <div className="mb-5">
           <div className="flex justify-between items-baseline mb-2">
-            <span className="text-xs font-semibold text-stone-500 tracking-wide">Fame score</span>
-            <span className="text-2xl font-bold text-stone-800 tabular-nums">{fame}</span>
+            <span className="text-xs font-semibold text-(--color-text-muted) tracking-wide">Fame score</span>
+            <span className="text-2xl font-bold text-(--color-primary) tabular-nums">{fame}</span>
           </div>
-          <div className="h-1.5 rounded-full bg-stone-100 overflow-hidden">
-            <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-400 transition-all duration-700" style={{ width: `${fame}%` }} />
+          <div className="h-1.5 rounded-full bg-(--color-background) overflow-hidden">
+            <div className="h-full rounded-full bg-(--color-primary) transition-all duration-700" style={{ width: `${fame}%` }} />
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-stone-100 mb-3">
+        <div className="flex border-b border-(--color-border) mb-3">
           {([
             { key: 'visitors' as const, label: 'Visitors', icon: Eye, count: visitors.length },
             { key: 'likers' as const, label: 'Liked me', icon: Heart, count: likers.length },
           ]).map(({ key, label, icon: Icon, count }) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`flex items-center gap-1.5 px-1 py-2 mr-5 text-xs font-semibold border-b-2 transition-all -mb-px ${tab === key ? 'border-stone-800 text-stone-800' : 'border-transparent text-stone-300 hover:text-stone-500'}`}>
+              className={`flex items-center gap-1.5 px-1 py-2 mr-5 text-xs font-semibold border-b-2 transition-all -mb-px ${tab === key ? 'border-(--color-primary) text-(--color-primary)' : 'border-transparent text-(--color-text-muted)/50 hover:text-(--color-text-muted)'}`}>
               <Icon size={11} /> {label}
-              <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${tab === key ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-400'}`}>{count}</span>
+              <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${tab === key ? 'bg-(--color-primary) text-white' : 'bg-(--color-background) text-(--color-text-muted)'}`}>{count}</span>
             </button>
           ))}
         </div>
 
         {loading
-          ? <div className="flex justify-center py-8"><Loader2 size={16} className="animate-spin text-stone-300" /></div>
+          ? <div className="flex justify-center py-8"><Loader2 size={16} className="animate-spin text-(--color-text-muted)/30" /></div>
           : <div className="max-h-56 overflow-y-auto -mx-5 px-5">
               {tab === 'visitors'
-                ? visitors.length > 0 ? visitors.map(v => <UserRow key={v.id} item={v} />) : <p className="text-xs text-stone-300 italic text-center py-6">No visitors yet.</p>
-                : likers.length > 0 ? likers.map(l => <UserRow key={l.id} item={l} />) : <p className="text-xs text-stone-300 italic text-center py-6">No likes yet.</p>}
+                ? visitors.length > 0 ? visitors.map(v => <UserRow key={v.id} item={v} />) : <p className="text-xs text-(--color-text-muted)/50 italic text-center py-6">No visitors yet.</p>
+                : likers.length > 0 ? likers.map(l => <UserRow key={l.id} item={l} />) : <p className="text-xs text-(--color-text-muted)/50 italic text-center py-6">No likes yet.</p>}
             </div>}
       </div>
     </Section>
@@ -634,21 +637,52 @@ function ProfileHeader({ user }: { user: UserProfile }) {
   const initials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
   return (
     <div className="flex items-end gap-4 px-5 pb-5 pt-8">
-      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-stone-200 flex-shrink-0 shadow-md">
+      <div className="w-20 h-20 rounded-2xl overflow-hidden bg-(--color-background) flex-shrink-0 shadow-md border border-(--color-border)">
         {mainPhoto
           ? <img src={mainPhoto.url} alt="" className="w-full h-full object-cover" />
-          : <div className="w-full h-full flex items-center justify-center text-stone-400 text-xl font-bold">{initials}</div>}
+          : <div className="w-full h-full flex items-center justify-center text-(--color-primary) text-xl font-bold">{initials}</div>}
       </div>
       <div className="pb-1">
-        <h1 className="text-xl font-bold text-stone-900 leading-tight">{user.first_name} {user.last_name}</h1>
-        <p className="text-xs text-stone-400 mt-0.5">@{user.username}</p>
+        <h1 className="text-xl font-bold text-(--color-text) leading-tight">{user.first_name} {user.last_name}</h1>
+        <p className="text-xs text-(--color-text-muted) mt-0.5">@{user.username}</p>
         {user.location_city && (
-          <p className="flex items-center gap-1 text-xs text-stone-400 mt-1">
-            <MapPin size={10} /> {user.location_city}
+          <p className="flex items-center gap-1 text-xs text-(--color-text-muted) mt-1">
+            <MapPin size={10} className="text-(--color-primary)" /> {user.location_city}
           </p>
         )}
       </div>
     </div>
+  );
+}
+
+// ─── Logout Button ────────────────────────────────────────────────────────────
+
+function LogoutButton() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await api.logout();
+      navigate('/login');
+    } catch {
+      // fallback: navigate anyway
+      navigate('/login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      disabled={loading}
+      className="flex items-center gap-2 w-full px-5 py-4 text-sm font-semibold text-(--color-primary) hover:bg-(--color-primary)/5 transition-colors disabled:opacity-50"
+    >
+      {loading ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
+      {loading ? 'Signing out…' : 'Sign out'}
+    </button>
   );
 }
 
@@ -668,33 +702,35 @@ const MyProfilePage = () => {
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50">
-      <Loader2 size={24} className="animate-spin text-stone-300" />
+    <div className="min-h-screen flex items-center justify-center bg-(--color-background)">
+      <Loader2 size={24} className="animate-spin text-(--color-primary)" />
     </div>
   );
 
   if (fetchError || !user) return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50">
+    <div className="min-h-screen flex items-center justify-center bg-(--color-background)">
       <div className="text-center">
-        <p className="text-sm text-stone-500 mb-3">{fetchError || 'Profile not found.'}</p>
-        <button onClick={() => navigate('/login')} className="text-sm font-semibold text-stone-800 hover:underline">Back to login</button>
+        <p className="text-sm text-(--color-text-muted) mb-3">{fetchError || 'Profile not found.'}</p>
+        <button onClick={() => navigate('/login')} className="text-sm font-semibold text-(--color-primary) hover:underline">Back to login</button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div className="min-h-screen bg-(--color-background)">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white border-b border-stone-100 px-4 py-3.5 flex items-center gap-3">
-        <button onClick={() => navigate('/browse')} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-stone-100 transition-colors">
-          <ArrowLeft size={16} className="text-stone-600" />
+      <header className="sticky top-0 z-10 bg-white border-b border-(--color-border) px-4 py-3.5 flex items-center gap-3">
+        <button onClick={() => navigate('/browse')} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-(--color-background) transition-colors">
+          <ArrowLeft size={16} className="text-(--color-text-muted)" />
         </button>
-        <span className="text-sm font-semibold text-stone-800 flex-1">My Profile</span>
+        <span className="text-sm font-bold text-(--color-text) flex-1">My Profile</span>
+        {/* Matcha wordmark */}
+        <span className="text-sm font-bold text-(--color-primary) italic">Matcha</span>
       </header>
 
       <div className="max-w-lg mx-auto pb-16">
         {/* Hero area */}
-        <div className="bg-white border-b border-stone-100">
+        <div className="bg-white border-b border-(--color-border)">
           <ProfileHeader user={user} />
         </div>
 
@@ -705,6 +741,14 @@ const MyProfilePage = () => {
           <TagsSection user={user} onUpdate={setUser} />
           <LocationSection user={user} onUpdate={setUser} />
           <StatsSection user={user} />
+
+          {/* Logout */}
+          <div>
+            <p className="text-[10px] font-bold tracking-widest text-(--color-text-muted) uppercase mb-3 px-1">Account</p>
+            <div className="bg-white rounded-2xl border border-(--color-border) shadow-sm overflow-hidden">
+              <LogoutButton />
+            </div>
+          </div>
         </div>
       </div>
     </div>
