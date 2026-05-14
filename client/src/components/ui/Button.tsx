@@ -6,6 +6,7 @@ interface ButtonProps {
   type?: 'button' | 'submit';
   variant?: 'primary' | 'google' | 'secondary' | 'danger';
   className?: string;
+  disabled?: boolean;
 }
 
 const Button = ({
@@ -14,6 +15,7 @@ const Button = ({
   type = 'button',
   variant = 'primary',
   className = '',
+  disabled = false,
 }: ButtonProps) => {
   if (variant === 'google') {
     return (
@@ -21,6 +23,7 @@ const Button = ({
         type={type}
         onClick={onClick}
         className={`w-full flex items-center justify-center gap-2 border-2 border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
+        disabled={disabled}
       >
         <svg width="18" height="18" viewBox="0 0 48 48">
           <path
@@ -53,7 +56,7 @@ const Button = ({
       style={{ background: 'linear-gradient(90deg, #C4364A, #e05570)' }}
     >
       {children}
-      <span className='text-[10px]'>▶</span>
+      <span className="text-[10px]">▶</span>
     </button>
   );
 };

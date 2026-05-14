@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { type CSSProperties } from 'react';
-import { Heart as LucideHeart, ShieldCheck, Sparkles, MessageCircle } from 'lucide-react';
+import { Heart as LucideHeart } from 'lucide-react';
 import MatchaLogo from '@/components/Logo';
 import FloatingHearts from '@/components/FloatingHearts';
 
