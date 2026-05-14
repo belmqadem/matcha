@@ -7,7 +7,8 @@ const buildUserResponse = async (userId) => {
   const userRes = await query(
     `SELECT id, username, email, first_name, last_name,
             gender, sexual_preference, biography, fame_rating,
-            latitude, longitude, location_city,
+          birth_date,
+          latitude, longitude, location_city,
             is_verified, is_online, last_seen, profile_picture_id,
             created_at, updated_at
      FROM users WHERE id = $1`,

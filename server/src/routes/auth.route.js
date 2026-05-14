@@ -7,6 +7,7 @@ import {
   registerSchema,
   loginSchema,
   forgotSchema,
+  resendVerificationSchema,
   resetSchema,
 } from "../validators/auth.validator.js";
 // import {
@@ -14,6 +15,7 @@ import {
 //   loginLimiter,
 //   forgotPasswordLimiter,
 //   resetPasswordLimiter,
+//   resendVerificationLimiter,
 // } from "../middleware/rateLimiter.js";
 
 // TODO: Comment off rate limiters when testing done
@@ -43,6 +45,13 @@ router.post(
   // forgotPasswordLimiter,
   validate(forgotSchema),
   asyncHandler(authController.forgotPassword),
+);
+
+router.post(
+  "/resend-verification",
+  // resendVerificationLimiter,
+  validate(resendVerificationSchema),
+  asyncHandler(authController.resendVerification),
 );
 
 router.post(

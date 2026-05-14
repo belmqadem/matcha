@@ -1,4 +1,5 @@
 import AppError from "../utils/AppError.js";
+import { formatZodError } from "../utils/validationErrors.js";
 
 const validateQuery = (schema) => (req, res, next) => {
   if (!schema || typeof schema.safeParse !== "function") {
@@ -7,12 +8,8 @@ const validateQuery = (schema) => (req, res, next) => {
 
   const result = schema.safeParse(req.query);
   if (!result.success) {
-    const fieldErrors = result.error.flatten().fieldErrors;
-    const messages = Object.entries(fieldErrors)
-      .map(([field, errs]) => `${field}: ${errs.join(", ")}`)
-      .join("; ");
-
-    return next(new AppError(messages || "Invalid query params", 400));
+    const message = formatZodError(result.error, "Invalid query params");
+    return next(new AppError(message, 400));
   }
 
   req.validatedQuery = result.data;

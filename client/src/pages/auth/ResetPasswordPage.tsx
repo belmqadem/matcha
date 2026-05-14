@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import ShowPasswordButton from '@/components/ui/ ShowPasswordButton';
 import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
 import { Lock } from 'lucide-react';
+import { authApi } from '@/api/authApi';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token'); // e.g. /reset-password?token=abc123
-
+  // const [searchParams] = useSearchParams();
+  // const token = searchParams.get('token'); // e.g. /reset-password?token=abc123
+  const { token } = useParams<{ token: string }>();
   const [form, setForm] = useState({ password: '', confirm: '' });
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const passwordVisibility = usePasswordVisibility();
   const confirmVisibility = usePasswordVisibility();
 
@@ -22,8 +25,13 @@ const ResetPasswordPage = () => {
     setError('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!token) {
+      setError('Invalid or missing reset token.');
+      return;
+    }
     if (form.password !== form.confirm) {
       setError('Passwords do not match.');
       return;
@@ -32,9 +40,17 @@ const ResetPasswordPage = () => {
       setError('Password must be at least 8 characters.');
       return;
     }
-    // TODO: call reset-password API with token + new password
-    console.log('Reset password:', { token, password: form.password });
-    navigate('/login');
+
+    setIsLoading(true);
+    setError('');
+    try {
+      await authApi.resetPassword(token, form.password);
+      navigate('/login');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,7 +78,9 @@ const ResetPasswordPage = () => {
         {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
         <div className="mt-6">
-          <Button type="submit">Reset</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'Resetting…' : 'Reset'}
+          </Button>
         </div>
       </form>
 

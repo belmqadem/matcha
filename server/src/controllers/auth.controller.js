@@ -2,6 +2,8 @@ import * as authService from "../services/auth.service.js";
 import { setLocationFromIp } from "../services/location.service.js";
 import logger from "../utils/logger.js";
 import env from "../config/env.js";
+import AppError from "../utils/AppError.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const COOKIE_NAME = "token";
 const COOKIE_OPTIONS = {
@@ -59,6 +61,14 @@ export const forgotPassword = async (req, res) => {
     .json({ message: "If that email exists, a reset link has been sent." });
 };
 
+export const resendVerification = async (req, res) => {
+  const { email } = req.body;
+  await authService.resendVerification(email);
+  return res.status(200).json({
+    message: "If that email exists, a verification link has been sent.",
+  });
+};
+
 export const resetPassword = async (req, res) => {
   const { token, password } = req.body;
   await authService.resetPassword(token, password);
@@ -66,12 +76,12 @@ export const resetPassword = async (req, res) => {
 };
 
 // OAuth placeholders
-export const googleAuth = async (req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+export const googleAuth = async (_req, _res) => {
+  throw new AppError("Not implemented", HTTP_STATUS.NOT_IMPLEMENTED);
 };
 
-export const googleCallback = async (req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+export const googleCallback = async (_req, _res) => {
+  throw new AppError("Not implemented", HTTP_STATUS.NOT_IMPLEMENTED);
 };
 
 export default {
@@ -80,6 +90,7 @@ export default {
   login,
   logout,
   forgotPassword,
+  resendVerification,
   resetPassword,
   googleAuth,
   googleCallback,

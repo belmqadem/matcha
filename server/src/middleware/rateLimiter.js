@@ -1,12 +1,22 @@
 import rateLimit from "express-rate-limit";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
+import AppError from "../utils/AppError.js";
 
-const createRateLimiter = (options) => {
+const DEFAULT_MESSAGE = "Too many requests, please try again later.";
+
+const createRateLimiter = (options = {}) => {
+  const message = options.message || DEFAULT_MESSAGE;
   return rateLimit({
     windowMs: options.windowMs || 15 * 60 * 1000,
     limit: options.limit || 100,
     standardHeaders: true,
     legacyHeaders: false,
-    message: options.message || "Too many requests, please try again later.",
+    message,
+    handler: (_req, _res, next, opts) => {
+      const safeMessage =
+        typeof opts?.message === "string" ? opts.message : message;
+      next(new AppError(safeMessage, HTTP_STATUS.TOO_MANY_REQUESTS));
+    },
   });
 };
 
@@ -34,9 +44,18 @@ const resetPasswordLimiter = createRateLimiter({
   message: "Too many reset password attempts, please try again after 1 hour.",
 });
 
+const resendVerificationLimiter = createRateLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  message:
+    "Too many resend verification attempts, please try again after 1 hour.",
+});
+
 export {
+  createRateLimiter,
   loginLimiter,
   registerLimiter,
   forgotPasswordLimiter,
   resetPasswordLimiter,
+  resendVerificationLimiter
 };

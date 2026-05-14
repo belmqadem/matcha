@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
-import Button from '@/components/ui/Button';
 import { authApi } from '@/api/authApi';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
@@ -9,9 +8,9 @@ type Status = 'idle' | 'loading' | 'success' | 'error';
 const VerifyEmailPage = () => {
   const navigate = useNavigate();
   const { token } = useParams<{ token: string }>();
+
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
-  const [resent, setResent] = useState(false);
   const didVerify = useRef(false);
 
   useEffect(() => {
@@ -30,12 +29,6 @@ const VerifyEmailPage = () => {
         setError(err instanceof Error ? err.message : 'Verification failed.');
       });
   }, [token]);
-
-  const handleResend = () => {
-    // TODO: call resend-verification API
-    console.log('Resend verification email');
-    setResent(true);
-  };
 
   return (
     <AuthLayout header="Verify your Email">
@@ -73,26 +66,10 @@ const VerifyEmailPage = () => {
       )}
 
       {status === 'idle' && !token && (
-        <>
-          <p className="text-center text-sm text-gray-600 mb-6 leading-relaxed">
-            We've sent a verification link to your email address. Please check your inbox and click
-            the link to activate your account.
-          </p>
-          <div className="space-y-3">
-            {resent ? (
-              <p className="text-center text-sm text-(--color-primary) font-medium">
-                ✓ Verification email resent!
-              </p>
-            ) : (
-              <button
-                onClick={handleResend}
-                className="w-full text-sm text-(--color-primary) font-semibold py-2 hover:underline transition-colors"
-              >
-                Resend verification email
-              </button>
-            )}
-          </div>
-        </>
+        <p className="text-center text-sm text-gray-600 mb-6 leading-relaxed">
+          We've sent a verification link to your email address. Please check your inbox and click
+          the link to activate your account.
+        </p>
       )}
 
       <p className="text-center text-xs text-gray-500 mt-5">

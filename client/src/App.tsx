@@ -31,7 +31,9 @@ const App = () => {
 
         <Route path="/verify-email" element={<VerifyEmailPage />} />  {/* for post-register landing */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* <Route path="/reset-password" element={<ResetPasswordPage />} /> */}
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        
         <Route path="/profile/setup" element={<ProfileSetupPage />} />
         <Route path="/browse" element={<BrowsePage />} />
         <Route path="/search" element={<SearchPage />} />

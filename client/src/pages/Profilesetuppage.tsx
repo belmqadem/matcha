@@ -7,7 +7,7 @@ import { MapPin, User, Heart, FileText, Tag, Camera, ChevronRight, ChevronLeft, 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Gender = 'male' | 'female' | 'non_binary' | 'other';
+type Gender = 'male' | 'female' | 'non-binary' | 'other';
 type SexualPreference = 'heterosexual' | 'homosexual' | 'bisexual';
 
 interface ProfileForm {
@@ -110,7 +110,7 @@ const OptionButton = ({
 const GENDERS: { value: Gender; label: string }[] = [
   { value: 'male', label: 'Man' },
   { value: 'female', label: 'Woman' },
-  { value: 'non_binary', label: 'Non-binary' },
+  { value: 'non-binary', label: 'Non-binary' },
   { value: 'other', label: 'Other' },
 ];
 
