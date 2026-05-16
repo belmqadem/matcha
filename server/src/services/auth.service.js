@@ -91,11 +91,7 @@ export const login = async ({ username, password }) => {
   const user = uRes.rows[0];
 
   if (!user.password_hash) {
-    const provider = user.oauth_provider || "OAuth";
-    throw new AppError(
-      `This account uses ${provider} login. Please use the ${provider} login button.`,
-      401,
-    );
+    throw new AppError("Invalid credentials", 401);
   }
 
   const match = await bcrypt.compare(password, user.password_hash || "");
