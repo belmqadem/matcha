@@ -15,11 +15,21 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://matcha_server:3000',        changeOrigin: true,
+    //   },
+    //   '/uploads': 'http://localhost:3000',
+    // },
     proxy: {
-      '/api': {
-        target: 'http://matcha_server:3000',
-        changeOrigin: true,
-      },
-    },
+  '/api': {
+    target: 'http://matcha_server:3000',
+    changeOrigin: true,
+  },
+  '/uploads': {
+    target: 'http://matcha_server:3000',
+    changeOrigin: true,
+  },
+},
   },
 });
