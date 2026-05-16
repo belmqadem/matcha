@@ -1,247 +1,258 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
 
 const heartPath = 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
 
-const Heart = ({ size, color }: { size: number; color: string }) => (
+interface HeartProps {
+  size?: number;
+  color?: string;
+}
+
+const Heart = ({ size = 24, color = '#D4537E' }: HeartProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
     <path d={heartPath} />
   </svg>
 );
 
-const ORBIT_HEARTS = [
-  { size: 16, color: '#f4a4b2', anim: 'orbit1 4s linear infinite' },
-  { size: 12, color: '#EDA0B8', anim: 'orbit2 5s linear infinite' },
-  { size: 14, color: '#D4537E', anim: 'orbit3 3.5s linear infinite' },
-  { size: 10, color: '#F4A4B2', anim: 'orbit4 6s linear infinite' },
-  { size: 13, color: '#e8899a', anim: 'orbit5 4.5s linear infinite' },
+interface FloatHeart {
+  x: string;
+  y: string;
+  size: number;
+  color: string;
+  delay: string;
+}
+
+const FLOAT_HEARTS: FloatHeart[] = [
+  { x: 'left-[60%]', y: 'top-[10%]', size: 32, color: '#D4537E', delay: '[animation-delay:0s]' },
+  { x: 'left-[76%]', y: 'top-[6%]',  size: 16, color: '#f4a4b2', delay: '[animation-delay:0.5s]' },
+  { x: 'left-[53%]', y: 'top-[26%]', size: 20, color: '#f4a4b2', delay: '[animation-delay:1s]' },
+  { x: 'left-[84%]', y: 'top-[32%]', size: 13, color: '#c0324a', delay: '[animation-delay:1.4s]' },
+  { x: 'left-[68%]', y: 'top-[20%]', size: 10, color: '#f4a4b2', delay: '[animation-delay:0.3s]' },
 ];
 
-const FLOAT_HEARTS = [
-  { left: '8%',  size: 20, color: '#f4a4b2', dur: 5.2, delay: 0 },
-  { left: '18%', size: 14, color: '#EDA0B8', dur: 4.4, delay: 1.1 },
-  { left: '30%', size: 18, color: '#D4537E', dur: 6.0, delay: 0.4 },
-  { left: '45%', size: 12, color: '#f18ea7', dur: 5.5, delay: 2.2 },
-  { left: '58%', size: 22, color: '#F4C8D0', dur: 4.8, delay: 0.7 },
-  { left: '70%', size: 16, color: '#EDA0B8', dur: 5.9, delay: 1.8 },
-  { left: '82%', size: 13, color: '#D4537E', dur: 4.2, delay: 0.3 },
-  { left: '92%', size: 19, color: '#f4a4b2', dur: 5.3, delay: 1.5 },
-  { left: '3%',  size: 11, color: '#e8899a', dur: 3.9, delay: 2.8 },
-  { left: '53%', size: 17, color: '#C4364A', dur: 6.5, delay: 0.9 },
-];
+const BearIllustration = () => (
+  <svg viewBox="0 0 420 340" xmlns="http://www.w3.org/2000/svg" className="relative z-10 w-full max-w-[460px]">
 
-const SPARKLES = Array.from({ length: 8 }, (_, i) => ({
-  id: i,
-  size: 6 + (i * 3.7) % 8,
-  x: 5 + (i * 13.7) % 90,
-  y: 5 + (i * 17.3) % 90,
-  delay: (i * 0.43) % 3,
-  dur: 1.5 + (i * 0.31) % 2,
-}));
+    {/* Floating hearts above white bear */}
+    <g className="animate-[floatBob_2.8s_ease-in-out_infinite]">
+      <path d="M288 52 C288 46 296 40 300 46 C304 40 312 46 312 52 C312 60 300 68 300 68 C300 68 288 60 288 52Z"
+        fill="none" stroke="#D4537E" strokeWidth="2.5" strokeLinejoin="round" />
+    </g>
+    <g className="animate-[floatBob_2.4s_ease-in-out_0.5s_infinite]">
+      <path d="M272 38 C272 33 278 28 281 33 C284 28 290 33 290 38 C290 44 281 50 281 50 C281 50 272 44 272 38Z"
+        fill="none" stroke="#D4537E" strokeWidth="2.2" strokeLinejoin="round" />
+    </g>
+    <g className="animate-[floatBob_3s_ease-in-out_1s_infinite]">
+      <path d="M306 30 C306 26 311 22 313 26 C315 22 320 26 320 30 C320 35 313 40 313 40 C313 40 306 35 306 30Z"
+        fill="none" stroke="#f4a4b2" strokeWidth="2" strokeLinejoin="round" />
+    </g>
+
+    {/* ── BROWN BEAR ── */}
+    <g className="animate-[bearBob_3s_ease-in-out_infinite]">
+      <ellipse cx="108" cy="318" rx="62" ry="10" fill="#d4a8a8" opacity="0.4" />
+      <ellipse cx="108" cy="240" rx="66" ry="72" fill="#c8924a" />
+      <ellipse cx="108" cy="256" rx="40" ry="46" fill="#e8b87a" />
+      <ellipse cx="50"  cy="238" rx="20" ry="34" fill="#c8924a" transform="rotate(-15 50 238)" />
+      <ellipse cx="166" cy="224" rx="20" ry="34" fill="#c8924a" transform="rotate(25 166 224)" />
+      <ellipse cx="82"  cy="298" rx="26" ry="20" fill="#c8924a" />
+      <ellipse cx="134" cy="298" rx="26" ry="20" fill="#c8924a" />
+      <ellipse cx="80"  cy="312" rx="22" ry="12" fill="#b07838" />
+      <ellipse cx="136" cy="312" rx="22" ry="12" fill="#b07838" />
+      <circle cx="70"  cy="316" r="3.5" fill="#9a6228" />
+      <circle cx="80"  cy="319" r="3.5" fill="#9a6228" />
+      <circle cx="90"  cy="316" r="3.5" fill="#9a6228" />
+      <circle cx="126" cy="316" r="3.5" fill="#9a6228" />
+      <circle cx="136" cy="319" r="3.5" fill="#9a6228" />
+      <circle cx="146" cy="316" r="3.5" fill="#9a6228" />
+      {/* head */}
+      <ellipse cx="108" cy="158" rx="60" ry="56" fill="#c8924a" />
+      <circle cx="58"  cy="112" r="24" fill="#c8924a" />
+      <circle cx="58"  cy="112" r="14" fill="#e8b47a" />
+      <circle cx="158" cy="112" r="24" fill="#c8924a" />
+      <circle cx="158" cy="112" r="14" fill="#e8b47a" />
+      <ellipse cx="108" cy="174" rx="30" ry="22" fill="#e8b87a" />
+      <ellipse cx="108" cy="164" rx="11" ry="7.5" fill="#5a3018" />
+      <path d="M98 178 Q108 188 118 178" fill="none" stroke="#5a3018" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="90"  cy="148" r="9" fill="#2a1a08" />
+      <circle cx="126" cy="148" r="9" fill="#2a1a08" />
+      <circle cx="92"  cy="146" r="3" fill="white" />
+      <circle cx="128" cy="146" r="3" fill="white" />
+      <ellipse cx="76"  cy="170" rx="12" ry="7" fill="#e8899a" opacity="0.45" />
+      <ellipse cx="140" cy="170" rx="12" ry="7" fill="#e8899a" opacity="0.45" />
+    </g>
+
+    {/* ── Heart being held ── */}
+    <g className="animate-[heartPulse_1.8s_ease-in-out_infinite] origin-[190px_226px]">
+      <path d="M167 210 C167 196 178 188 185 196 C192 188 203 196 203 210 C203 226 185 242 185 242 C185 242 167 226 167 210Z"
+        fill="#D4537E" stroke="#c0305a" strokeWidth="1.5" strokeLinejoin="round" />
+      <ellipse cx="178" cy="204" rx="5" ry="8" fill="white" opacity="0.35" transform="rotate(-20 178 204)" />
+    </g>
+
+    {/* ── WHITE BEAR ── */}
+    <g className="animate-[bearBob_3s_ease-in-out_0.6s_infinite]">
+      <ellipse cx="308" cy="318" rx="62" ry="10" fill="#d4a8a8" opacity="0.4" />
+      <ellipse cx="308" cy="240" rx="66" ry="72" fill="#f0ece8" />
+      <ellipse cx="308" cy="256" rx="40" ry="46" fill="#fff8f4" />
+      <ellipse cx="250" cy="210" rx="20" ry="34" fill="#f0ece8" transform="rotate(30 250 210)" />
+      <ellipse cx="366" cy="232" rx="20" ry="34" fill="#f0ece8" transform="rotate(-10 366 232)" />
+      <ellipse cx="282" cy="298" rx="26" ry="20" fill="#f0ece8" />
+      <ellipse cx="334" cy="298" rx="26" ry="20" fill="#f0ece8" />
+      <ellipse cx="280" cy="312" rx="22" ry="12" fill="#d8d0c8" />
+      <ellipse cx="336" cy="312" rx="22" ry="12" fill="#d8d0c8" />
+      <circle cx="270" cy="316" r="3.5" fill="#c0b8b0" />
+      <circle cx="280" cy="319" r="3.5" fill="#c0b8b0" />
+      <circle cx="290" cy="316" r="3.5" fill="#c0b8b0" />
+      <circle cx="326" cy="316" r="3.5" fill="#c0b8b0" />
+      <circle cx="336" cy="319" r="3.5" fill="#c0b8b0" />
+      <circle cx="346" cy="316" r="3.5" fill="#c0b8b0" />
+      {/* head */}
+      <ellipse cx="308" cy="158" rx="60" ry="56" fill="#f0ece8" />
+      <circle cx="258" cy="112" r="24" fill="#f0ece8" />
+      <circle cx="258" cy="112" r="14" fill="#e8d8d0" />
+      <circle cx="358" cy="112" r="24" fill="#f0ece8" />
+      <circle cx="358" cy="112" r="14" fill="#e8d8d0" />
+      <ellipse cx="308" cy="174" rx="30" ry="22" fill="#fff8f4" />
+      <ellipse cx="308" cy="164" rx="11" ry="7.5" fill="#3a2818" />
+      <path d="M294 178 Q308 194 322 178" fill="none" stroke="#3a2818" strokeWidth="2.5" strokeLinecap="round" />
+      <ellipse cx="308" cy="187" rx="9" ry="6" fill="#D4537E" opacity="0.85" />
+      <path d="M292 144 Q300 136 308 144" fill="none" stroke="#2a1a08" strokeWidth="3" strokeLinecap="round" />
+      <path d="M318 144 Q326 136 334 144" fill="none" stroke="#2a1a08" strokeWidth="3" strokeLinecap="round" />
+      <ellipse cx="276" cy="172" rx="14" ry="8" fill="#e8899a" opacity="0.5" />
+      <ellipse cx="340" cy="172" rx="14" ry="8" fill="#e8899a" opacity="0.5" />
+      <circle cx="272" cy="174" r="2.5" fill="#D4537E" opacity="0.4" />
+      <circle cx="280" cy="176" r="2"   fill="#D4537E" opacity="0.4" />
+      <circle cx="336" cy="174" r="2.5" fill="#D4537E" opacity="0.4" />
+      <circle cx="344" cy="176" r="2"   fill="#D4537E" opacity="0.4" />
+    </g>
+  </svg>
+);
 
 const LandingPage = () => {
   return (
-    <main className="relative min-h-screen overflow-hidden flex items-center justify-center px-4 py-8"
-      style={{ background: '#fdf6f8' }}>
+    <main className="relative min-h-screen overflow-hidden bg-white" style={{ fontFamily: "'Poppins', sans-serif" }}>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700&display=swap"
+        rel="stylesheet"
+      />
 
-      {/* Background blobs */}
-      <div className="pointer-events-none absolute rounded-full"
-        style={{ width: 320, height: 320, background: 'rgba(244,164,178,0.18)', top: -60, right: -80 }} />
-      <div className="pointer-events-none absolute rounded-full"
-        style={{ width: 240, height: 240, background: 'rgba(212,83,126,0.10)', bottom: -40, left: -60 }} />
-      <div className="pointer-events-none absolute rounded-full"
-        style={{ width: 180, height: 180, background: 'rgba(244,164,178,0.12)', top: '40%', left: '5%' }} />
-
-      {/* Floating hearts layer */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {FLOAT_HEARTS.map((h, i) => (
-          <div
-            key={i}
-            className="absolute"
-            style={{
-              left: h.left,
-              bottom: -30,
-              color: h.color,
-              animation: `floatSide ${h.dur}s linear ${h.delay}s infinite`,
-            }}
-          >
-            <Heart size={h.size} color={h.color} />
-          </div>
-        ))}
-      </div>
-
-      {/* Card */}
-      <div
-        className="relative z-10 flex flex-col items-center text-center rounded-[2rem] px-8 py-12 w-full"
-        style={{
-          maxWidth: 640,
-          background: 'rgba(255,255,255,0.92)',
-          border: '1px solid #f0dce4',
-          backdropFilter: 'blur(12px)',
-          animation: 'popIn 0.7s cubic-bezier(.22,1,.36,1) both',
-        }}
-      >
-        {/* Sparkles */}
-        {SPARKLES.map((s) => (
-          <div
-            key={s.id}
-            className="absolute pointer-events-none"
-            style={{
-              left: `${s.x}%`,
-              top: `${s.y}%`,
-              color: '#f4a4b2',
-              animation: `twinkle ${s.dur}s ease-in-out ${s.delay}s infinite`,
-            }}
-          >
-            <svg width={s.size} height={s.size} viewBox="0 0 10 10" fill="currentColor">
-              <polygon points="5,0 6,4 10,5 6,6 5,10 4,6 0,5 4,4" />
-            </svg>
-          </div>
-        ))}
-
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-6" style={{ color: '#D4537E', fontSize: 22, fontWeight: 500 }}>
-          <Heart size={20} color="#D4537E" />
-          matcha
+      {/* NAVBAR */}
+      <nav className="relative z-20 flex items-center justify-between px-14 py-6">
+        <div className="flex items-center gap-2">
+          <Heart size={22} color="#D4537E" />
+          <span className="text-xl font-bold tracking-tight text-[#1a1a2e]">
+            matcha<span className="text-[#D4537E]">.</span>
+          </span>
         </div>
 
-        {/* Heart cluster */}
-        <div className="relative flex items-center justify-center mb-7" style={{ width: 130, height: 130 }}>
-          {/* Pulse rings */}
-          <div className="absolute rounded-full"
-            style={{ width: 90, height: 90, top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-              border: '2px solid rgba(212,83,126,0.4)', animation: 'pulseRing 2.4s ease-out infinite' }} />
-          <div className="absolute rounded-full"
-            style={{ width: 115, height: 115, top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-              border: '2px solid rgba(212,83,126,0.25)', animation: 'pulseRing 2.4s ease-out 0.8s infinite' }} />
+        <div className="flex items-center gap-3">
+          <Link
+            to="/login"
+            className="rounded-full border border-gray-200 px-5 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-[#D4537E] hover:text-[#D4537E]"
+          >
+            Log In
+          </Link>
+          <Link
+            to="/register"
+            className="rounded-full bg-[#D4537E] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_18px_rgba(212,83,126,0.38)] transition-transform hover:scale-105"
+          >
+            Sign Up
+          </Link>
+        </div>
+      </nav>
 
-          {/* Main heart */}
-          <div style={{ animation: 'heartbeat 2s ease-in-out infinite', filter: 'drop-shadow(0 0 12px rgba(212,83,126,0.3))' }}>
-            <Heart size={80} color="#D4537E" />
+      {/* HERO */}
+      <div className="flex items-center pl-14" style={{ minHeight: 'calc(100vh - 80px)' }}>
+
+        {/* LEFT */}
+        <div className="z-10 w-[44%] shrink-0 animate-[slideInLeft_0.7s_cubic-bezier(.22,1,.36,1)_both]">
+          <h1 className="mb-5 text-[3.8rem] font-extrabold leading-[1.08] tracking-[-2px] text-[#1a1a2e]">
+            Find your{' '}
+            <span
+              className="inline-block  text-[#D4537E]"
+              style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic' }}
+            >
+              matchy matchy
+            </span>
+          </h1>
+
+          <p className="mb-10 max-w-[360px] text-[0.96rem] leading-relaxed text-[#9a8a95]">
+            Matcha matches you with people who just get it — your humor,
+            your pace, your vibe. Real connections, no noise.
+          </p>
+
+          <div className="flex items-center gap-5">
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2.5 rounded-full bg-[#D4537E] px-9 py-3.5 text-[0.95rem] font-semibold text-white shadow-[0_8px_28px_rgba(212,83,126,0.38)] transition-transform hover:scale-105"
+            >
+              <Heart size={15} color="white" />
+              Find my match
+            </Link>
           </div>
+        </div>
 
-          {/* Orbiting hearts */}
-          {ORBIT_HEARTS.map((h, i) => (
+        {/* RIGHT */}
+        <div
+          className="relative flex flex-1 animate-[fadeIn_0.9s_ease_0.2s_both] items-center justify-center"
+          style={{ height: 'calc(100vh - 80px)' }}
+        >
+          {/* Blob */}
+          <svg
+            viewBox="0 0 700 600"
+            className="absolute inset-0 h-full w-full"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <defs>
+              <linearGradient id="blobGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fce8ed" />
+                <stop offset="55%" stopColor="#f4a4b2" stopOpacity="0.55" />
+                <stop offset="100%" stopColor="#D4537E" stopOpacity="0.28" />
+              </linearGradient>
+            </defs>
+            <path d="M 700 0 C 590 0 470 50 390 130 C 310 210 330 310 295 410 C 260 510 175 565 195 600 L 700 600 Z" fill="url(#blobGrad)" />
+            <path d="M 700 0 C 575 25 495 105 455 205 C 415 305 438 405 398 505 C 378 565 318 592 355 600 L 700 600 Z" fill="rgba(244,164,178,0.22)" />
+          </svg>
+
+          {/* Floating hearts */}
+          {FLOAT_HEARTS.map((h: FloatHeart, i: number) => (
             <div
               key={i}
-              className="absolute"
-              style={{
-                top: '50%',
-                left: '50%',
-                marginTop: -h.size / 2,
-                marginLeft: -h.size / 2,
-                animation: h.anim,
-              }}
+              className={`pointer-events-none absolute z-10 animate-[floatBob_3.2s_ease-in-out_infinite] ${h.x} ${h.y} ${h.delay}`}
             >
               <Heart size={h.size} color={h.color} />
             </div>
           ))}
-        </div>
 
-        {/* Heading */}
-        <h1 className="mb-3" style={{ fontSize: '2.4rem', fontWeight: 500, color: '#2d1a24', lineHeight: 1.2, letterSpacing: '-0.5px' }}>
-          find your{' '}
-          <span style={{ color: '#D4537E', display: 'inline-block', animation: 'wiggle 2.5s ease-in-out infinite', transformOrigin: 'center' }}>
-            matchy matchy
-          </span>
-        </h1>
-
-        {/* Subtitle */}
-        <p className="mb-8" style={{ fontSize: '1rem', lineHeight: 1.65, color: '#9a6b7c', maxWidth: 440 }}>
-          Matcha helps you discover compatible profiles, start conversations instantly, and
-          meet safely in a community built for modern dating.
-        </p>
-
-        {/* Buttons */}
-        <div className="flex gap-3 flex-wrap justify-center">
-          <Link
-            to="/register"
-            className="inline-flex items-center gap-2 transition-transform hover:scale-105"
-            style={{
-              height: 52,
-              padding: '0 2rem',
-              borderRadius: 100,
-              background: '#D4537E',
-              color: 'white',
-              fontSize: '0.9rem',
-              fontWeight: 500,
-              textDecoration: 'none',
-            }}
-          >
-            <Heart size={16} color="white" />
-            Get started
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center transition-transform hover:scale-105"
-            style={{
-              height: 52,
-              padding: '0 2rem',
-              borderRadius: 100,
-              background: 'white',
-              color: '#2d1a24',
-              fontSize: '0.9rem',
-              fontWeight: 500,
-              border: '1px solid #f0dce4',
-              textDecoration: 'none',
-            }}
-          >
-            Log in
-          </Link>
+          {/* Bears */}
+          <div className="relative z-10 w-4/5 max-w-[480px] pt-5">
+            <BearIllustration />
+          </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes floatSide {
-          0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.9; }
-          33%  { transform: translateY(-15px) translateX(8px) rotate(15deg); opacity: 0.7; }
-          66%  { transform: translateY(-28px) translateX(-5px) rotate(-10deg); opacity: 0.4; }
-          100% { transform: translateY(-50px) translateX(3px) rotate(20deg); opacity: 0; }
+        @keyframes slideInLeft {
+          from { transform: translateX(-40px); opacity: 0; }
+          to   { transform: translateX(0); opacity: 1; }
         }
-        @keyframes heartbeat {
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes floatBob {
+          0%, 100% { transform: translateY(0) rotate(-8deg); }
+          50%       { transform: translateY(-16px) rotate(8deg); }
+        }
+        @keyframes gentleFloat {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(-5px); }
+        }
+        @keyframes bearBob {
+          0%, 100% { transform: translateY(0); }
+          50%       { transform: translateY(-10px); }
+        }
+        @keyframes heartPulse {
           0%, 100% { transform: scale(1); }
-          14%  { transform: scale(1.22); }
-          28%  { transform: scale(1); }
-          42%  { transform: scale(1.18); }
-          70%  { transform: scale(1); }
-        }
-        @keyframes orbit1 {
-          from { transform: rotate(0deg)   translateX(70px) rotate(0deg); }
-          to   { transform: rotate(360deg) translateX(70px) rotate(-360deg); }
-        }
-        @keyframes orbit2 {
-          from { transform: rotate(120deg) translateX(85px) rotate(-120deg); }
-          to   { transform: rotate(480deg) translateX(85px) rotate(-480deg); }
-        }
-        @keyframes orbit3 {
-          from { transform: rotate(240deg) translateX(60px) rotate(-240deg); }
-          to   { transform: rotate(600deg) translateX(60px) rotate(-600deg); }
-        }
-        @keyframes orbit4 {
-          from { transform: rotate(60deg)  translateX(95px) rotate(-60deg); }
-          to   { transform: rotate(420deg) translateX(95px) rotate(-420deg); }
-        }
-        @keyframes orbit5 {
-          from { transform: rotate(180deg) translateX(50px) rotate(-180deg); }
-          to   { transform: rotate(540deg) translateX(50px) rotate(-540deg); }
-        }
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.2; transform: scale(0.8); }
-          50%       { opacity: 1;   transform: scale(1.2); }
-        }
-        @keyframes wiggle {
-          0%, 100% { transform: rotate(-8deg); }
-          50%       { transform: rotate(8deg); }
-        }
-        @keyframes pulseRing {
-          0%   { transform: translate(-50%,-50%) scale(0.9); opacity: 0.6; }
-          50%  { transform: translate(-50%,-50%) scale(1.3); opacity: 0; }
-          100% { transform: translate(-50%,-50%) scale(0.9); opacity: 0; }
-        }
-        @keyframes popIn {
-          0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
-          60%  { transform: scale(1.15) rotate(5deg); }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+          50%       { transform: scale(1.15); }
         }
       `}</style>
     </main>
