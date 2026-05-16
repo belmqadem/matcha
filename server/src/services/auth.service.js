@@ -1,14 +1,12 @@
 import { query } from "../db/pool.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
 import AppError from "../utils/AppError.js";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } from "../utils/email.js";
 import { isCommonPassword } from "../utils/commonPasswords.js";
-import env from "../config/env.js";
 
 const SALT_ROUNDS = 12;
 
@@ -82,7 +80,7 @@ export const verifyEmail = async (token) => {
 
 export const login = async ({ username, password }) => {
   const uRes = await query(
-    "SELECT id, username, email, password_hash, is_verified, first_name, last_name, profile_picture_id, latitude, longitude FROM users WHERE username = $1",
+    "SELECT id, username, email, password_hash, oauth_provider, is_verified, first_name, last_name, profile_picture_id, latitude, longitude FROM users WHERE username = $1",
     [username],
   );
 
@@ -91,6 +89,14 @@ export const login = async ({ username, password }) => {
   }
 
   const user = uRes.rows[0];
+
+  if (!user.password_hash) {
+    const provider = user.oauth_provider || "OAuth";
+    throw new AppError(
+      `This account uses ${provider} login. Please use the ${provider} login button.`,
+      401,
+    );
+  }
 
   const match = await bcrypt.compare(password, user.password_hash || "");
   if (!match) {
@@ -106,9 +112,6 @@ export const login = async ({ username, password }) => {
     [user.id],
   );
 
-  const payload = { id: user.id, username: user.username };
-  const token = jwt.sign(payload, env.JWT_SECRET, { expiresIn: "7d" });
-
   const safeUser = {
     id: user.id,
     username: user.username,
@@ -120,7 +123,7 @@ export const login = async ({ username, password }) => {
 
   const hasLocation = user.latitude !== null && user.longitude !== null;
 
-  return { user: safeUser, token, hasLocation };
+  return { user: safeUser, hasLocation };
 };
 
 export const logout = async (userId) => {
@@ -132,12 +135,23 @@ export const logout = async (userId) => {
 };
 
 export const forgotPassword = async (email) => {
-  const uRes = await query("SELECT id FROM users WHERE email = $1", [email]);
+  const uRes = await query(
+    "SELECT id, oauth_provider FROM users WHERE email = $1",
+    [email],
+  );
   if (!uRes.rows.length) {
     return true;
   }
 
-  const userId = uRes.rows[0].id;
+  const user = uRes.rows[0];
+  if (user.oauth_provider) {
+    throw new AppError(
+      `This account uses ${user.oauth_provider} login. Password reset is not available.`,
+      400,
+    );
+  }
+
+  const userId = user.id;
 
   // delete existing reset tokens
   await query("DELETE FROM email_tokens WHERE user_id = $1 AND type = $2", [

@@ -1,17 +1,9 @@
 import * as authService from "../services/auth.service.js";
 import { setLocationFromIp } from "../services/location.service.js";
 import logger from "../utils/logger.js";
+import { issueAuthCookie } from "../utils/issueAuthCookie.js";
+import passport from "../config/passport.js";
 import env from "../config/env.js";
-import AppError from "../utils/AppError.js";
-import { HTTP_STATUS } from "../constants/httpStatus.js";
-
-const COOKIE_NAME = "token";
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: env.NODE_ENV === "production",
-  sameSite: "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
 
 export const register = async (req, res) => {
   await authService.register(req.body);
@@ -28,12 +20,12 @@ export const verifyEmail = async (req, res) => {
 
 export const login = async (req, res) => {
   const { username, password } = req.body;
-  const { user, token, hasLocation } = await authService.login({
+  const { user, hasLocation } = await authService.login({
     username,
     password,
   });
 
-  res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
+  issueAuthCookie(res, user);
 
   if (!hasLocation) {
     setLocationFromIp(user.id, req.ip).catch((err) =>
@@ -49,7 +41,7 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   await authService.logout(req.user.id);
-  res.clearCookie(COOKIE_NAME);
+  res.clearCookie("token");
   return res.status(200).json({ message: "Logged out." });
 };
 
@@ -75,14 +67,35 @@ export const resetPassword = async (req, res) => {
   return res.status(200).json({ message: "Password updated successfully." });
 };
 
-// OAuth placeholders
-export const googleAuth = async (_req, _res) => {
-  throw new AppError("Not implemented", HTTP_STATUS.NOT_IMPLEMENTED);
+const oauthFailureRedirect = `${env.CLIENT_URL}/login?error=oauth_failed`;
+
+const oauthSuccessRedirect = (req, res) => {
+  issueAuthCookie(res, req.user);
+  res.redirect(`${env.CLIENT_URL}/browse`);
 };
 
-export const googleCallback = async (_req, _res) => {
-  throw new AppError("Not implemented", HTTP_STATUS.NOT_IMPLEMENTED);
-};
+export const googleAuth = passport.authenticate("google", {
+  scope: ["profile", "email"],
+  session: false,
+});
+
+export const googleCallback = [
+  passport.authenticate("google", {
+    session: false,
+    failureRedirect: oauthFailureRedirect,
+  }),
+  oauthSuccessRedirect,
+];
+
+export const fortyTwoAuth = passport.authenticate("42", { session: false });
+
+export const fortyTwoCallback = [
+  passport.authenticate("42", {
+    session: false,
+    failureRedirect: oauthFailureRedirect,
+  }),
+  oauthSuccessRedirect,
+];
 
 export default {
   register,
@@ -94,4 +107,6 @@ export default {
   resetPassword,
   googleAuth,
   googleCallback,
+  fortyTwoAuth,
+  fortyTwoCallback,
 };
