@@ -69,7 +69,24 @@ export const resetPassword = async (req, res) => {
 
 const oauthFailureRedirect = `${env.CLIENT_URL}/login?error=oauth_failed`;
 
-const oauthSuccessRedirect = (req, res) => {
+const oauthSuccessRedirect = async (req, res) => {
+  const hasLocation =
+    req.user?.latitude !== null && req.user?.longitude !== null;
+
+  if (!hasLocation) {
+    try {
+      const location = await setLocationFromIp(req.user.id, req.ip);
+      req.user.latitude = location.latitude;
+      req.user.longitude = location.longitude;
+      req.user.location_city = location.location_city;
+    } catch (err) {
+      logger.warn(
+        { err, userId: req.user.id },
+        "Could not auto-set location on OAuth login",
+      );
+    }
+  }
+
   issueAuthCookie(res, req.user);
   res.redirect(`${env.CLIENT_URL}/browse`);
 };

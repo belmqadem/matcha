@@ -32,7 +32,7 @@ export const findOrCreateOAuthUser = async ({
 
     const updated = await query(
       `UPDATE users
-       SET oauth_provider = $1, oauth_id = $2, updated_at = NOW()
+       SET oauth_provider = $1, oauth_id = $2, is_verified = true, updated_at = NOW()
        WHERE id = $3
        RETURNING *`,
       [provider, oauthId, existing.id],
@@ -52,7 +52,7 @@ export const findOrCreateOAuthUser = async ({
   let username = baseUsername;
   let attempts = 0;
 
-  while (attempts < 10) {
+  while (attempts < 15) {
     const taken = await query("SELECT 1 FROM users WHERE username = $1", [
       username,
     ]);
