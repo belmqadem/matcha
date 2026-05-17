@@ -59,8 +59,11 @@ const LoginPage = () => {
 
   return (
     <AuthLayout header="Log in to find your match">
-      <Button variant="google" onClick={handleGoogleLogin}>
+      <Button variant="google" onClick={() => authApi.googleLogin()}>
         Continue with Google
+      </Button>
+      <Button variant="42" onClick={() => authApi.login42()}>
+        Continue with 42
       </Button>
 
       <Divider />

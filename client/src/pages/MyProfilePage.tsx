@@ -1,831 +1,940 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Camera,
+  X,
+  Check,
+  Edit2,
+  MapPin,
+  Heart,
+  Star,
+  Eye,
+  ChevronDown,
+  Loader2,
+  LogOut,
+  AlertTriangle,
+  Shield,
+  Info,
+  CheckCircle2,
+} from 'lucide-react';
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const SUGGESTED_TAGS = ["#vegan","#geek","#piercing","#fitness","#travel","#music","#art","#gaming","#hiking","#foodie","#coffee","#books","#cinema","#yoga","#cooking"];
-const GENDERS = [{ value: "male", label: "Man" },{ value: "female", label: "Woman" },{ value: "non_binary", label: "Non-binary" },{ value: "other", label: "Other" }];
-const PREFERENCES = [{ value: "heterosexual", label: "Heterosexual" },{ value: "homosexual", label: "Homosexual" },{ value: "bisexual", label: "Bisexual" }];
+interface Photo {
+  id: number;
+  url: string;
+  order_index: number;
+  created_at: string;
+}
 
-// ─── Fix: useNavigate returns a navigate function directly ────────────────────
-const useNavigate = () => {
-  return (path) => console.log("navigate to", path);
-};
+interface UserProfile {
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  age: number | null;
+  gender: string | null;
+  sexual_preference: string | null;
+  biography: string | null;
+  location_city: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  fame_rating: number;
+  tags: string[];
+  photos: Photo[];
+  profile_picture_id: number | null;
+  is_online?: boolean;
+  last_seen?: string | null;
+}
+
+interface Visitor {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  profile_picture_url: string | null;
+  visited_at: string;
+}
+
+interface Liker {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  profile_picture_url: string | null;
+  liked_at: string;
+}
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 const api = {
   getMe: () =>
-    fetch("/api/users/me", { credentials: "include" })
-      .then(r => r.json()).then(d => d.user),
-  patchUser: (body) =>
-    fetch("/api/users/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) })
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.user; }),
-  patchProfile: (body) =>
-    fetch("/api/profile/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) })
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.user; }),
-  updateTags: (tags) =>
-    fetch("/api/profile/me/tags", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ tags }) })
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.tags; }),
-  uploadPhoto: (file) => {
-    const fd = new FormData(); fd.append("photo", file);
-    return fetch("/api/profile/me/photos", { method: "POST", credentials: "include", body: fd })
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.photo; });
+    fetch('/api/users/me', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => d.user as UserProfile),
+
+  patchUser: (body: object) =>
+    fetch('/api/users/me', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+      return d.user as UserProfile;
+    }),
+
+  patchProfile: (body: object) =>
+    fetch('/api/profile/me', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+      return d.user as UserProfile;
+    }),
+
+  updateTags: (tags: string[]) =>
+    fetch('/api/profile/me/tags', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ tags }),
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+      return d.tags as string[];
+    }),
+
+  uploadPhoto: (file: File) => {
+    const fd = new FormData();
+    fd.append('photo', file);
+    return fetch('/api/profile/me/photos', {
+      method: 'POST',
+      credentials: 'include',
+      body: fd,
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+      return d.photo as Photo;
+    });
   },
-  deletePhoto: (id) =>
-    fetch(`/api/profile/me/photos/${id}`, { method: "DELETE", credentials: "include" })
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); }),
-  setMainPhoto: (id) =>
-    fetch(`/api/profile/me/photos/${id}/set-main`, { method: "PATCH", credentials: "include" })
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); }),
+
+  deletePhoto: (id: number) =>
+    fetch(`/api/profile/me/photos/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+    }),
+
+  setMainPhoto: (id: number) =>
+    fetch(`/api/profile/me/photos/${id}/set-main`, {
+      method: 'PATCH',
+      credentials: 'include',
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+      return d.user as UserProfile;
+    }),
+
   getVisitors: () =>
-    fetch("/api/profile/me/visitors", { credentials: "include" }).then(r => r.json()).then(d => d.visitors ?? []),
+    fetch('/api/profile/me/visitors', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => d.visitors as Visitor[]),
+
   getLikedBy: () =>
-    fetch("/api/profile/me/liked-by", { credentials: "include" }).then(r => r.json()).then(d => d.likers ?? []),
-  updateLocation: (body) =>
-    fetch("/api/profile/me/location", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) })
-      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d; }),
+    fetch('/api/profile/me/liked-by', { credentials: 'include' })
+      .then((r) => r.json())
+      .then((d) => d.likers as Liker[]),
+
+  updateLocation: (body: object) =>
+    fetch('/api/profile/me/location', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+      return d;
+    }),
+
   logout: () =>
-    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
-      .then(async r => { if (!r.ok) throw new Error("Logout failed"); }),
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).then(async (r) => {
+      if (!r.ok) throw new Error('Logout failed');
+    }),
 };
 
-// ─── Mock user for preview ────────────────────────────────────────────────────
-const MOCK_USER = {
-  id: 1, first_name: "Sophie", last_name: "Laurent", username: "sophielau",
-  email: "sophie@matcha.app", gender: "female", sexual_preference: "bisexual",
-  biography: "Coffee-fueled wanderer. I collect sunsets and mismatched socks. Probably thinking about pasta right now.",
-  location_city: "Paris", latitude: 48.85, longitude: 2.35,
-  fame_rating: 72, profile_picture_id: null,
-  photos: [], tags: ["#coffee", "#travel", "#cinema", "#yoga", "#art"],
-};
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const SUGGESTED_TAGS = [
+  '#vegan', '#geek', '#piercing', '#fitness', '#travel', '#music',
+  '#art', '#gaming', '#hiking', '#foodie', '#cinema', '#yoga',
+  '#cooking', '#reading', '#photography',
+];
+
+const GENDERS = [
+  { value: 'male', label: 'Man' },
+  { value: 'female', label: 'Woman' },
+  { value: 'non_binary', label: 'Non-binary' },
+  { value: 'other', label: 'Other' },
+];
+
+const PREFERENCES = [
+  { value: 'heterosexual', label: 'Heterosexual' },
+  { value: 'homosexual', label: 'Homosexual' },
+  { value: 'bisexual', label: 'Bisexual' },
+];
+
+const DEFAULT_PREFERENCE = 'bisexual';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function timeAgo(iso) {
+function timeAgo(iso: string) {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return "just now";
+  if (m < 1) return 'just now';
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function getCompletion(user) {
-  const items = [
-    { label: "Gender",    ok: Boolean(user.gender) },
-    { label: "Bio",       ok: Boolean(user.biography?.trim()) },
-    { label: "Location",  ok: Boolean(user.location_city?.trim() || (user.latitude != null && user.longitude != null)) },
-    { label: "Interests", ok: (user.tags ?? []).length > 0 },
-    { label: "Photos",    ok: (user.photos ?? []).length > 0 },
-  ];
-  return { score: Math.round(items.filter(i => i.ok).length / items.length * 100), items };
-}
+// ─── Shared input styles ──────────────────────────────────────────────────────
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
-const T = {
-  P:        "#C84B7A",
-  P2:       "#E8789E",
-  PL:       "#fdf0f5",
-  PB:       "#f2cedd",
-  PM:       "#f7dfe8",
-  TEXT:     "#1a0e14",
-  TEXT2:    "#9e7486",
-  TEXT3:    "#c4a8b4",
-  BG:       "#faf5f7",
-  CARD:     "#ffffff",
-  BORDER:   "rgba(200,75,122,0.12)",
-  GREEN:    "#16a37f",
-  SHADOW:   "0 2px 24px rgba(200,75,122,0.07)",
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  borderRadius: '10px',
+  border: '1.5px solid #f0f0f0',
+  background: '#fafafa',
+  padding: '9px 14px',
+  fontSize: '13px',
+  color: '#333',
+  outline: 'none',
+  fontFamily: 'inherit',
+  transition: 'border-color 0.15s',
 };
 
-const styles = {
-  inp: {
-    width: "100%", padding: "11px 15px", borderRadius: 12,
-    border: `1.5px solid ${T.PB}`, background: T.CARD, fontSize: 13.5,
-    color: T.TEXT, outline: "none", fontFamily: "inherit",
-    boxSizing: "border-box", transition: "border-color 0.15s, box-shadow 0.15s",
-  },
-  lbl: {
-    display: "block", fontSize: 10.5, fontWeight: 700,
-    letterSpacing: "0.12em", textTransform: "uppercase",
-    color: T.TEXT3, marginBottom: 7,
-  },
-  pill: {
-    display: "inline-flex", alignItems: "center", gap: 5,
-    padding: "5px 14px", borderRadius: 100,
-    background: T.PL, color: T.P, fontSize: 12.5, fontWeight: 600,
-    border: `1px solid ${T.PB}`, letterSpacing: "0.01em",
-  },
-  btnP: {
-    display: "inline-flex", alignItems: "center", gap: 7,
-    padding: "10px 22px", borderRadius: 100,
-    background: T.P, color: "#fff", fontSize: 12.5, fontWeight: 700,
-    border: "none", cursor: "pointer", fontFamily: "inherit",
-    letterSpacing: "0.02em", transition: "background 0.15s, transform 0.1s",
-  },
-  btnO: {
-    display: "inline-flex", alignItems: "center", gap: 7,
-    padding: "10px 22px", borderRadius: 100,
-    background: T.CARD, color: T.P, fontSize: 12.5, fontWeight: 700,
-    border: `1.5px solid ${T.PB}`, cursor: "pointer", fontFamily: "inherit",
-    letterSpacing: "0.02em", transition: "border-color 0.15s, background 0.15s",
-  },
-  card: {
-    background: T.CARD, border: `1px solid ${T.BORDER}`,
-    borderRadius: 22, overflow: "hidden", boxShadow: T.SHADOW,
-  },
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '10px',
+  fontWeight: 700,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: '#aaa',
+  marginBottom: '5px',
 };
 
-// ─── Shared UI ────────────────────────────────────────────────────────────────
+// ─── SaveBar ─────────────────────────────────────────────────────────────────
 
-function SaveBar({ saving, error, onSave, onCancel }) {
+function SaveBar({ saving, error, onSave, onCancel }: {
+  saving: boolean; error: string; onSave: () => void; onCancel: () => void;
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 9, paddingTop: 18, marginTop: 18, borderTop: `1px solid ${T.BORDER}` }}>
-      {error && <span style={{ fontSize: 12, color: "#c0392b", flex: 1 }}>{error}</span>}
-      <button onClick={onCancel} style={styles.btnO}>Discard</button>
-      <button onClick={onSave} disabled={saving} style={{ ...styles.btnP, opacity: saving ? 0.65 : 1 }}>
-        {saving ? "Saving..." : "Save changes"}
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', paddingTop: '12px', marginTop: '12px', borderTop: '1px solid #f5f5f5' }}>
+      {error && (
+        <p style={{ flex: 1, fontSize: '11px', color: '#e94057', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <AlertTriangle size={10} /> {error}
+        </p>
+      )}
+      <button type="button" onClick={onCancel} style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '8px', border: '1.5px solid #eee', background: '#fff', color: '#888', cursor: 'pointer' }}>
+        Cancel
+      </button>
+      <button type="button" onClick={onSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '8px', background: '#e94057', color: '#fff', border: 'none', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
+        {saving ? <Loader2 size={10} /> : <Check size={10} />} Save
       </button>
     </div>
   );
 }
 
-function SectionWrap({ title, subtitle, badge, onEdit, editing, children }) {
+// ─── Modal wrapper ────────────────────────────────────────────────────────────
+
+function EditModal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div style={styles.card}>
-      <div style={{ padding: "26px 30px 0" }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 22 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>{title}</p>
-              {badge && <span style={{ fontSize: 10, padding: "2px 9px", borderRadius: 100, background: T.PL, color: T.P, fontWeight: 700, border: `1px solid ${T.PB}` }}>{badge}</span>}
-            </div>
-            {subtitle && <p style={{ fontSize: 13, color: T.TEXT2, margin: "5px 0 0", fontWeight: 400 }}>{subtitle}</p>}
-          </div>
-          {onEdit && !editing && (
-            <button onClick={onEdit} style={{ ...styles.btnO, padding: "7px 16px", fontSize: 11.5 }}>Edit</button>
-          )}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: '#fff', borderRadius: '20px', padding: '24px', width: '100%', maxWidth: '480px', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', margin: '0 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>{title}</h3>
+          <button onClick={onClose} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1.5px solid #eee', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#888' }}>
+            <X size={14} />
+          </button>
         </div>
+        {children}
       </div>
-      <div style={{ padding: "0 30px 28px" }}>{children}</div>
     </div>
   );
 }
 
-// ─── Photos ───────────────────────────────────────────────────────────────────
+// ─── Edit modals ──────────────────────────────────────────────────────────────
 
-function PhotosSection({ user, onUpdate }) {
-  const fileRef = useRef(null);
+function EditIdentityModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdate: (u: UserProfile) => void; onClose: () => void }) {
+  const [form, setForm] = useState({ first_name: user.first_name, last_name: user.last_name, username: user.username, email: user.email });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSave = async () => {
+    if (!form.first_name.trim() || !form.last_name.trim()) { setError('Name is required.'); return; }
+    setSaving(true); setError('');
+    try { const u = await api.patchUser(form); onUpdate(u); onClose(); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <EditModal title="Edit Identity" onClose={onClose}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          {(['first_name', 'last_name'] as const).map(f => (
+            <div key={f}>
+              <label style={labelStyle}>{f === 'first_name' ? 'First name' : 'Last name'}</label>
+              <input value={form[f]} onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))} style={inputStyle} />
+            </div>
+          ))}
+        </div>
+        <div>
+          <label style={labelStyle}>Username</label>
+          <input value={form.username} onChange={e => setForm(p => ({ ...p, username: e.target.value }))} style={inputStyle} />
+        </div>
+        <div>
+          <label style={labelStyle}>Email</label>
+          <input value={form.email} type="email" onChange={e => setForm(p => ({ ...p, email: e.target.value }))} style={inputStyle} />
+          <p style={{ fontSize: '10px', color: '#bbb', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Shield size={9} /> Changing your email requires re-verification.</p>
+        </div>
+        <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
+      </div>
+    </EditModal>
+  );
+}
+
+function EditAboutModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdate: (u: UserProfile) => void; onClose: () => void }) {
+  const [form, setForm] = useState({ gender: user.gender ?? '', sexual_preference: user.sexual_preference ?? '', biography: user.biography ?? '', age: user.age?.toString() ?? '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSave = async () => {
+    setSaving(true); setError('');
+    try { const u = await api.patchProfile({ ...form, age: form.age ? parseInt(form.age) : null }); onUpdate(u); onClose(); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <EditModal title="Edit About" onClose={onClose}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div>
+            <label style={labelStyle}>Age</label>
+            <input value={form.age} type="number" min={18} max={99} onChange={e => setForm(p => ({ ...p, age: e.target.value }))} style={inputStyle} placeholder="Your age" />
+          </div>
+          <div>
+            <label style={labelStyle}>Gender</label>
+            <div style={{ position: 'relative' }}>
+              <select value={form.gender} onChange={e => setForm(p => ({ ...p, gender: e.target.value }))} style={{ ...inputStyle, appearance: 'none', paddingRight: '28px' }}>
+                <option value="">Not specified</option>
+                {GENDERS.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
+              </select>
+              <ChevronDown size={12} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
+            </div>
+          </div>
+        </div>
+        <div>
+          <label style={labelStyle}>Sexual orientation</label>
+          <div style={{ position: 'relative' }}>
+            <select value={form.sexual_preference} onChange={e => setForm(p => ({ ...p, sexual_preference: e.target.value }))} style={{ ...inputStyle, appearance: 'none', paddingRight: '28px' }}>
+              <option value="">Not specified (defaults to bisexual)</option>
+              {PREFERENCES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+            <ChevronDown size={12} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
+          </div>
+          {!form.sexual_preference && <p style={{ fontSize: '10px', color: '#f59e0b', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Info size={9} /> Will default to bisexual.</p>}
+        </div>
+        <div>
+          <label style={labelStyle}>Biography</label>
+          <textarea value={form.biography} onChange={e => setForm(p => ({ ...p, biography: e.target.value }))} maxLength={500} rows={4} placeholder="Tell others who you are…" style={{ ...inputStyle, resize: 'none' }} />
+          <p style={{ textAlign: 'right', fontSize: '10px', color: '#ccc', marginTop: '2px' }}>{form.biography.length}/500</p>
+        </div>
+        <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
+      </div>
+    </EditModal>
+  );
+}
+
+function EditTagsModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdate: (u: UserProfile) => void; onClose: () => void }) {
+  const [tags, setTags] = useState<string[]>(user.tags ?? []);
+  const [input, setInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const addTag = (tag: string) => {
+    const n = tag.startsWith('#') ? tag.toLowerCase() : `#${tag.toLowerCase()}`;
+    if (!n || n === '#' || tags.includes(n) || n.length < 2) return;
+    setTags(t => [...t, n]); setInput('');
+  };
+
+  const handleSave = async () => {
+    setSaving(true); setError('');
+    try { const t = await api.updateTags(tags); onUpdate({ ...user, tags: t }); onClose(); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
+    finally { setSaving(false); }
+  };
+
+  const available = SUGGESTED_TAGS.filter(t => !tags.includes(t));
+
+  return (
+    <EditModal title="Edit Interests" onClose={onClose}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input value={input} onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(input.trim()); } }}
+            placeholder="#sport, #music…" style={{ ...inputStyle, flex: 1 }} />
+          <button type="button" onClick={() => addTag(input.trim())} style={{ padding: '9px 14px', borderRadius: '10px', background: '#e94057', color: '#fff', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Add</button>
+        </div>
+        {tags.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {tags.map(tag => (
+              <span key={tag} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 12px', borderRadius: '999px', background: '#e94057', color: '#fff', fontSize: '12px', fontWeight: 500 }}>
+                {tag}
+                <button type="button" onClick={() => setTags(t => t.filter(x => x !== tag))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={9} /></button>
+              </span>
+            ))}
+          </div>
+        )}
+        {available.length > 0 && (
+          <div>
+            <p style={labelStyle}>Quick add</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {available.map(tag => (
+                <button key={tag} type="button" onClick={() => addTag(tag)} style={{ padding: '4px 12px', borderRadius: '999px', border: '1.5px solid #eee', background: '#fff', color: '#888', fontSize: '12px', cursor: 'pointer' }}>{tag}</button>
+              ))}
+            </div>
+          </div>
+        )}
+        <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
+      </div>
+    </EditModal>
+  );
+}
+
+function EditLocationModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdate: (u: UserProfile) => void; onClose: () => void }) {
+  const [cityInput, setCityInput] = useState(user.location_city ?? '');
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(
+    user.latitude && user.longitude ? { lat: user.latitude, lng: user.longitude } : null
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const useGPS = () => {
+    if (!navigator.geolocation) { setError('Geolocation not supported.'); return; }
+    setGpsLoading(true); setError('');
+    navigator.geolocation.getCurrentPosition(
+      pos => { setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGpsLoading(false); },
+      () => { setError('Could not get GPS. Enter city manually.'); setGpsLoading(false); }
+    );
+  };
+
+  const handleSave = async () => {
+    if (!cityInput.trim() && !gpsCoords) { setError('Location is required for matching.'); return; }
+    setSaving(true); setError('');
+    try {
+      const body: Record<string, unknown> = {};
+      if (gpsCoords) { body.latitude = gpsCoords.lat; body.longitude = gpsCoords.lng; }
+      if (cityInput.trim()) body.location_city = cityInput.trim();
+      await api.updateLocation(body);
+      onUpdate({ ...user, location_city: cityInput.trim() || user.location_city, latitude: gpsCoords?.lat ?? user.latitude, longitude: gpsCoords?.lng ?? user.longitude });
+      onClose();
+    } catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
+    finally { setSaving(false); }
+  };
+
+  return (
+    <EditModal title="Edit Location" onClose={onClose}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div>
+          <label style={labelStyle}>GPS location</label>
+          <button type="button" onClick={useGPS} disabled={gpsLoading} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', borderRadius: '10px', border: `1.5px solid ${gpsCoords ? '#e94057' : '#eee'}`, background: gpsCoords ? 'rgba(233,64,87,0.06)' : '#fafafa', color: gpsCoords ? '#e94057' : '#888', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+            {gpsLoading ? <Loader2 size={14} /> : <MapPin size={14} />}
+            {gpsLoading ? 'Detecting…' : gpsCoords ? '✓ GPS detected' : 'Use my current location'}
+          </button>
+          <p style={{ fontSize: '10px', color: '#bbb', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Shield size={9} /> Only used for matching. You consent by clicking above.</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ flex: 1, height: '1px', background: '#f0f0f0' }} />
+          <span style={{ fontSize: '10px', color: '#ccc', letterSpacing: '0.1em', textTransform: 'uppercase' }}>or</span>
+          <div style={{ flex: 1, height: '1px', background: '#f0f0f0' }} />
+        </div>
+        <div>
+          <label style={labelStyle}>City (manual)</label>
+          <input value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="e.g. Paris, Marais district" style={inputStyle} />
+        </div>
+        <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
+      </div>
+    </EditModal>
+  );
+}
+
+// ─── Photos strip + upload ────────────────────────────────────────────────────
+
+function PhotosPanel({ user, onUpdate }: { user: UserProfile; onUpdate: (u: UserProfile) => void }) {
+  const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState("");
-  const [hovId, setHovId] = useState(null);
+  const [error, setError] = useState('');
   const photos = user.photos ?? [];
-  const sorted = [...photos].sort((a, b) => a.order_index - b.order_index);
-  const main   = sorted.find(p => p.id === user.profile_picture_id) ?? sorted[0] ?? null;
-  const others = sorted.filter(p => p.id !== main?.id);
-  // All 5 slots in a single uniform grid (no oversized main)
-  const slots  = [main, ...others, ...Array(Math.max(0, 5 - sorted.length)).fill(null)].slice(0, 5);
+  const sorted = photos.slice().sort((a, b) => a.order_index - b.order_index);
+  const slots: (Photo | null)[] = [...sorted, ...Array(5 - sorted.length).fill(null)].slice(0, 5);
 
-  const handleUpload = async (e) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    e.target.value = "";
+    e.target.value = '';
     if (!files.length) return;
-    if (photos.length + files.length > 5) { setError("Max 5 photos."); return; }
-    setUploading(true); setError("");
+    if (photos.length + files.length > 5) { setError('Max 5 photos.'); return; }
+    setUploading(true); setError('');
     try {
       let updated = { ...user };
       for (const file of files) {
         const p = await api.uploadPhoto(file);
         updated = { ...updated, photos: [...updated.photos, p] };
+        if (!updated.profile_picture_id) updated.profile_picture_id = p.id;
       }
       onUpdate(updated);
-    } catch (e) { setError(e instanceof Error ? e.message : "Upload failed."); }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Upload failed.'); }
     finally { setUploading(false); }
   };
 
-  const handleDelete  = async (id) => { try { await api.deletePhoto(id); onUpdate({ ...user, photos: photos.filter(p => p.id !== id) }); } catch (e) { setError(e instanceof Error ? e.message : "Delete failed."); } };
-  const handleSetMain = async (id) => { try { await api.setMainPhoto(id); onUpdate({ ...user, profile_picture_id: id }); } catch (e) { setError(e instanceof Error ? e.message : "Failed."); } };
-
-  return (
-    <div style={styles.card}>
-      <div style={{ padding: "26px 30px 0" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-              <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>Photos</p>
-              <span style={{ fontSize: 10, padding: "2px 9px", borderRadius: 100, background: T.PL, color: T.P, fontWeight: 700, border: `1px solid ${T.PB}` }}>{photos.length}/5</span>
-            </div>
-            <p style={{ fontSize: 13, color: T.TEXT2, margin: "5px 0 0" }}>Hover to set main or remove</p>
-          </div>
-          <button onClick={() => fileRef.current?.click()} disabled={uploading} style={styles.btnP}>
-            {uploading ? "Uploading..." : "+ Add photo"}
-          </button>
-        </div>
-      </div>
-      <div style={{ padding: "0 30px 28px" }}>
-        {/* Uniform 5-column grid — all photos the same size */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
-          {slots.map((ph, i) => (
-            <div
-              key={ph?.id ?? `e-${i}`}
-              style={{ aspectRatio: "1" }}
-              onMouseEnter={() => setHovId(ph?.id ?? `e-${i}`)}
-              onMouseLeave={() => setHovId(null)}
-            >
-              <SlotBox
-                photo={ph}
-                isMain={ph?.id === user.profile_picture_id || (i === 0 && !user.profile_picture_id && ph != null)}
-                hovered={hovId === (ph?.id ?? `e-${i}`)}
-                onSetMain={handleSetMain}
-                onDelete={handleDelete}
-                onAdd={() => fileRef.current?.click()}
-                uploading={uploading}
-              />
-            </div>
-          ))}
-        </div>
-        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleUpload} style={{ display: "none" }} />
-        {error && <p style={{ fontSize: 12, color: "#c0392b", marginTop: 10 }}>{error}</p>}
-      </div>
-    </div>
-  );
-}
-
-function SlotBox({ photo, isMain, hovered, onSetMain, onDelete, onAdd, uploading }) {
-  const base = {
-    width: "100%", height: "100%", position: "relative",
-    borderRadius: 14, overflow: "hidden",
-    background: T.PL,
-    border: photo ? (isMain ? `2px solid ${T.P}` : `1px solid ${T.PB}`) : `2px dashed ${T.PB}`,
-    transition: "box-shadow 0.2s",
-    boxShadow: hovered && photo ? `0 4px 16px rgba(200,75,122,0.18)` : "none",
-  };
-  return (
-    <div style={base}>
-      {photo ? (
-        <>
-          {photo.url
-            ? <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: T.PB }}>[ ]</div>}
-          {isMain && (
-            <div style={{ position: "absolute", top: 6, left: 6 }}>
-              <span style={{ background: T.P, color: "#fff", fontSize: 8.5, fontWeight: 800, padding: "2px 8px", borderRadius: 100, letterSpacing: "0.08em", textTransform: "uppercase" }}>Main</span>
-            </div>
-          )}
-          {hovered && (
-            <div style={{ position: "absolute", inset: 0, background: "rgba(26,14,20,0.45)", backdropFilter: "blur(2px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              {!isMain && <button onClick={() => onSetMain(photo.id)} style={{ ...styles.btnP, padding: "5px 11px", fontSize: 10 }}>Set main</button>}
-              <button onClick={() => onDelete(photo.id)} style={{ ...styles.btnO, padding: "5px 11px", fontSize: 10, background: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}>Remove</button>
-            </div>
-          )}
-        </>
-      ) : (
-        <button onClick={onAdd} disabled={uploading}
-          style={{ width: "100%", height: "100%", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, color: T.PB, fontFamily: "inherit" }}>
-          <span style={{ fontSize: 18, lineHeight: 1, color: T.TEXT3 }}>+</span>
-          <span style={{ fontSize: 10, color: T.TEXT3 }}>Add</span>
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ─── Identity ─────────────────────────────────────────────────────────────────
-
-function IdentitySection({ user, onUpdate }) {
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ first_name: user.first_name, last_name: user.last_name, username: user.username, email: user.email });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSave = async () => {
-    setSaving(true); setError("");
-    try { const u = await api.patchUser(form); onUpdate(u); setEditing(false); }
-    catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
-    finally { setSaving(false); }
-  };
-  const handleCancel = () => { setForm({ first_name: user.first_name, last_name: user.last_name, username: user.username, email: user.email }); setEditing(false); setError(""); };
-
-  return (
-    <SectionWrap title="Identity" subtitle="Your name, username & email" onEdit={() => setEditing(true)} editing={editing}>
-      {editing ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            {["first_name","last_name"].map(f => (
-              <div key={f}>
-                <label style={styles.lbl}>{f === "first_name" ? "First name" : "Last name"}</label>
-                <input value={form[f]} onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))} style={styles.inp} />
-              </div>
-            ))}
-          </div>
-          {[{k:"username",l:"Username",t:"text"},{k:"email",l:"Email address",t:"email"}].map(({k,l,t}) => (
-            <div key={k}>
-              <label style={styles.lbl}>{l}</label>
-              <input value={form[k]} onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))} type={t} style={styles.inp} />
-            </div>
-          ))}
-          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
-        </div>
-      ) : (
-        <div>
-          {[
-            ["Full name", `${user.first_name} ${user.last_name}`],
-            ["Username",  `@${user.username}`],
-            ["Email",     user.email],
-          ].map(([label, value], i, arr) => (
-            <div key={label} style={{ display: "grid", gridTemplateColumns: "140px 1fr", padding: "13px 0", borderBottom: i < arr.length - 1 ? `1px solid ${T.BORDER}` : "none" }}>
-              <span style={{ fontSize: 12.5, color: T.TEXT3, fontWeight: 500 }}>{label}</span>
-              <span style={{ fontSize: 13.5, color: T.TEXT, fontWeight: 600 }}>{value}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </SectionWrap>
-  );
-}
-
-// ─── About ────────────────────────────────────────────────────────────────────
-
-function AboutSection({ user, onUpdate }) {
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ gender: user.gender ?? "", sexual_preference: user.sexual_preference ?? "", biography: user.biography ?? "" });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSave = async () => {
-    setSaving(true); setError("");
-    try { const u = await api.patchProfile(form); onUpdate(u); setEditing(false); }
-    catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
-    finally { setSaving(false); }
-  };
-  const handleCancel = () => { setForm({ gender: user.gender ?? "", sexual_preference: user.sexual_preference ?? "", biography: user.biography ?? "" }); setEditing(false); setError(""); };
-
-  const gL = GENDERS.find(g => g.value === user.gender)?.label;
-  const pL = PREFERENCES.find(p => p.value === user.sexual_preference)?.label;
-
-  return (
-    <SectionWrap title="About me" subtitle="Gender, preference & bio" onEdit={() => setEditing(true)} editing={editing}>
-      {editing ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            {[{ label: "Gender", key: "gender", opts: GENDERS },{ label: "Attracted to", key: "sexual_preference", opts: PREFERENCES }].map(({ label, key, opts }) => (
-              <div key={key}>
-                <label style={styles.lbl}>{label}</label>
-                <select value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} style={{ ...styles.inp, appearance: "none" }}>
-                  <option value="">Select...</option>
-                  {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-            ))}
-          </div>
-          <div>
-            <label style={styles.lbl}>Bio <span style={{ fontSize: 10, color: T.TEXT3, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>— {form.biography.length}/500</span></label>
-            <textarea value={form.biography} onChange={e => setForm(p => ({ ...p, biography: e.target.value }))} maxLength={500} rows={5} placeholder="Tell people who you are..." style={{ ...styles.inp, resize: "none", lineHeight: 1.6 }} />
-          </div>
-          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
-        </div>
-      ) : (
-        <div>
-          <div style={{ display: "flex", gap: 9, flexWrap: "wrap", marginBottom: 16 }}>
-            {gL && <span style={styles.pill}>{gL}</span>}
-            {pL && <span style={{ ...styles.pill, background: "#f3eafd", color: "#7b3f99", borderColor: "#d9b8f0" }}>{pL}</span>}
-            {!gL && !pL && <span style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic" }}>Not filled in yet.</span>}
-          </div>
-          {user.biography
-            ? <p style={{ fontSize: 14, color: T.TEXT2, lineHeight: 1.75, margin: 0, fontWeight: 400 }}>{user.biography}</p>
-            : <p style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic", margin: 0 }}>No bio yet — tell the world about yourself!</p>}
-        </div>
-      )}
-    </SectionWrap>
-  );
-}
-
-// ─── Interests ────────────────────────────────────────────────────────────────
-
-function InterestsSection({ user, onUpdate }) {
-  const [editing, setEditing] = useState(false);
-  const [tags, setTags] = useState(user.tags ?? []);
-  const [input, setInput] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const addTag = (tag) => {
-    const n = tag.trim().startsWith("#") ? tag.trim().toLowerCase() : `#${tag.trim().toLowerCase()}`;
-    if (!n || n === "#" || tags.includes(n)) return;
-    setTags(t => [...t, n]); setInput("");
-  };
-  const handleSave = async () => {
-    setSaving(true); setError("");
-    try { const t = await api.updateTags(tags); onUpdate({ ...user, tags: t }); setEditing(false); }
-    catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
-    finally { setSaving(false); }
-  };
-  const handleCancel = () => { setTags(user.tags ?? []); setInput(""); setEditing(false); setError(""); };
-
-  return (
-    <SectionWrap title="Interests" subtitle="Things you're passionate about" badge={`${(user.tags ?? []).length} tags`} onEdit={() => setEditing(true)} editing={editing}>
-      {editing ? (
-        <div>
-          <div style={{ display: "flex", gap: 9, marginBottom: 14 }}>
-            <input value={input} onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(input); }}}
-              placeholder="Type and press Enter..." style={{ ...styles.inp, flex: 1 }} />
-            <button onClick={() => addTag(input)} style={styles.btnP}>Add</button>
-          </div>
-          {tags.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
-              {tags.map(tag => (
-                <span key={tag} style={{ ...styles.pill, background: T.P, color: "#fff", borderColor: T.P }}>
-                  {tag}
-                  <button onClick={() => setTags(t => t.filter(x => x !== tag))} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: 14, padding: 0, lineHeight: 1, display: "flex", marginLeft: 2 }}>x</button>
-                </span>
-              ))}
-            </div>
-          )}
-          <p style={{ ...styles.lbl, marginBottom: 10 }}>Quick add</p>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {SUGGESTED_TAGS.filter(t => !tags.includes(t)).map(tag => (
-              <button key={tag} onClick={() => addTag(tag)} style={{ ...styles.pill, cursor: "pointer", background: "transparent", transition: "background 0.12s" }}>{tag}</button>
-            ))}
-          </div>
-          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
-        </div>
-      ) : (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {(user.tags ?? []).length > 0
-            ? user.tags.map(tag => <span key={tag} style={styles.pill}>{tag}</span>)
-            : <span style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic" }}>No interests yet. Add some!</span>}
-        </div>
-      )}
-    </SectionWrap>
-  );
-}
-
-// ─── Location ─────────────────────────────────────────────────────────────────
-
-function LocationSection({ user, onUpdate }) {
-  const [editing, setEditing] = useState(false);
-  const [city, setCity] = useState(user.location_city ?? "");
-  const [gpsCoords, setGpsCoords] = useState(null);
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [gpsOk, setGpsOk] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  const useGPS = () => {
-    if (!navigator.geolocation) { setError("Geolocation not supported."); return; }
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      pos => { setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGpsOk(true); setGpsLoading(false); },
-      () => { setError("Could not get location."); setGpsLoading(false); }
-    );
-  };
-  const handleSave = async () => {
-    if (!city.trim() && !gpsCoords) { setError("Please provide a city or use GPS."); return; }
-    setSaving(true); setError("");
+  const handleDelete = async (id: number) => {
     try {
-      const body = {};
-      if (gpsCoords) { body.latitude = gpsCoords.lat; body.longitude = gpsCoords.lng; }
-      if (city.trim()) body.location_city = city.trim();
-      await api.updateLocation(body);
-      onUpdate({ ...user, location_city: city.trim() || user.location_city, latitude: gpsCoords?.lat ?? user.latitude, longitude: gpsCoords?.lng ?? user.longitude });
-      setEditing(false);
-    } catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
-    finally { setSaving(false); }
+      await api.deletePhoto(id);
+      const remaining = photos.filter(p => p.id !== id);
+      const newPicId = id === user.profile_picture_id ? (remaining[0]?.id ?? null) : user.profile_picture_id;
+      onUpdate({ ...user, photos: remaining, profile_picture_id: newPicId });
+    } catch (e) { setError(e instanceof Error ? e.message : 'Delete failed.'); }
   };
-  const handleCancel = () => { setCity(user.location_city ?? ""); setGpsOk(false); setGpsCoords(null); setEditing(false); setError(""); };
 
+  const handleSetMain = async (id: number) => {
+    try { const u = await api.setMainPhoto(id); onUpdate(u); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Failed.'); }
+  };
+
+  return (
+    <div style={{ background: '#fff', borderRadius: '20px', padding: '20px 22px', border: '1px solid #f0f0f0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>Photos</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{ fontSize: '11px', color: '#bbb' }}>{photos.length}/5</span>
+          {photos.length < 5 && (
+            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+              style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'rgba(233,64,87,0.08)', border: 'none', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer' }}>
+              + Add photo
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
+        {slots.map((photo, i) => (
+          <div key={photo?.id ?? `empty-${i}`} style={{ position: 'relative', flexShrink: 0, width: '140px', height: '180px', borderRadius: '14px', overflow: 'hidden', background: '#f9f9f9', border: '1.5px solid #f0f0f0', cursor: photo ? 'default' : 'pointer' }}
+            onClick={() => !photo && fileRef.current?.click()}>
+            {photo ? (
+              <>
+                <img src={photo.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {photo.id === user.profile_picture_id && (
+                  <span style={{ position: 'absolute', top: '8px', left: '8px', background: '#e94057', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', letterSpacing: '0.05em' }}>MAIN</span>
+                )}
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.25)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0)')}>
+                  <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
+                    {photo.id !== user.profile_picture_id && (
+                      <button type="button" onClick={() => handleSetMain(photo.id)} title="Set as main" style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#e94057' }}>
+                        <Star size={12} />
+                      </button>
+                    )}
+                    <button type="button" onClick={() => handleDelete(photo.id)} style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555' }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#ccc' }}>
+                {uploading && i === photos.length ? <Loader2 size={20} /> : <Camera size={20} />}
+                <span style={{ fontSize: '11px', fontWeight: 500 }}>Add</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleUpload} style={{ display: 'none' }} />
+      {error && <p style={{ fontSize: '11px', color: '#e94057', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={10} /> {error}</p>}
+    </div>
+  );
+}
+
+// ─── About panel ──────────────────────────────────────────────────────────────
+
+function AboutPanel({ user, onEditAbout, onEditLocation }: { user: UserProfile; onEditAbout: () => void; onEditLocation: () => void }) {
+  const genderLabel = GENDERS.find(g => g.value === user.gender)?.label;
+  const prefLabel = PREFERENCES.find(p => p.value === user.sexual_preference)?.label
+    ?? `${PREFERENCES.find(p => p.value === DEFAULT_PREFERENCE)?.label} (default)`;
   const lat = user.latitude != null ? Number(user.latitude) : null;
   const lng = user.longitude != null ? Number(user.longitude) : null;
 
+  const rows = [
+    { label: 'City', value: user.location_city ?? (lat ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation },
+    { label: 'Age', value: user.age ? `${user.age} years old` : null, action: onEditAbout },
+    { label: 'Gender', value: genderLabel ?? null, action: onEditAbout },
+    { label: 'Orientation', value: prefLabel, action: onEditAbout },
+  ];
+
   return (
-    <SectionWrap title="Location" subtitle="Used for nearby match suggestions" onEdit={() => setEditing(true)} editing={editing}>
-      {editing ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <button onClick={useGPS} disabled={gpsLoading}
-            style={{ ...styles.btnO, justifyContent: "center", padding: "13px", borderColor: gpsOk ? T.P : T.PB, color: gpsOk ? T.P : T.TEXT2, width: "100%" }}>
-            {gpsLoading ? "Detecting..." : gpsOk ? "GPS detected" : "Use my current location"}
-          </button>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ flex: 1, height: 1, background: T.PM }} />
-            <span style={{ fontSize: 10.5, color: T.TEXT3, letterSpacing: "0.08em", textTransform: "uppercase" }}>or</span>
-            <div style={{ flex: 1, height: 1, background: T.PM }} />
+    <div style={{ background: '#fff', borderRadius: '20px', padding: '20px 22px', border: '1px solid #f0f0f0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>About</h3>
+        <button onClick={onEditAbout} style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <Edit2 size={11} /> Edit
+        </button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
+        {rows.map(({ label, value }) => (
+          <div key={label} style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+            <p style={{ fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>{label}</p>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: value ? '#333' : '#ddd' }}>
+              {value ?? '—'}
+            </p>
           </div>
-          <input value={city} onChange={e => setCity(e.target.value)} placeholder="Type your city" style={styles.inp} />
-          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
-        </div>
-      ) : (
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: "50%", background: T.PL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, border: `1px solid ${T.PB}`, color: T.P, fontWeight: 700 }}>Loc</div>
-          {user.location_city
-            ? <div><p style={{ fontSize: 15, fontWeight: 700, color: T.TEXT, margin: 0 }}>{user.location_city}</p><p style={{ fontSize: 12, color: T.TEXT3, margin: "3px 0 0" }}>Your primary location</p></div>
-            : lat
-              ? <span style={{ fontSize: 13, color: T.TEXT2 }}>{lat.toFixed(3)}, {lng?.toFixed(3)}</span>
-              : <p style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic", margin: 0 }}>No location set yet</p>}
-        </div>
-      )}
-    </SectionWrap>
+        ))}
+      </div>
+    </div>
   );
 }
 
-// ─── Activity ─────────────────────────────────────────────────────────────────
+// ─── Activity panel ───────────────────────────────────────────────────────────
 
-function ActivitySection({ user }) {
-  const [visitors, setVisitors] = useState([]);
-  const [likers, setLikers] = useState([]);
-  const [tab, setTab] = useState("visitors");
+function ActivityPanel({ user }: { user: UserProfile }) {
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
+  const [likers, setLikers] = useState<Liker[]>([]);
+  const [tab, setTab] = useState<'visitors' | 'likers'>('visitors');
   const [loading, setLoading] = useState(true);
+  const fame = Math.min(100, Math.max(0, user.fame_rating ?? 0));
 
   useEffect(() => {
     Promise.all([api.getVisitors(), api.getLikedBy()])
-      .then(([v, l]) => { setVisitors(v); setLikers(l); })
+      .then(([v, l]) => { setVisitors(v ?? []); setLikers(l ?? []); })
       .finally(() => setLoading(false));
   }, []);
 
-  const fame = Math.min(100, Math.max(0, user.fame_rating ?? 0));
-  const list = tab === "visitors" ? visitors : likers;
-
-  const stat = (n, label, color = T.P) => (
-    <div style={{ background: T.BG, borderRadius: 18, padding: "20px 16px", textAlign: "center", border: `1px solid ${T.BORDER}` }}>
-      <div style={{ fontSize: 30, fontWeight: 900, color, lineHeight: 1 }}>{n}</div>
-      <div style={{ fontSize: 10.5, color: T.TEXT3, marginTop: 7, fontWeight: 500, letterSpacing: "0.03em" }}>{label}</div>
-    </div>
-  );
+  const list = tab === 'visitors' ? visitors : likers;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={styles.card}>
-        <div style={{ padding: "26px 30px" }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12 }}>
-            <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>Fame score</p>
-            <span style={{ fontSize: 36, fontWeight: 900, color: T.P, lineHeight: 1 }}>{fame}</span>
-          </div>
-          <div style={{ height: 8, borderRadius: 100, background: T.PM, overflow: "hidden", marginBottom: 22 }}>
-            <div style={{ height: "100%", width: `${fame}%`, background: `linear-gradient(90deg, ${T.P2}, ${T.P})`, borderRadius: 100, transition: "width 0.9s ease" }} />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            {stat(likers.length, "Likes received")}
-            {stat(visitors.length, "Profile views")}
-            {stat(0, "Connections", T.GREEN)}
-          </div>
+    <div style={{ background: '#fff', borderRadius: '20px', padding: '20px 22px', border: '1px solid #f0f0f0' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>Fame & Activity</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <Star size={12} style={{ color: '#e94057' }} />
+          <span style={{ fontSize: '13px', fontWeight: 700, color: '#e94057' }}>{fame}</span>
         </div>
       </div>
 
-      <div style={styles.card}>
-        <div style={{ padding: "26px 30px 0" }}>
-          <div style={{ display: "flex", gap: 2, marginBottom: 20 }}>
-            {[["visitors","Visitors", visitors.length],["likers","Liked me", likers.length]].map(([key, label, count]) => (
-              <button key={key} onClick={() => setTab(key)}
-                style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", marginRight: 4, fontSize: 12.5, fontWeight: 700, color: tab === key ? T.P : T.TEXT3, background: tab === key ? T.PL : "none", border: `1.5px solid ${tab === key ? T.PB : "transparent"}`, borderRadius: 100, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s" }}>
-                {label}
-                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 100, background: tab === key ? T.P : T.PM, color: tab === key ? "#fff" : T.TEXT3, fontWeight: 800 }}>{count}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{ padding: "0 30px 24px", maxHeight: 340, overflowY: "auto" }}>
-          {loading ? (
-            <p style={{ textAlign: "center", color: T.TEXT3, fontSize: 13, padding: "32px 0" }}>Loading...</p>
-          ) : list.length > 0 ? list.map(item => {
-            const time = "visited_at" in item ? item.visited_at : item.liked_at;
-            const initials = `${item.first_name[0]}${item.last_name[0]}`.toUpperCase();
+      <div style={{ height: '6px', borderRadius: '999px', background: '#f5f5f5', marginBottom: '16px', overflow: 'hidden' }}>
+        <div style={{ height: '100%', borderRadius: '999px', background: '#e94057', width: `${fame}%`, transition: 'width 0.7s ease' }} />
+      </div>
+
+      <div style={{ display: 'flex', borderBottom: '1px solid #f5f5f5', marginBottom: '12px' }}>
+        {[
+          { key: 'visitors' as const, label: 'Visitors', icon: Eye, count: visitors.length },
+          { key: 'likers' as const, label: 'Liked me', icon: Heart, count: likers.length },
+        ].map(({ key, label, icon: Icon, count }) => (
+          <button key={key} onClick={() => setTab(key)} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 0', marginRight: '20px', fontSize: '12px', fontWeight: 600, color: tab === key ? '#e94057' : '#bbb', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#e94057' : 'transparent'}`, cursor: 'pointer', marginBottom: '-1px' }}>
+            <Icon size={11} /> {label}
+            <span style={{ marginLeft: '2px', padding: '1px 6px', borderRadius: '999px', background: tab === key ? '#e94057' : '#f5f5f5', color: tab === key ? '#fff' : '#aaa', fontSize: '9px', fontWeight: 700 }}>{count}</span>
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><Loader2 size={16} style={{ color: '#ddd' }} /></div>
+      ) : list.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0', maxHeight: '200px', overflowY: 'auto' }}>
+          {list.map(item => {
+            const time = 'visited_at' in item ? item.visited_at : item.liked_at;
             return (
-              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 0", borderBottom: `1px solid ${T.BORDER}` }}>
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: T.PL, border: `1.5px solid ${T.PB}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13.5, fontWeight: 800, color: T.P, flexShrink: 0, overflow: "hidden" }}>
-                  {item.profile_picture_url ? <img src={item.profile_picture_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials}
+              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderBottom: '1px solid #f9f9f9' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f5f5f5', overflow: 'hidden', flexShrink: 0, border: '1.5px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#e94057' }}>
+                  {item.profile_picture_url ? <img src={item.profile_picture_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : item.first_name[0]}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 13.5, fontWeight: 700, color: T.TEXT, margin: 0 }}>{item.first_name} {item.last_name}</p>
-                  <p style={{ fontSize: 11.5, color: T.TEXT3, margin: "2px 0 0" }}>@{item.username}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.first_name} {item.last_name}</p>
+                  <p style={{ fontSize: '10px', color: '#bbb' }}>@{item.username}</p>
                 </div>
-                <span style={{ fontSize: 11.5, color: T.TEXT3 }}>{timeAgo(time)}</span>
+                <span style={{ fontSize: '10px', color: '#ccc', flexShrink: 0 }}>{timeAgo(time)}</span>
               </div>
             );
-          }) : (
-            <p style={{ textAlign: "center", color: T.TEXT3, fontSize: 13, fontStyle: "italic", padding: "32px 0" }}>Nothing here yet.</p>
-          )}
+          })}
         </div>
+      ) : (
+        <p style={{ fontSize: '12px', color: '#ccc', textAlign: 'center', padding: '20px 0', fontStyle: 'italic' }}>Nothing here yet.</p>
+      )}
+    </div>
+  );
+}
+
+// ─── Sidebar: Messages ────────────────────────────────────────────────────────
+
+function MessagesSidebar() {
+  const navigate = useNavigate();
+  // Placeholder messages — in real app these come from the chat API
+  const mockChats = [
+    { id: 1, name: 'Sofia M.', avatar: null, initials: 'SM', preview: "Hey, how are you doing?", time: '4:20 am', online: true },
+    { id: 2, name: 'Lucas B.', avatar: null, initials: 'LB', preview: "I'm down for coffee!", time: '2:09 am', online: true },
+    { id: 3, name: 'Amira K.', avatar: null, initials: 'AK', preview: "Lol that's so funny 😂", time: '2:02 am', online: true },
+    { id: 4, name: 'Remi C.', avatar: null, initials: 'RC', preview: "Did you see my last message?", time: '1:56 am', online: false },
+    { id: 5, name: 'Yuki T.', avatar: null, initials: 'YT', preview: "You: Aww, thank you!", time: '1:04 am', online: false },
+  ];
+  const [activeTab, setActiveTab] = useState<'chats' | 'requests'>('chats');
+
+  return (
+    <div style={{ background: '#fff', borderRadius: '20px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+      <div style={{ padding: '18px 20px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>Messages</h3>
+          <button onClick={() => navigate('/chat')} style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer' }}>See all</button>
+        </div>
+        <div style={{ display: 'flex', borderBottom: '1px solid #f5f5f5' }}>
+          {(['chats', 'requests'] as const).map(t => (
+            <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: '8px 0', fontSize: '12px', fontWeight: 600, color: activeTab === t ? '#e94057' : '#bbb', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === t ? '#e94057' : 'transparent'}`, cursor: 'pointer', marginBottom: '-1px', textTransform: 'capitalize' }}>
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ padding: '4px 0' }}>
+        {mockChats.map(chat => (
+          <div key={chat.id} onClick={() => navigate('/chat')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px', cursor: 'pointer', transition: 'background 0.1s' }}
+            onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffe4e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#e94057', overflow: 'hidden' }}>
+                {chat.avatar ? <img src={chat.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : chat.initials}
+              </div>
+              {chat.online && <span style={{ position: 'absolute', bottom: 0, right: 0, width: '11px', height: '11px', borderRadius: '50%', background: '#4ade80', border: '2px solid #fff' }} />}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: '13px', fontWeight: 600, color: '#222', marginBottom: '1px' }}>{chat.name}</p>
+              <p style={{ fontSize: '11px', color: '#bbb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chat.preview}</p>
+            </div>
+            <span style={{ fontSize: '10px', color: '#ccc', flexShrink: 0 }}>{chat.time}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+// ─── Sidebar: Online contacts ─────────────────────────────────────────────────
 
-const NAV = [
-  { key: "photos",    icon: "Cam",  label: "My photos" },
-  { key: "identity",  icon: "Id",   label: "Identity" },
-  { key: "about",     icon: "Me",   label: "About me" },
-  { key: "interests", icon: "#",    label: "Interests" },
-  { key: "location",  icon: "Loc",  label: "Location" },
-  { key: "activity",  icon: "Act",  label: "Activity" },
-];
-
-function Sidebar({ user, active, onSection, onLogout, logoutLoading }) {
-  const mainPhoto = user.photos?.find(p => p.id === user.profile_picture_id) ?? user.photos?.[0];
-  const initials  = `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase();
-  const { score, items } = getCompletion(user);
+function OnlineContactsSidebar({ visitors }: { visitors: Visitor[] }) {
+  const navigate = useNavigate();
+  // Show visitors as "contacts online" — in real app use a dedicated endpoint
+  const online = visitors.slice(0, 8);
+  const colors = ['#e94057', '#f97316', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#6366f1'];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Profile card */}
-      <div style={styles.card}>
-        <div style={{ padding: "22px 20px" }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, paddingBottom: 18, marginBottom: 14, borderBottom: `1px solid ${T.BORDER}` }}>
-            {/* Avatar */}
-            <div style={{ position: "relative" }}>
-              <div style={{ width: 84, height: 84, borderRadius: "50%", overflow: "hidden", background: T.PL, border: `3px solid ${T.PB}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 800, color: T.P }}>
-                {mainPhoto?.url ? <img src={mainPhoto.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials}
-              </div>
-              <span style={{ position: "absolute", bottom: 4, right: 4, width: 14, height: 14, background: T.GREEN, borderRadius: "50%", border: `2.5px solid #fff` }} />
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 15.5, fontWeight: 800, color: T.TEXT, margin: 0, letterSpacing: "-0.02em" }}>{user.first_name} {user.last_name}</p>
-              <p style={{ fontSize: 12, color: T.TEXT3, margin: "3px 0 0" }}>@{user.username}</p>
-            </div>
-            {/* Fame bar */}
-            <div style={{ width: "100%" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10.5, color: T.TEXT3, marginBottom: 6 }}>
-                <span style={{ fontWeight: 600 }}>Fame</span>
-                <span style={{ color: T.P, fontWeight: 800 }}>{user.fame_rating ?? 0}</span>
-              </div>
-              <div style={{ height: 5, background: T.PM, borderRadius: 100, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${Math.min(100, user.fame_rating ?? 0)}%`, background: `linear-gradient(90deg, ${T.P2}, ${T.P})`, borderRadius: 100 }} />
-              </div>
-            </div>
-          </div>
-
-          {/* Nav */}
-          <nav>
-            {NAV.map(({ key, label }) => {
-              const isActive = active === key;
-              return (
-                <button key={key} onClick={() => onSection(key)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, width: "100%",
-                    padding: "10px 12px", borderRadius: 13,
-                    background: isActive ? T.PL : "transparent",
-                    color: isActive ? T.P : T.TEXT2,
-                    fontSize: 13.5, fontWeight: isActive ? 700 : 400,
-                    border: isActive ? `1px solid ${T.PB}` : "1px solid transparent",
-                    cursor: "pointer", fontFamily: "inherit", textAlign: "left",
-                    marginBottom: 3, transition: "all 0.13s",
-                  }}>
-                  {label}
-                  {isActive && <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: T.P }} />}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      </div>
-
-      {/* Profile strength */}
-      <div style={styles.card}>
-        <div style={{ padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-            <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>Profile strength</p>
-            <span style={{ fontSize: 11, color: score === 100 ? T.GREEN : T.P, fontWeight: 700 }}>
-              {score === 100 ? "Complete!" : `${score}%`}
-            </span>
-          </div>
-          <div style={{ height: 6, background: T.PM, borderRadius: 100, overflow: "hidden", marginBottom: 14 }}>
-            <div style={{ height: "100%", width: `${score}%`, background: score === 100 ? T.GREEN : `linear-gradient(90deg, ${T.P2}, ${T.P})`, borderRadius: 100, transition: "width 0.6s ease" }} />
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-            {items.map(item => (
-              <div key={item.label} style={{
-                fontSize: 11, padding: "6px 10px", borderRadius: 10,
-                background: item.ok ? T.PL : T.BG,
-                color: item.ok ? T.P : T.TEXT3,
-                border: `1px solid ${item.ok ? T.PB : T.BORDER}`,
-                textAlign: "center", fontWeight: item.ok ? 700 : 400,
-              }}>
-                {item.ok ? "✓ " : "○ "}{item.label}
+    <div style={{ background: '#fff', borderRadius: '20px', border: '1px solid #f0f0f0', padding: '18px 20px' }}>
+      <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222', marginBottom: '14px' }}>Online now</h3>
+      {online.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
+            {online.map((v, i) => (
+              <div key={v.id} onClick={() => navigate(`/profile/${v.username}`)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: `${colors[i % colors.length]}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, color: colors[i % colors.length], overflow: 'hidden', border: `2px solid ${colors[i % colors.length]}44` }}>
+                    {v.profile_picture_url ? <img src={v.profile_picture_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : v.first_name[0]}
+                  </div>
+                  <span style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80', border: '2px solid #fff' }} />
+                </div>
+                <span style={{ fontSize: '10px', color: '#888', textAlign: 'center', maxWidth: '44px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.first_name}</span>
               </div>
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Sign out */}
-      <div style={styles.card}>
-        <button onClick={onLogout} disabled={logoutLoading}
-          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "15px 20px", background: "none", border: "none", cursor: "pointer", fontSize: 13.5, color: T.TEXT2, fontWeight: 500, fontFamily: "inherit", transition: "color 0.13s" }}>
-          {logoutLoading ? "Signing out..." : "Sign out"}
-        </button>
-      </div>
+      ) : (
+        <p style={{ fontSize: '12px', color: '#ccc', fontStyle: 'italic' }}>No one online right now.</p>
+      )}
     </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Main page ────────────────────────────────────────────────────────────────
 
-export default function MyProfilePage() {
+const MyProfilePage = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [active, setActive] = useState("photos");
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState("");
-  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [fetchError, setFetchError] = useState('');
+  const [visitors, setVisitors] = useState<Visitor[]>([]);
+
+  // Edit modal state
+  const [editModal, setEditModal] = useState<'identity' | 'about' | 'tags' | 'location' | null>(null);
+
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
-    // Try real API, fall back to mock for preview
     api.getMe()
       .then(setUser)
-      .catch(() => setUser(MOCK_USER))
+      .catch(e => setFetchError(e instanceof Error ? e.message : 'Failed to load profile.'))
       .finally(() => setLoading(false));
+    api.getVisitors().then(setVisitors).catch(() => {});
   }, []);
 
-  const handleLogout = async () => {
-    setLogoutLoading(true);
-    try { await api.logout(); } catch {}
-    navigate("/login");
-  };
-
   if (loading) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.BG }}>
-      <div style={{ textAlign: "center" }}>
-        <p style={{ color: T.TEXT3, fontSize: 13.5, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Loading your profile...</p>
-      </div>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Loader2 size={28} style={{ color: '#e94057' }} />
     </div>
   );
 
-  if (fetchError && !user) return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.BG }}>
-      <div style={{ textAlign: "center" }}>
-        <p style={{ color: T.TEXT3, fontSize: 13.5, marginBottom: 14 }}>{fetchError}</p>
-        <button onClick={() => navigate("/login")} style={styles.btnP}>Back to login</button>
-      </div>
+  if (fetchError || !user) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
+      <p style={{ fontSize: '14px', color: '#aaa' }}>{fetchError || 'Profile not found.'}</p>
+      <button onClick={() => navigate('/login')} style={{ fontSize: '13px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer' }}>Back to login</button>
     </div>
   );
 
-  const sectionMap = {
-    photos:    <PhotosSection    user={user} onUpdate={setUser} />,
-    identity:  <IdentitySection  user={user} onUpdate={setUser} />,
-    about:     <AboutSection     user={user} onUpdate={setUser} />,
-    interests: <InterestsSection user={user} onUpdate={setUser} />,
-    location:  <LocationSection  user={user} onUpdate={setUser} />,
-    activity:  <ActivitySection  user={user} />,
+  const mainPhoto = user.photos?.find(p => p.id === user.profile_picture_id) ?? user.photos?.[0];
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try { await api.logout(); } catch {}
+    navigate('/login');
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: T.BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${T.PB}; border-radius: 100px; }
-        input:focus, select:focus, textarea:focus {
-          border-color: ${T.P} !important;
-          box-shadow: 0 0 0 3px rgba(200,75,122,0.1) !important;
-          outline: none;
-        }
-        button:hover:not(:disabled) { opacity: 0.88; }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .section-enter { animation: fadeUp 0.22s ease both; }
-      `}</style>
+    <div style={{ minHeight: '100vh', background: '#f7f4f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
 
-      {/* Header */}
-      <header style={{
-        position: "sticky", top: 0, zIndex: 20,
-        background: "rgba(250,245,247,0.9)", backdropFilter: "blur(16px)",
-        borderBottom: `1px solid ${T.BORDER}`,
-        padding: "14px 40px",
-        display: "flex", alignItems: "center", gap: 16,
-      }}>
-        <button onClick={() => navigate("/browse")}
-          style={{ width: 36, height: 36, borderRadius: "50%", border: `1.5px solid ${T.PB}`, background: T.CARD, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: T.P, flexShrink: 0 }}>
-          &larr;
-        </button>
-        <span style={{ fontSize: 16, fontWeight: 800, color: T.TEXT, flex: 1, letterSpacing: "-0.02em" }}>My Profile</span>
-        <span style={{ fontSize: 18, fontWeight: 900, color: T.P, fontStyle: "italic", letterSpacing: "-0.04em" }}>Matcha</span>
-      </header>
+      {/* ── Edit modals ── */}
+      {editModal === 'identity' && <EditIdentityModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
+      {editModal === 'about' && <EditAboutModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
+      {editModal === 'tags' && <EditTagsModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
+      {editModal === 'location' && <EditLocationModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
 
-      {/* Layout */}
-      <div style={{
-        maxWidth: "100%",
-        margin: "0 auto",
-        padding: "28px 40px 80px",
-        display: "grid",
-        gridTemplateColumns: "260px 1fr",
-        gap: 24,
-        alignItems: "start",
-      }}>
-        {/* Sticky sidebar */}
-        <div style={{ position: "sticky", top: 78 }}>
-          <Sidebar user={user} active={active} onSection={setActive} onLogout={handleLogout} logoutLoading={logoutLoading} />
+      <div style={{ maxWidth: '1140px', margin: '0 auto', padding: '28px 24px', display: 'grid', gridTemplateColumns: '1fr 320px', gap: '24px', alignItems: 'start' }}>
+
+        {/* ══ LEFT COLUMN ══ */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+          {/* ── Hero card: photo + info ── */}
+          <div style={{ background: '#fff', borderRadius: '24px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', minHeight: '260px' }}>
+
+              {/* Profile photo */}
+              <div style={{ position: 'relative', background: '#f5f5f5' }}>
+                {mainPhoto ? (
+                  <img src={mainPhoto.url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#ccc', minHeight: '260px', cursor: 'pointer' }}
+                    onClick={() => document.getElementById('photo-upload')?.click()}>
+                    <Camera size={32} />
+                    <span style={{ fontSize: '12px' }}>Add photo</span>
+                  </div>
+                )}
+                {user.is_online && (
+                  <span style={{ position: 'absolute', bottom: '12px', left: '12px', background: '#4ade80', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', letterSpacing: '0.05em' }}>● ONLINE</span>
+                )}
+              </div>
+
+              {/* Name / bio / tags */}
+              <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  {/* Name row */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a1a', lineHeight: 1.2 }}>
+                        {user.first_name} {user.last_name}{user.age ? `, ${user.age}` : ''}
+                      </h1>
+                      <CheckCircle2 size={18} style={{ color: '#e94057', flexShrink: 0 }} />
+                    </div>
+                    <button onClick={() => setEditModal('identity')} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, color: '#e94057', background: 'rgba(233,64,87,0.08)', border: 'none', borderRadius: '8px', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>
+                      <Edit2 size={10} /> Edit
+                    </button>
+                  </div>
+
+                  {/* Location */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '14px' }}>
+                    <MapPin size={12} style={{ color: '#e94057' }} />
+                    <span style={{ fontSize: '13px', color: '#aaa' }}>
+                      {user.location_city ?? (user.latitude ? `${Number(user.latitude).toFixed(2)}, ${Number(user.longitude).toFixed(2)}` : 'Location not set')}
+                    </span>
+                    <button onClick={() => setEditModal('location')} style={{ marginLeft: '4px', fontSize: '10px', color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}>
+                      <Edit2 size={9} />
+                    </button>
+                  </div>
+
+                  {/* Bio */}
+                  <div style={{ marginBottom: '18px' }}>
+                    {user.biography ? (
+                      <p style={{ fontSize: '13.5px', color: '#555', lineHeight: 1.6 }}>{user.biography}</p>
+                    ) : (
+                      <button onClick={() => setEditModal('about')} style={{ fontSize: '13px', color: '#bbb', fontStyle: 'italic', background: 'none', border: '1.5px dashed #eee', borderRadius: '10px', padding: '8px 14px', cursor: 'pointer' }}>
+                        + Add a bio
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', alignItems: 'center' }}>
+                    {(user.tags ?? []).length > 0 ? (
+                      user.tags.map(tag => (
+                        <span key={tag} style={{ padding: '4px 13px', borderRadius: '999px', background: '#fff0f2', color: '#e94057', fontSize: '12px', fontWeight: 500, border: '1px solid #ffd6db' }}>
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#ddd', fontStyle: 'italic' }}>No interests yet</span>
+                    )}
+                    <button onClick={() => setEditModal('tags')} style={{ padding: '4px 10px', borderRadius: '999px', background: '#fafafa', color: '#bbb', fontSize: '12px', fontWeight: 600, border: '1.5px dashed #eee', cursor: 'pointer' }}>
+                      + Edit
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Photos strip ── */}
+          <PhotosPanel user={user} onUpdate={setUser} />
+
+          {/* ── About ── */}
+          <AboutPanel user={user} onEditAbout={() => setEditModal('about')} onEditLocation={() => setEditModal('location')} />
+
+          {/* ── Activity ── */}
+          <ActivityPanel user={user} />
+
+          {/* ── Logout ── */}
+          <div style={{ background: '#fff', borderRadius: '20px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+            <button onClick={handleLogout} disabled={loggingOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '16px 22px', fontSize: '13px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', opacity: loggingOut ? 0.6 : 1 }}>
+              {loggingOut ? <Loader2 size={15} /> : <LogOut size={15} />}
+              {loggingOut ? 'Signing out…' : 'Sign out'}
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="section-enter" key={active}>
-          {sectionMap[active]}
+        {/* ══ RIGHT SIDEBAR ══ */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '88px' }}>
+          <MessagesSidebar />
+          <OnlineContactsSidebar visitors={visitors} />
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default MyProfilePage;

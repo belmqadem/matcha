@@ -4,7 +4,7 @@ interface ButtonProps {
   onClick?: () => void;
   children: ReactNode;
   type?: 'button' | 'submit';
-  variant?: 'primary' | 'google' | 'secondary' | 'danger';
+  variant?: 'primary' | 'google' | '42' | 'secondary' | 'danger';
   className?: string;
   disabled?: boolean;
 }
@@ -43,6 +43,20 @@ const Button = ({
             d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
           />
         </svg>
+        {children}
+      </button>
+    );
+  }
+
+  if (variant === '42') {
+    return (
+      <button
+        type={type}
+        onClick={onClick}
+        className={`w-full flex items-center justify-center gap-2 border-2 border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
+        disabled={disabled}
+      >
+        <img src="/src/assets/42-logo.png" alt="42" width={22} height={22} className="object-contain" />
         {children}
       </button>
     );

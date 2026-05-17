@@ -76,6 +76,9 @@ const RegisterPage = () => {
       <Button variant="google" onClick={handleGoogleSignup}>
         Signup with Google
       </Button>
+      <Button variant="42" onClick={() => authApi.login42()}>
+        Signup with 42
+      </Button>
 
       <Divider />
 
