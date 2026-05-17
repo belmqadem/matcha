@@ -9,6 +9,7 @@ import env from "./config/env.js";
 import pool from "./db/pool.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import { initSocket } from "./socket/index.js";
+import passport from "./config/passport.js";
 import notFound from "./middleware/notFound.js";
 import errorHandler from "./middleware/errorHandler.js";
 import { createRateLimiter } from "./middleware/rateLimiter.js";
@@ -36,6 +37,7 @@ app.use(httpLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(passport.initialize());
 app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 200 }));
 app.use("/uploads", express.static(uploadsDir));
 
