@@ -61,8 +61,9 @@ router.post(
   asyncHandler(authController.resetPassword),
 );
 
-// OAuth (placeholders)
-router.get("/google", asyncHandler(authController.googleAuth));
-router.get("/google/callback", asyncHandler(authController.googleCallback));
+router.get("/google", authController.googleAuth);
+router.get("/google/callback", authController.googleCallback);
+router.get("/42", authController.fortyTwoAuth);
+router.get("/42/callback", authController.fortyTwoCallback);
 
 export default router;

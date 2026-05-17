@@ -33,7 +33,7 @@ POST /api/auth/login
 
 **Body:** `{ username, password }`
 **Response 200:** `{ user: { id, username, email, first_name, last_name, profile_picture_id } }` + sets `token` cookie
-**Errors:** 401 invalid credentials, 401 not verified
+**Errors:** 401 invalid credentials, 401 not verified, 401 oauth account (password login not available)
 
 POST /api/auth/logout
 
@@ -44,7 +44,7 @@ POST /api/auth/forgot-password
 
 **Body:** `{ email }`
 **Response 200:** `{ message: "If that email exists, a reset link has been sent." }`
-**Errors:** 400 validation
+**Errors:** 400 validation, 400 oauth account (password reset not available)
 
 POST /api/auth/resend-verification
 
@@ -60,11 +60,22 @@ POST /api/auth/reset-password
 
 GET /api/auth/google
 
-**Response 501:** `{ error: "Not implemented" }`
+**Response 302:** Redirects to Google consent screen
 
 GET /api/auth/google/callback
 
-**Response 501:** `{ error: "Not implemented" }`
+**Response 302:** Sets `token` cookie and redirects to `${CLIENT_URL}/browse`
+**Errors:** Redirects to `${CLIENT_URL}/login?error=oauth_failed`
+
+GET /api/auth/42
+
+**Response 302:** Redirects to 42 consent screen
+**Notes:** 42 uses the Intra OAuth provider; email access is required.
+
+GET /api/auth/42/callback
+
+**Response 302:** Sets `token` cookie and redirects to `${CLIENT_URL}/browse`
+**Errors:** Redirects to `${CLIENT_URL}/login?error=oauth_failed`
 
 ---
 
