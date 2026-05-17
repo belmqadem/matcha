@@ -36,12 +36,10 @@ type BadgeKey = 'messages' | 'notifications';
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 const fetchCounts = (): Promise<NotifCounts> =>
-  Promise.all([
-    fetch('/api/chat/unread/count', { credentials: 'include' })
-      .then((r) => r.json()).then((d) => d.unread ?? 0).catch(() => 0),
-    fetch('/api/notifications/unread/count', { credentials: 'include' })
-      .then((r) => r.json()).then((d) => d.unread ?? 0).catch(() => 0),
-  ]).then(([unread_messages, unread_notifications]) => ({ unread_messages, unread_notifications }));
+  fetch('/api/chat/unread/count', { credentials: 'include' })
+    .then((r) => r.ok ? r.json() : { unread: 0 })
+    .then((d) => ({ unread_messages: d.unread ?? 0, unread_notifications: 0 }))
+    .catch(() => ({ unread_messages: 0, unread_notifications: 0 }));
 
 const fetchMe = (): Promise<Me | null> =>
   fetch('/api/users/me', { credentials: 'include' })
@@ -140,11 +138,9 @@ function TopNav({
     }}>
       <div style={{
         display: 'grid',
-        // Fixed side columns so center nav always gets the space it deserves
         gridTemplateColumns: '180px 1fr 180px',
         alignItems: 'center',
         height: '64px',
-        // Reduced side padding so the nav can breathe in the middle
         padding: '0 24px',
         gap: '8px',
       }}>
@@ -182,7 +178,6 @@ function TopNav({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  // More generous padding so links don't feel cramped
                   padding: '8px 14px',
                   borderRadius: '999px',
                   textDecoration: 'none',
@@ -194,7 +189,6 @@ function TopNav({
                   transition: 'color 0.15s, background 0.15s',
                 }}>
                   <span style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    {/* Slightly larger icons */}
                     <Icon size={15} strokeWidth={active ? 2.2 : 1.6} />
                     {count > 0 && (
                       <span style={{
@@ -214,7 +208,7 @@ function TopNav({
               );
             })}
 
-            {/* ── Search — bigger, flex-fills remaining space ── */}
+            {/* ── Search ── */}
             <form onSubmit={handleSearch} style={{ marginLeft: '8px', flex: 1, minWidth: 0 }}>
               <div style={{
                 display: 'flex',
@@ -229,10 +223,7 @@ function TopNav({
                 transition: 'border-color 0.2s, box-shadow 0.2s, background 0.2s',
                 cursor: 'text',
               }}>
-                <Search
-                  size={14}
-                  style={{ color: '#e94057', flexShrink: 0 }}
-                />
+                <Search size={14} style={{ color: '#e94057', flexShrink: 0 }} />
                 <input
                   type="text"
                   value={searchVal}

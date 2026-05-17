@@ -32,6 +32,10 @@ const LoginPage = () => {
     authApi.googleLogin();
   };
 
+  const handle42Login = () => {
+    authApi.login42();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -59,15 +63,6 @@ const LoginPage = () => {
 
   return (
     <AuthLayout header="Log in to find your match">
-      <Button variant="google" onClick={() => authApi.googleLogin()}>
-        Continue with Google
-      </Button>
-      <Button variant="42" onClick={() => authApi.login42()}>
-        Continue with 42
-      </Button>
-
-      <Divider />
-
       <form onSubmit={handleSubmit}>
         <Input
           type="text"
@@ -99,7 +94,7 @@ const LoginPage = () => {
       <div className="text-center mt-4 space-y-2">
         <Link
           to="/forgot-password"
-          className="block text-sm text-(--color-text) font-medium hover:text-(--color-primary) transition-colors"
+          className="block text-sm text-(--color-text) font-medium hover:text-(--color-primary) transition underline hover:underline-offset-2 duration-150 ease-in"
         >
           Forgot your password?
         </Link>
@@ -109,6 +104,17 @@ const LoginPage = () => {
             Register
           </Link>
         </p>
+      </div>
+
+      <Divider />
+
+      <div className="flex gap-4">
+        <Button variant="google" onClick={handleGoogleLogin}>
+          Continue with Google
+        </Button>
+        <Button variant="42" onClick={handle42Login}>
+          Continue with 42
+        </Button>
       </div>
     </AuthLayout>
   );
