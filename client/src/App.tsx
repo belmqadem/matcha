@@ -40,6 +40,7 @@ const App = () => {
         <Route path="/forgot-password"         element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token"   element={<ResetPasswordPage />} />
         <Route path="/profile/setup"           element={<ProfileSetupPage />} />
+        <Route path="/profile/me"          element={<MyProfilePage />} />
 
         {/* ── Authenticated routes (with app header) ── */}
         <Route element={<AppLayout />}>
@@ -51,8 +52,7 @@ const App = () => {
           <Route path="/likes"               element={<LikesPage />} />
           <Route path="/visitors"            element={<VisitorsPage />} />
           <Route path="/map"                 element={<MapPage />} />
-          <Route path="/profile/me"          element={<MyProfilePage />} />
-          <Route path="/profile/edit"        element={<EditProfilePage />} />
+{/* ?          <Route path="/profile/edit"        element={<EditProfilePage />} /> */}
           <Route path="/profile/:id"         element={<ProfilePage />} />
         </Route>
 

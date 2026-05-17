@@ -1,830 +1,197 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  Camera,
-  X,
-  Check,
-  Edit2,
-  MapPin,
-  Heart,
-  Star,
-  Eye,
-  ChevronDown,
-  Loader2,
-  ArrowLeft,
-  LogOut,
-} from 'lucide-react';
+import { useState, useRef, useEffect } from "react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-interface Photo {
-  id: number;
-  url: string;
-  order_index: number;
-  created_at: string;
-}
+const SUGGESTED_TAGS = ["#vegan","#geek","#piercing","#fitness","#travel","#music","#art","#gaming","#hiking","#foodie","#coffee","#books","#cinema","#yoga","#cooking"];
+const GENDERS = [{ value: "male", label: "Man" },{ value: "female", label: "Woman" },{ value: "non_binary", label: "Non-binary" },{ value: "other", label: "Other" }];
+const PREFERENCES = [{ value: "heterosexual", label: "Heterosexual" },{ value: "homosexual", label: "Homosexual" },{ value: "bisexual", label: "Bisexual" }];
 
-interface UserProfile {
-  id: number;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  gender: string | null;
-  sexual_preference: string | null;
-  biography: string | null;
-  location_city: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  fame_rating: number;
-  tags: string[];
-  photos: Photo[];
-  profile_picture_id: number | null;
-}
-
-interface Visitor {
-  id: number;
-  username: string;
-  first_name: string;
-  last_name: string;
-  profile_picture_url: string | null;
-  visited_at: string;
-}
-interface Liker {
-  id: number;
-  username: string;
-  first_name: string;
-  last_name: string;
-  profile_picture_url: string | null;
-  liked_at: string;
-}
+// ─── Fix: useNavigate returns a navigate function directly ────────────────────
+const useNavigate = () => {
+  return (path) => console.log("navigate to", path);
+};
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 const api = {
   getMe: () =>
-    fetch('/api/users/me', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => d.user as UserProfile),
-
-  patchUser: (body: object) =>
-    fetch('/api/users/me', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    }).then(async (r) => {
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-      return d.user as UserProfile;
-    }),
-
-  patchProfile: (body: object) =>
-    fetch('/api/profile/me', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    }).then(async (r) => {
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-      return d.user as UserProfile;
-    }),
-
-  updateTags: (tags: string[]) =>
-    fetch('/api/profile/me/tags', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ tags }),
-    }).then(async (r) => {
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-      return d.tags as string[];
-    }),
-
-  uploadPhoto: (file: File) => {
-    const fd = new FormData();
-    fd.append('photo', file);
-    return fetch('/api/profile/me/photos', {
-      method: 'POST',
-      credentials: 'include',
-      body: fd,
-    }).then(async (r) => {
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-      return d.photo as Photo;
-    });
+    fetch("/api/users/me", { credentials: "include" })
+      .then(r => r.json()).then(d => d.user),
+  patchUser: (body) =>
+    fetch("/api/users/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) })
+      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.user; }),
+  patchProfile: (body) =>
+    fetch("/api/profile/me", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) })
+      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.user; }),
+  updateTags: (tags) =>
+    fetch("/api/profile/me/tags", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ tags }) })
+      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.tags; }),
+  uploadPhoto: (file) => {
+    const fd = new FormData(); fd.append("photo", file);
+    return fetch("/api/profile/me/photos", { method: "POST", credentials: "include", body: fd })
+      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d.photo; });
   },
-
-  deletePhoto: (id: number) =>
-    fetch(`/api/profile/me/photos/${id}`, { method: 'DELETE', credentials: 'include' }).then(
-      async (r) => {
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-      },
-    ),
-
-  setMainPhoto: (id: number) =>
-    fetch(`/api/profile/me/photos/${id}/set-main`, {
-      method: 'PATCH',
-      credentials: 'include',
-    }).then(async (r) => {
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-    }),
-
+  deletePhoto: (id) =>
+    fetch(`/api/profile/me/photos/${id}`, { method: "DELETE", credentials: "include" })
+      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); }),
+  setMainPhoto: (id) =>
+    fetch(`/api/profile/me/photos/${id}/set-main`, { method: "PATCH", credentials: "include" })
+      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); }),
   getVisitors: () =>
-    fetch('/api/profile/me/visitors', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => d.visitors as Visitor[]),
-
+    fetch("/api/profile/me/visitors", { credentials: "include" }).then(r => r.json()).then(d => d.visitors ?? []),
   getLikedBy: () =>
-    fetch('/api/profile/me/liked-by', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d) => d.likers as Liker[]),
-
-  updateLocation: (body: object) =>
-    fetch('/api/profile/me/location', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(body),
-    }).then(async (r) => {
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-      return d;
-    }),
-
+    fetch("/api/profile/me/liked-by", { credentials: "include" }).then(r => r.json()).then(d => d.likers ?? []),
+  updateLocation: (body) =>
+    fetch("/api/profile/me/location", { method: "PATCH", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) })
+      .then(async r => { const d = await r.json(); if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`); return d; }),
   logout: () =>
-    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).then(async (r) => {
-      if (!r.ok) throw new Error('Logout failed');
-    }),
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" })
+      .then(async r => { if (!r.ok) throw new Error("Logout failed"); }),
 };
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Mock user for preview ────────────────────────────────────────────────────
+const MOCK_USER = {
+  id: 1, first_name: "Sophie", last_name: "Laurent", username: "sophielau",
+  email: "sophie@matcha.app", gender: "female", sexual_preference: "bisexual",
+  biography: "Coffee-fueled wanderer. I collect sunsets and mismatched socks. Probably thinking about pasta right now.",
+  location_city: "Paris", latitude: 48.85, longitude: 2.35,
+  fame_rating: 72, profile_picture_id: null,
+  photos: [], tags: ["#coffee", "#travel", "#cinema", "#yoga", "#art"],
+};
 
-const SUGGESTED_TAGS = [
-  '#vegan',
-  '#geek',
-  '#piercing',
-  '#fitness',
-  '#travel',
-  '#music',
-  '#art',
-  '#gaming',
-  '#hiking',
-  '#foodie',
-];
-const GENDERS = [
-  { value: 'male', label: 'Man' },
-  { value: 'female', label: 'Woman' },
-  { value: 'non_binary', label: 'Non-binary' },
-  { value: 'other', label: 'Other' },
-];
-const PREFERENCES = [
-  { value: 'heterosexual', label: 'Heterosexual' },
-  { value: 'homosexual', label: 'Homosexual' },
-  { value: 'bisexual', label: 'Bisexual' },
-];
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const SECTION_TABS = [
-  { key: 'photos', label: 'Photos' },
-  { key: 'identity', label: 'Identity' },
-  { key: 'about', label: 'About' },
-  { key: 'interests', label: 'Interests' },
-  { key: 'location', label: 'Location' },
-  { key: 'activity', label: 'Activity' },
-] as const;
-
-type SectionKey = (typeof SECTION_TABS)[number]['key'];
-
-function timeAgo(iso: string) {
+function timeAgo(iso) {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return 'just now';
+  if (m < 1) return "just now";
   if (m < 60) return `${m}m ago`;
   const h = Math.floor(m / 60);
   if (h < 24) return `${h}h ago`;
   return `${Math.floor(h / 24)}d ago`;
 }
 
-function getProfileCompletion(user: UserProfile) {
+function getCompletion(user) {
   const items = [
-    { label: 'Gender', ok: Boolean(user.gender) },
-    { label: 'Bio', ok: Boolean(user.biography?.trim()) },
-    {
-      label: 'Location',
-      ok: Boolean(user.location_city?.trim() || (user.latitude != null && user.longitude != null)),
-    },
-    { label: 'Interests', ok: (user.tags ?? []).length > 0 },
-    { label: 'Photos', ok: (user.photos ?? []).length > 0 },
+    { label: "Gender",    ok: Boolean(user.gender) },
+    { label: "Bio",       ok: Boolean(user.biography?.trim()) },
+    { label: "Location",  ok: Boolean(user.location_city?.trim() || (user.latitude != null && user.longitude != null)) },
+    { label: "Interests", ok: (user.tags ?? []).length > 0 },
+    { label: "Photos",    ok: (user.photos ?? []).length > 0 },
   ];
-  const score = Math.round((items.filter((item) => item.ok).length / items.length) * 100);
-  return { score, items };
+  return { score: Math.round(items.filter(i => i.ok).length / items.length * 100), items };
 }
+
+// ─── Design tokens ────────────────────────────────────────────────────────────
+const T = {
+  P:        "#C84B7A",
+  P2:       "#E8789E",
+  PL:       "#fdf0f5",
+  PB:       "#f2cedd",
+  PM:       "#f7dfe8",
+  TEXT:     "#1a0e14",
+  TEXT2:    "#9e7486",
+  TEXT3:    "#c4a8b4",
+  BG:       "#faf5f7",
+  CARD:     "#ffffff",
+  BORDER:   "rgba(200,75,122,0.12)",
+  GREEN:    "#16a37f",
+  SHADOW:   "0 2px 24px rgba(200,75,122,0.07)",
+};
+
+const styles = {
+  inp: {
+    width: "100%", padding: "11px 15px", borderRadius: 12,
+    border: `1.5px solid ${T.PB}`, background: T.CARD, fontSize: 13.5,
+    color: T.TEXT, outline: "none", fontFamily: "inherit",
+    boxSizing: "border-box", transition: "border-color 0.15s, box-shadow 0.15s",
+  },
+  lbl: {
+    display: "block", fontSize: 10.5, fontWeight: 700,
+    letterSpacing: "0.12em", textTransform: "uppercase",
+    color: T.TEXT3, marginBottom: 7,
+  },
+  pill: {
+    display: "inline-flex", alignItems: "center", gap: 5,
+    padding: "5px 14px", borderRadius: 100,
+    background: T.PL, color: T.P, fontSize: 12.5, fontWeight: 600,
+    border: `1px solid ${T.PB}`, letterSpacing: "0.01em",
+  },
+  btnP: {
+    display: "inline-flex", alignItems: "center", gap: 7,
+    padding: "10px 22px", borderRadius: 100,
+    background: T.P, color: "#fff", fontSize: 12.5, fontWeight: 700,
+    border: "none", cursor: "pointer", fontFamily: "inherit",
+    letterSpacing: "0.02em", transition: "background 0.15s, transform 0.1s",
+  },
+  btnO: {
+    display: "inline-flex", alignItems: "center", gap: 7,
+    padding: "10px 22px", borderRadius: 100,
+    background: T.CARD, color: T.P, fontSize: 12.5, fontWeight: 700,
+    border: `1.5px solid ${T.PB}`, cursor: "pointer", fontFamily: "inherit",
+    letterSpacing: "0.02em", transition: "border-color 0.15s, background 0.15s",
+  },
+  card: {
+    background: T.CARD, border: `1px solid ${T.BORDER}`,
+    borderRadius: 22, overflow: "hidden", boxShadow: T.SHADOW,
+  },
+};
 
 // ─── Shared UI ────────────────────────────────────────────────────────────────
 
-const inputCls =
-  'w-full rounded-xl border border-(--color-border) bg-white px-3.5 py-2.5 text-sm text-(--color-text) placeholder:text-(--color-text-muted)/40 focus:outline-none focus:border-(--color-primary) focus:ring-2 focus:ring-(--color-primary)/10 transition-all font-(--font-primary)';
-const labelCls =
-  'block text-[10px] font-semibold tracking-widest text-(--color-text-muted) uppercase mb-1.5';
-
-const SaveBar = ({
-  saving,
-  error,
-  onSave,
-  onCancel,
-}: {
-  saving: boolean;
-  error: string;
-  onSave: () => void;
-  onCancel: () => void;
-}) => (
-  <div className="flex items-center justify-between gap-3 pt-4 mt-4 border-t border-(--color-border)">
-    {error ? (
-      <p className="text-xs text-(--color-error) flex-1">{error}</p>
-    ) : (
-      <span className="flex-1" />
-    )}
-    <button
-      type="button"
-      onClick={onCancel}
-      className="px-4 py-2 text-xs font-semibold rounded-xl border border-(--color-border) text-(--color-text-muted) hover:bg-gray-50 transition-colors"
-    >
-      Cancel
-    </button>
-    <button
-      type="button"
-      onClick={onSave}
-      disabled={saving}
-      className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl bg-(--color-primary) text-white hover:opacity-90 disabled:opacity-50 transition-opacity"
-    >
-      {saving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Save changes
-    </button>
-  </div>
-);
-
-// ─── Section wrapper ──────────────────────────────────────────────────────────
-
-function Section({
-  id,
-  label,
-  children,
-}: {
-  id?: string;
-  label: string;
-  children: React.ReactNode;
-}) {
+function SaveBar({ saving, error, onSave, onCancel }) {
   return (
-    <div id={id}>
-      <p className="text-[10px] font-bold tracking-widest text-(--color-text-muted) uppercase mb-3 px-1">
-        {label}
-      </p>
-      <div className="bg-white rounded-2xl border border-(--color-border) shadow-sm overflow-hidden">
-        {children}
-      </div>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 9, paddingTop: 18, marginTop: 18, borderTop: `1px solid ${T.BORDER}` }}>
+      {error && <span style={{ fontSize: 12, color: "#c0392b", flex: 1 }}>{error}</span>}
+      <button onClick={onCancel} style={styles.btnO}>Discard</button>
+      <button onClick={onSave} disabled={saving} style={{ ...styles.btnP, opacity: saving ? 0.65 : 1 }}>
+        {saving ? "Saving..." : "Save changes"}
+      </button>
     </div>
   );
 }
 
-// ─── Basic Info ───────────────────────────────────────────────────────────────
-
-function BasicInfoSection({
-  user,
-  onUpdate,
-}: {
-  user: UserProfile;
-  onUpdate: (u: UserProfile) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    first_name: user.first_name,
-    last_name: user.last_name,
-    username: user.username,
-    email: user.email,
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError('');
-    try {
-      const u = await api.patchUser(form);
-      onUpdate(u);
-      setEditing(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save.');
-    } finally {
-      setSaving(false);
-    }
-  };
-  const handleCancel = () => {
-    setForm({
-      first_name: user.first_name,
-      last_name: user.last_name,
-      username: user.username,
-      email: user.email,
-    });
-    setError('');
-    setEditing(false);
-  };
-
+function SectionWrap({ title, subtitle, badge, onEdit, editing, children }) {
   return (
-    <Section label="Identity">
-      <div className="p-5">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-(--color-text-muted)">Name, username & email</p>
-          {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity"
-            >
-              <Edit2 size={11} /> Edit
-            </button>
-          )}
-        </div>
-        {editing ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {(['first_name', 'last_name'] as const).map((f) => (
-                <div key={f}>
-                  <label className={labelCls}>{f === 'first_name' ? 'First' : 'Last'}</label>
-                  <input
-                    value={form[f]}
-                    onChange={(e) => setForm((p) => ({ ...p, [f]: e.target.value }))}
-                    className={inputCls}
-                  />
-                </div>
-              ))}
-            </div>
-            {(['username', 'email'] as const).map((f) => (
-              <div key={f}>
-                <label className={labelCls}>{f}</label>
-                <input
-                  value={form[f]}
-                  onChange={(e) => setForm((p) => ({ ...p, [f]: e.target.value }))}
-                  type={f === 'email' ? 'email' : 'text'}
-                  className={inputCls}
-                />
-              </div>
-            ))}
-            <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { label: 'First name', value: user.first_name },
-                { label: 'Last name', value: user.last_name },
-              ].map(({ label, value }) => (
-                <div key={label}>
-                  <p className={labelCls}>{label}</p>
-                  <p className="text-sm font-medium text-(--color-text)">{value}</p>
-                </div>
-              ))}
-            </div>
-            <div>
-              <p className={labelCls}>Username</p>
-              <p className="text-sm font-medium text-(--color-text)">@{user.username}</p>
-            </div>
-            <div>
-              <p className={labelCls}>Email</p>
-              <p className="text-sm text-(--color-text-muted)">{user.email}</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </Section>
-  );
-}
-
-// ─── About ────────────────────────────────────────────────────────────────────
-
-function AboutSection({
-  user,
-  onUpdate,
-}: {
-  user: UserProfile;
-  onUpdate: (u: UserProfile) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({
-    gender: user.gender ?? '',
-    sexual_preference: user.sexual_preference ?? '',
-    biography: user.biography ?? '',
-  });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const handleSave = async () => {
-    setSaving(true);
-    setError('');
-    try {
-      const u = await api.patchProfile(form);
-      onUpdate(u);
-      setEditing(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save.');
-    } finally {
-      setSaving(false);
-    }
-  };
-  const handleCancel = () => {
-    setForm({
-      gender: user.gender ?? '',
-      sexual_preference: user.sexual_preference ?? '',
-      biography: user.biography ?? '',
-    });
-    setError('');
-    setEditing(false);
-  };
-
-  const genderLabel = GENDERS.find((g) => g.value === user.gender)?.label;
-  const prefLabel = PREFERENCES.find((p) => p.value === user.sexual_preference)?.label;
-
-  return (
-    <Section label="About">
-      <div className="p-5">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-(--color-text-muted)">Gender, preference & bio</p>
-          {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity"
-            >
-              <Edit2 size={11} /> Edit
-            </button>
-          )}
-        </div>
-        {editing ? (
-          <div className="space-y-3">
-            {[
-              { label: 'Gender', key: 'gender' as const, opts: GENDERS },
-              { label: 'Interested in', key: 'sexual_preference' as const, opts: PREFERENCES },
-            ].map(({ label, key, opts }) => (
-              <div key={key}>
-                <label className={labelCls}>{label}</label>
-                <div className="relative">
-                  <select
-                    value={form[key]}
-                    onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))}
-                    className={inputCls + ' appearance-none pr-8'}
-                  >
-                    <option value="">Select…</option>
-                    {opts.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={12}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-(--color-text-muted) pointer-events-none"
-                  />
-                </div>
-              </div>
-            ))}
-            <div>
-              <label className={labelCls}>Bio</label>
-              <textarea
-                value={form.biography}
-                onChange={(e) => setForm((p) => ({ ...p, biography: e.target.value }))}
-                maxLength={500}
-                rows={4}
-                className={inputCls + ' resize-none'}
-                placeholder="Write something about yourself…"
-              />
-              <p className="text-right text-[10px] text-(--color-text-muted)/50 mt-1">
-                {form.biography.length}/500
-              </p>
-            </div>
-            <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex gap-2 flex-wrap">
-              {genderLabel && (
-                <span className="px-3 py-1 rounded-full bg-(--color-background) text-(--color-text) text-xs font-medium border border-(--color-border)">
-                  {genderLabel}
-                </span>
-              )}
-              {prefLabel && (
-                <span className="px-3 py-1 rounded-full bg-(--color-primary)/10 text-(--color-primary) text-xs font-medium border border-(--color-primary)/20">
-                  {prefLabel}
-                </span>
-              )}
-              {!genderLabel && !prefLabel && (
-                <p className="text-xs text-(--color-text-muted)/50 italic">Not filled in yet.</p>
-              )}
-            </div>
-            {user.biography ? (
-              <p className="text-sm text-(--color-text-muted) leading-relaxed">{user.biography}</p>
-            ) : (
-              <p className="text-xs text-(--color-text-muted)/50 italic">No bio yet.</p>
-            )}
-          </div>
-        )}
-      </div>
-    </Section>
-  );
-}
-
-// ─── Tags ─────────────────────────────────────────────────────────────────────
-
-function TagsSection({
-  user,
-  onUpdate,
-}: {
-  user: UserProfile;
-  onUpdate: (u: UserProfile) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [tags, setTags] = useState<string[]>(user.tags ?? []);
-  const [input, setInput] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const addTag = (tag: string) => {
-    const n = tag.startsWith('#') ? tag.toLowerCase() : `#${tag.toLowerCase()}`;
-    if (!n || n === '#' || tags.includes(n)) return;
-    setTags((t) => [...t, n]);
-    setInput('');
-  };
-  const handleSave = async () => {
-    setSaving(true);
-    setError('');
-    try {
-      const t = await api.updateTags(tags);
-      onUpdate({ ...user, tags: t });
-      setEditing(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save.');
-    } finally {
-      setSaving(false);
-    }
-  };
-  const handleCancel = () => {
-    setTags(user.tags ?? []);
-    setInput('');
-    setError('');
-    setEditing(false);
-  };
-
-  return (
-    <Section label="Interests">
-      <div className="p-5">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-(--color-text-muted)">Things you're into</p>
-          {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity"
-            >
-              <Edit2 size={11} /> Edit
-            </button>
-          )}
-        </div>
-        {editing ? (
+    <div style={styles.card}>
+      <div style={{ padding: "26px 30px 0" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 22 }}>
           <div>
-            <div className="flex gap-2 mb-3">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ',') {
-                    e.preventDefault();
-                    addTag(input.trim());
-                  }
-                }}
-                placeholder="Type a tag and press Enter"
-                className={inputCls}
-              />
-              <button
-                type="button"
-                onClick={() => addTag(input.trim())}
-                className="px-3 py-2 rounded-xl bg-(--color-primary) text-white text-xs font-semibold hover:opacity-90 transition-opacity whitespace-nowrap"
-              >
-                Add
-              </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>{title}</p>
+              {badge && <span style={{ fontSize: 10, padding: "2px 9px", borderRadius: 100, background: T.PL, color: T.P, fontWeight: 700, border: `1px solid ${T.PB}` }}>{badge}</span>}
             </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-4">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-(--color-primary) text-white text-xs font-medium"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => setTags((t) => t.filter((x) => x !== tag))}
-                      className="opacity-70 hover:opacity-100"
-                    >
-                      <X size={9} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-            <p className={labelCls + ' mb-2'}>Quick add</p>
-            <div className="flex flex-wrap gap-1.5">
-              {SUGGESTED_TAGS.filter((t) => !tags.includes(t)).map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => addTag(tag)}
-                  className="px-2.5 py-1 rounded-full border border-(--color-border) text-(--color-text-muted) text-xs hover:border-(--color-primary) hover:text-(--color-primary) transition-colors"
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
+            {subtitle && <p style={{ fontSize: 13, color: T.TEXT2, margin: "5px 0 0", fontWeight: 400 }}>{subtitle}</p>}
           </div>
-        ) : (
-          <div className="flex flex-wrap gap-1.5">
-            {(user.tags ?? []).length > 0 ? (
-              user.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-3 py-1 rounded-full bg-(--color-primary)/10 text-(--color-primary) text-xs font-medium border border-(--color-primary)/20"
-                >
-                  {tag}
-                </span>
-              ))
-            ) : (
-              <p className="text-xs text-(--color-text-muted)/50 italic">No interests added yet.</p>
-            )}
-          </div>
-        )}
-      </div>
-    </Section>
-  );
-}
-
-// ─── Location ─────────────────────────────────────────────────────────────────
-
-function LocationSection({
-  user,
-  onUpdate,
-}: {
-  user: UserProfile;
-  onUpdate: (u: UserProfile) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [cityInput, setCityInput] = useState(user.location_city ?? '');
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(
-    user.latitude && user.longitude ? { lat: user.latitude, lng: user.longitude } : null,
-  );
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  const useGPS = () => {
-    if (!navigator.geolocation) {
-      setError('Geolocation not supported.');
-      return;
-    }
-    setGpsLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setGpsLoading(false);
-      },
-      () => {
-        setError('Could not get location.');
-        setGpsLoading(false);
-      },
-    );
-  };
-
-  const handleSave = async () => {
-    if (!cityInput.trim() && !gpsCoords) {
-      setError('Please provide a city or use GPS.');
-      return;
-    }
-    setSaving(true);
-    setError('');
-    try {
-      const body: Record<string, unknown> = {};
-      if (gpsCoords) {
-        body.latitude = gpsCoords.lat;
-        body.longitude = gpsCoords.lng;
-      }
-      if (cityInput.trim()) body.location_city = cityInput.trim();
-      await api.updateLocation(body);
-      onUpdate({
-        ...user,
-        location_city: cityInput.trim() || user.location_city,
-        latitude: gpsCoords?.lat ?? user.latitude,
-        longitude: gpsCoords?.lng ?? user.longitude,
-      });
-      setEditing(false);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save.');
-    } finally {
-      setSaving(false);
-    }
-  };
-  const handleCancel = () => {
-    setCityInput(user.location_city ?? '');
-    setGpsCoords(
-      user.latitude && user.longitude ? { lat: user.latitude, lng: user.longitude } : null,
-    );
-    setError('');
-    setEditing(false);
-  };
-
-  const lat = user.latitude != null ? Number(user.latitude) : null;
-  const lng = user.longitude != null ? Number(user.longitude) : null;
-
-  return (
-    <Section label="Location">
-      <div className="p-5">
-        <div className="flex justify-between items-center mb-4">
-          <p className="text-xs text-(--color-text-muted)">Used for nearby suggestions</p>
-          {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="flex items-center gap-1 text-xs font-semibold text-(--color-primary) hover:opacity-70 transition-opacity"
-            >
-              <Edit2 size={11} /> Edit
-            </button>
+          {onEdit && !editing && (
+            <button onClick={onEdit} style={{ ...styles.btnO, padding: "7px 16px", fontSize: 11.5 }}>Edit</button>
           )}
         </div>
-        {editing ? (
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={useGPS}
-              disabled={gpsLoading}
-              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-medium transition-all ${gpsCoords ? 'border-(--color-primary) bg-(--color-primary)/5 text-(--color-primary)' : 'border-(--color-border) text-(--color-text-muted) hover:border-(--color-primary) hover:text-(--color-primary)'}`}
-            >
-              {gpsLoading ? <Loader2 size={14} className="animate-spin" /> : <MapPin size={14} />}
-              {gpsLoading ? 'Detecting…' : gpsCoords ? 'GPS detected ✓' : 'Use my current location'}
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-(--color-border)" />
-              <span className="text-[10px] text-(--color-text-muted)/50 tracking-widest uppercase">
-                or
-              </span>
-              <div className="flex-1 h-px bg-(--color-border)" />
-            </div>
-            <input
-              value={cityInput}
-              onChange={(e) => setCityInput(e.target.value)}
-              placeholder="Enter your city"
-              className={inputCls}
-            />
-            <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
-          </div>
-        ) : (
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-(--color-primary)/10 flex items-center justify-center flex-shrink-0">
-              <MapPin size={13} className="text-(--color-primary)" />
-            </div>
-            {user.location_city ? (
-              <span className="text-sm font-medium text-(--color-text)">{user.location_city}</span>
-            ) : lat ? (
-              <span className="text-sm text-(--color-text-muted)">
-                {lat.toFixed(3)}, {lng?.toFixed(3)}
-              </span>
-            ) : (
-              <span className="text-xs text-(--color-text-muted)/50 italic">No location set</span>
-            )}
-          </div>
-        )}
       </div>
-    </Section>
+      <div style={{ padding: "0 30px 28px" }}>{children}</div>
+    </div>
   );
 }
 
 // ─── Photos ───────────────────────────────────────────────────────────────────
 
-function PhotosSection({
-  user,
-  onUpdate,
-}: {
-  user: UserProfile;
-  onUpdate: (u: UserProfile) => void;
-}) {
-  const fileRef = useRef<HTMLInputElement>(null);
+function PhotosSection({ user, onUpdate }) {
+  const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [hovId, setHovId] = useState(null);
   const photos = user.photos ?? [];
+  const sorted = [...photos].sort((a, b) => a.order_index - b.order_index);
+  const main   = sorted.find(p => p.id === user.profile_picture_id) ?? sorted[0] ?? null;
+  const others = sorted.filter(p => p.id !== main?.id);
+  // All 5 slots in a single uniform grid (no oversized main)
+  const slots  = [main, ...others, ...Array(Math.max(0, 5 - sorted.length)).fill(null)].slice(0, 5);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e) => {
     const files = Array.from(e.target.files ?? []);
-    e.target.value = '';
+    e.target.value = "";
     if (!files.length) return;
-    if (photos.length + files.length > 5) {
-      setError('Max 5 photos.');
-      return;
-    }
-    setUploading(true);
-    setError('');
+    if (photos.length + files.length > 5) { setError("Max 5 photos."); return; }
+    setUploading(true); setError("");
     try {
       let updated = { ...user };
       for (const file of files) {
@@ -832,516 +199,633 @@ function PhotosSection({
         updated = { ...updated, photos: [...updated.photos, p] };
       }
       onUpdate(updated);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed.');
-    } finally {
-      setUploading(false);
-    }
+    } catch (e) { setError(e instanceof Error ? e.message : "Upload failed."); }
+    finally { setUploading(false); }
   };
 
-  const handleDelete = async (id: number) => {
-    try {
-      await api.deletePhoto(id);
-      onUpdate({ ...user, photos: photos.filter((p) => p.id !== id) });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Delete failed.');
-    }
-  };
-
-  const handleSetMain = async (id: number) => {
-    try {
-      await api.setMainPhoto(id);
-      onUpdate({ ...user, profile_picture_id: id });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to set main photo.');
-    }
-  };
-
-  const sorted = photos.slice().sort((a, b) => a.order_index - b.order_index);
-  const mainPhoto = sorted.find((p) => p.id === user.profile_picture_id) ?? sorted[0] ?? null;
-  const otherPhotos = sorted.filter((p) => p.id !== mainPhoto?.id);
-  const slots = [mainPhoto, ...otherPhotos, ...Array(5 - sorted.length).fill(null)].slice(0, 5);
+  const handleDelete  = async (id) => { try { await api.deletePhoto(id); onUpdate({ ...user, photos: photos.filter(p => p.id !== id) }); } catch (e) { setError(e instanceof Error ? e.message : "Delete failed."); } };
+  const handleSetMain = async (id) => { try { await api.setMainPhoto(id); onUpdate({ ...user, profile_picture_id: id }); } catch (e) { setError(e instanceof Error ? e.message : "Failed."); } };
 
   return (
-    <Section id="photos" label="Photos">
-      <div className="p-5">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-xs text-(--color-text-muted)">
-            {photos.length}/5 photos · hover to manage
-          </p>
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="text-xs font-semibold text-(--color-primary) hover:underline"
-          >
-            Upload
+    <div style={styles.card}>
+      <div style={{ padding: "26px 30px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>Photos</p>
+              <span style={{ fontSize: 10, padding: "2px 9px", borderRadius: 100, background: T.PL, color: T.P, fontWeight: 700, border: `1px solid ${T.PB}` }}>{photos.length}/5</span>
+            </div>
+            <p style={{ fontSize: 13, color: T.TEXT2, margin: "5px 0 0" }}>Hover to set main or remove</p>
+          </div>
+          <button onClick={() => fileRef.current?.click()} disabled={uploading} style={styles.btnP}>
+            {uploading ? "Uploading..." : "+ Add photo"}
           </button>
         </div>
-
-        <div className="grid gap-2 md:grid-cols-[2fr_1fr]">
-          <div className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-(--color-background) border border-(--color-border) group">
-            {mainPhoto ? (
-              <>
-                <img
-                  src={mainPhoto.url}
-                  alt="Main profile"
-                  className="w-full h-full object-cover"
-                />
-                <span className="absolute top-3 left-3 rounded-full bg-(--color-primary) px-2 py-0.5 text-[9px] text-white font-semibold tracking-[0.2em] uppercase">
-                  Main
-                </span>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                <div className="absolute inset-0 flex items-end justify-between p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    type="button"
-                    onClick={() => handleSetMain(mainPhoto.id)}
-                    className="rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold text-(--color-primary)"
-                  >
-                    Main
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(mainPhoto.id)}
-                    className="rounded-full bg-white/90 p-2 text-(--color-text)"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="w-full h-full flex flex-col items-center justify-center gap-2 text-(--color-text-muted) hover:text-(--color-primary) transition-colors"
-              >
-                {uploading ? <Loader2 size={22} className="animate-spin" /> : <Camera size={24} />}
-                <span className="text-sm font-medium">Add main photo</span>
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            {slots.slice(1).map((photo, index) => (
-              <div
-                key={photo?.id ?? `empty-${index}`}
-                className="relative aspect-square rounded-3xl overflow-hidden bg-(--color-background) border border-(--color-border) group"
-              >
-                {photo ? (
-                  <>
-                    <img
-                      src={photo.url}
-                      alt={`Photo ${index + 2}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                    <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={() => handleSetMain(photo.id)}
-                        className="rounded-full bg-white/90 p-2 text-(--color-primary)"
-                      >
-                        <Star size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(photo.id)}
-                        className="rounded-full bg-white/90 p-2 text-(--color-text)"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => fileRef.current?.click()}
-                    disabled={uploading}
-                    className="w-full h-full flex flex-col items-center justify-center gap-2 text-(--color-text-muted) hover:text-(--color-primary) transition-colors"
-                  >
-                    <Camera size={18} />
-                    <span className="text-[11px] font-medium">Add</span>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {photos.length < 5 && (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="w-full py-2.5 rounded-xl border border-dashed border-(--color-border) text-xs font-medium text-(--color-text-muted) hover:border-(--color-primary) hover:text-(--color-primary) transition-colors flex items-center justify-center gap-2 mt-4"
-          >
-            {uploading ? <Loader2 size={12} className="animate-spin" /> : <Camera size={12} />}
-            {uploading ? 'Uploading…' : 'Upload more photos'}
-          </button>
-        )}
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          multiple
-          onChange={handleUpload}
-          className="hidden"
-        />
-        {error && <p className="text-xs text-(--color-error) mt-2">{error}</p>}
       </div>
-    </Section>
+      <div style={{ padding: "0 30px 28px" }}>
+        {/* Uniform 5-column grid — all photos the same size */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 10 }}>
+          {slots.map((ph, i) => (
+            <div
+              key={ph?.id ?? `e-${i}`}
+              style={{ aspectRatio: "1" }}
+              onMouseEnter={() => setHovId(ph?.id ?? `e-${i}`)}
+              onMouseLeave={() => setHovId(null)}
+            >
+              <SlotBox
+                photo={ph}
+                isMain={ph?.id === user.profile_picture_id || (i === 0 && !user.profile_picture_id && ph != null)}
+                hovered={hovId === (ph?.id ?? `e-${i}`)}
+                onSetMain={handleSetMain}
+                onDelete={handleDelete}
+                onAdd={() => fileRef.current?.click()}
+                uploading={uploading}
+              />
+            </div>
+          ))}
+        </div>
+        <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleUpload} style={{ display: "none" }} />
+        {error && <p style={{ fontSize: 12, color: "#c0392b", marginTop: 10 }}>{error}</p>}
+      </div>
+    </div>
   );
 }
 
-// ─── Fame & Activity ──────────────────────────────────────────────────────────
+function SlotBox({ photo, isMain, hovered, onSetMain, onDelete, onAdd, uploading }) {
+  const base = {
+    width: "100%", height: "100%", position: "relative",
+    borderRadius: 14, overflow: "hidden",
+    background: T.PL,
+    border: photo ? (isMain ? `2px solid ${T.P}` : `1px solid ${T.PB}`) : `2px dashed ${T.PB}`,
+    transition: "box-shadow 0.2s",
+    boxShadow: hovered && photo ? `0 4px 16px rgba(200,75,122,0.18)` : "none",
+  };
+  return (
+    <div style={base}>
+      {photo ? (
+        <>
+          {photo.url
+            ? <img src={photo.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            : <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: T.PB }}>[ ]</div>}
+          {isMain && (
+            <div style={{ position: "absolute", top: 6, left: 6 }}>
+              <span style={{ background: T.P, color: "#fff", fontSize: 8.5, fontWeight: 800, padding: "2px 8px", borderRadius: 100, letterSpacing: "0.08em", textTransform: "uppercase" }}>Main</span>
+            </div>
+          )}
+          {hovered && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(26,14,20,0.45)", backdropFilter: "blur(2px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              {!isMain && <button onClick={() => onSetMain(photo.id)} style={{ ...styles.btnP, padding: "5px 11px", fontSize: 10 }}>Set main</button>}
+              <button onClick={() => onDelete(photo.id)} style={{ ...styles.btnO, padding: "5px 11px", fontSize: 10, background: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.3)", color: "#fff" }}>Remove</button>
+            </div>
+          )}
+        </>
+      ) : (
+        <button onClick={onAdd} disabled={uploading}
+          style={{ width: "100%", height: "100%", background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, color: T.PB, fontFamily: "inherit" }}>
+          <span style={{ fontSize: 18, lineHeight: 1, color: T.TEXT3 }}>+</span>
+          <span style={{ fontSize: 10, color: T.TEXT3 }}>Add</span>
+        </button>
+      )}
+    </div>
+  );
+}
 
-function StatsSection({ user }: { user: UserProfile }) {
-  const [visitors, setVisitors] = useState<Visitor[]>([]);
-  const [likers, setLikers] = useState<Liker[]>([]);
-  const [tab, setTab] = useState<'visitors' | 'likers'>('visitors');
+// ─── Identity ─────────────────────────────────────────────────────────────────
+
+function IdentitySection({ user, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ first_name: user.first_name, last_name: user.last_name, username: user.username, email: user.email });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    setSaving(true); setError("");
+    try { const u = await api.patchUser(form); onUpdate(u); setEditing(false); }
+    catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
+    finally { setSaving(false); }
+  };
+  const handleCancel = () => { setForm({ first_name: user.first_name, last_name: user.last_name, username: user.username, email: user.email }); setEditing(false); setError(""); };
+
+  return (
+    <SectionWrap title="Identity" subtitle="Your name, username & email" onEdit={() => setEditing(true)} editing={editing}>
+      {editing ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {["first_name","last_name"].map(f => (
+              <div key={f}>
+                <label style={styles.lbl}>{f === "first_name" ? "First name" : "Last name"}</label>
+                <input value={form[f]} onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))} style={styles.inp} />
+              </div>
+            ))}
+          </div>
+          {[{k:"username",l:"Username",t:"text"},{k:"email",l:"Email address",t:"email"}].map(({k,l,t}) => (
+            <div key={k}>
+              <label style={styles.lbl}>{l}</label>
+              <input value={form[k]} onChange={e => setForm(p => ({ ...p, [k]: e.target.value }))} type={t} style={styles.inp} />
+            </div>
+          ))}
+          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
+        </div>
+      ) : (
+        <div>
+          {[
+            ["Full name", `${user.first_name} ${user.last_name}`],
+            ["Username",  `@${user.username}`],
+            ["Email",     user.email],
+          ].map(([label, value], i, arr) => (
+            <div key={label} style={{ display: "grid", gridTemplateColumns: "140px 1fr", padding: "13px 0", borderBottom: i < arr.length - 1 ? `1px solid ${T.BORDER}` : "none" }}>
+              <span style={{ fontSize: 12.5, color: T.TEXT3, fontWeight: 500 }}>{label}</span>
+              <span style={{ fontSize: 13.5, color: T.TEXT, fontWeight: 600 }}>{value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </SectionWrap>
+  );
+}
+
+// ─── About ────────────────────────────────────────────────────────────────────
+
+function AboutSection({ user, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ gender: user.gender ?? "", sexual_preference: user.sexual_preference ?? "", biography: user.biography ?? "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    setSaving(true); setError("");
+    try { const u = await api.patchProfile(form); onUpdate(u); setEditing(false); }
+    catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
+    finally { setSaving(false); }
+  };
+  const handleCancel = () => { setForm({ gender: user.gender ?? "", sexual_preference: user.sexual_preference ?? "", biography: user.biography ?? "" }); setEditing(false); setError(""); };
+
+  const gL = GENDERS.find(g => g.value === user.gender)?.label;
+  const pL = PREFERENCES.find(p => p.value === user.sexual_preference)?.label;
+
+  return (
+    <SectionWrap title="About me" subtitle="Gender, preference & bio" onEdit={() => setEditing(true)} editing={editing}>
+      {editing ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {[{ label: "Gender", key: "gender", opts: GENDERS },{ label: "Attracted to", key: "sexual_preference", opts: PREFERENCES }].map(({ label, key, opts }) => (
+              <div key={key}>
+                <label style={styles.lbl}>{label}</label>
+                <select value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} style={{ ...styles.inp, appearance: "none" }}>
+                  <option value="">Select...</option>
+                  {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+            ))}
+          </div>
+          <div>
+            <label style={styles.lbl}>Bio <span style={{ fontSize: 10, color: T.TEXT3, fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>— {form.biography.length}/500</span></label>
+            <textarea value={form.biography} onChange={e => setForm(p => ({ ...p, biography: e.target.value }))} maxLength={500} rows={5} placeholder="Tell people who you are..." style={{ ...styles.inp, resize: "none", lineHeight: 1.6 }} />
+          </div>
+          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: "flex", gap: 9, flexWrap: "wrap", marginBottom: 16 }}>
+            {gL && <span style={styles.pill}>{gL}</span>}
+            {pL && <span style={{ ...styles.pill, background: "#f3eafd", color: "#7b3f99", borderColor: "#d9b8f0" }}>{pL}</span>}
+            {!gL && !pL && <span style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic" }}>Not filled in yet.</span>}
+          </div>
+          {user.biography
+            ? <p style={{ fontSize: 14, color: T.TEXT2, lineHeight: 1.75, margin: 0, fontWeight: 400 }}>{user.biography}</p>
+            : <p style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic", margin: 0 }}>No bio yet — tell the world about yourself!</p>}
+        </div>
+      )}
+    </SectionWrap>
+  );
+}
+
+// ─── Interests ────────────────────────────────────────────────────────────────
+
+function InterestsSection({ user, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [tags, setTags] = useState(user.tags ?? []);
+  const [input, setInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const addTag = (tag) => {
+    const n = tag.trim().startsWith("#") ? tag.trim().toLowerCase() : `#${tag.trim().toLowerCase()}`;
+    if (!n || n === "#" || tags.includes(n)) return;
+    setTags(t => [...t, n]); setInput("");
+  };
+  const handleSave = async () => {
+    setSaving(true); setError("");
+    try { const t = await api.updateTags(tags); onUpdate({ ...user, tags: t }); setEditing(false); }
+    catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
+    finally { setSaving(false); }
+  };
+  const handleCancel = () => { setTags(user.tags ?? []); setInput(""); setEditing(false); setError(""); };
+
+  return (
+    <SectionWrap title="Interests" subtitle="Things you're passionate about" badge={`${(user.tags ?? []).length} tags`} onEdit={() => setEditing(true)} editing={editing}>
+      {editing ? (
+        <div>
+          <div style={{ display: "flex", gap: 9, marginBottom: 14 }}>
+            <input value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(input); }}}
+              placeholder="Type and press Enter..." style={{ ...styles.inp, flex: 1 }} />
+            <button onClick={() => addTag(input)} style={styles.btnP}>Add</button>
+          </div>
+          {tags.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+              {tags.map(tag => (
+                <span key={tag} style={{ ...styles.pill, background: T.P, color: "#fff", borderColor: T.P }}>
+                  {tag}
+                  <button onClick={() => setTags(t => t.filter(x => x !== tag))} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.8)", fontSize: 14, padding: 0, lineHeight: 1, display: "flex", marginLeft: 2 }}>x</button>
+                </span>
+              ))}
+            </div>
+          )}
+          <p style={{ ...styles.lbl, marginBottom: 10 }}>Quick add</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {SUGGESTED_TAGS.filter(t => !tags.includes(t)).map(tag => (
+              <button key={tag} onClick={() => addTag(tag)} style={{ ...styles.pill, cursor: "pointer", background: "transparent", transition: "background 0.12s" }}>{tag}</button>
+            ))}
+          </div>
+          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {(user.tags ?? []).length > 0
+            ? user.tags.map(tag => <span key={tag} style={styles.pill}>{tag}</span>)
+            : <span style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic" }}>No interests yet. Add some!</span>}
+        </div>
+      )}
+    </SectionWrap>
+  );
+}
+
+// ─── Location ─────────────────────────────────────────────────────────────────
+
+function LocationSection({ user, onUpdate }) {
+  const [editing, setEditing] = useState(false);
+  const [city, setCity] = useState(user.location_city ?? "");
+  const [gpsCoords, setGpsCoords] = useState(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsOk, setGpsOk] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const useGPS = () => {
+    if (!navigator.geolocation) { setError("Geolocation not supported."); return; }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => { setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGpsOk(true); setGpsLoading(false); },
+      () => { setError("Could not get location."); setGpsLoading(false); }
+    );
+  };
+  const handleSave = async () => {
+    if (!city.trim() && !gpsCoords) { setError("Please provide a city or use GPS."); return; }
+    setSaving(true); setError("");
+    try {
+      const body = {};
+      if (gpsCoords) { body.latitude = gpsCoords.lat; body.longitude = gpsCoords.lng; }
+      if (city.trim()) body.location_city = city.trim();
+      await api.updateLocation(body);
+      onUpdate({ ...user, location_city: city.trim() || user.location_city, latitude: gpsCoords?.lat ?? user.latitude, longitude: gpsCoords?.lng ?? user.longitude });
+      setEditing(false);
+    } catch (e) { setError(e instanceof Error ? e.message : "Failed to save."); }
+    finally { setSaving(false); }
+  };
+  const handleCancel = () => { setCity(user.location_city ?? ""); setGpsOk(false); setGpsCoords(null); setEditing(false); setError(""); };
+
+  const lat = user.latitude != null ? Number(user.latitude) : null;
+  const lng = user.longitude != null ? Number(user.longitude) : null;
+
+  return (
+    <SectionWrap title="Location" subtitle="Used for nearby match suggestions" onEdit={() => setEditing(true)} editing={editing}>
+      {editing ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button onClick={useGPS} disabled={gpsLoading}
+            style={{ ...styles.btnO, justifyContent: "center", padding: "13px", borderColor: gpsOk ? T.P : T.PB, color: gpsOk ? T.P : T.TEXT2, width: "100%" }}>
+            {gpsLoading ? "Detecting..." : gpsOk ? "GPS detected" : "Use my current location"}
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: 1, height: 1, background: T.PM }} />
+            <span style={{ fontSize: 10.5, color: T.TEXT3, letterSpacing: "0.08em", textTransform: "uppercase" }}>or</span>
+            <div style={{ flex: 1, height: 1, background: T.PM }} />
+          </div>
+          <input value={city} onChange={e => setCity(e.target.value)} placeholder="Type your city" style={styles.inp} />
+          <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={handleCancel} />
+        </div>
+      ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 44, height: 44, borderRadius: "50%", background: T.PL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, border: `1px solid ${T.PB}`, color: T.P, fontWeight: 700 }}>Loc</div>
+          {user.location_city
+            ? <div><p style={{ fontSize: 15, fontWeight: 700, color: T.TEXT, margin: 0 }}>{user.location_city}</p><p style={{ fontSize: 12, color: T.TEXT3, margin: "3px 0 0" }}>Your primary location</p></div>
+            : lat
+              ? <span style={{ fontSize: 13, color: T.TEXT2 }}>{lat.toFixed(3)}, {lng?.toFixed(3)}</span>
+              : <p style={{ fontSize: 13, color: T.TEXT3, fontStyle: "italic", margin: 0 }}>No location set yet</p>}
+        </div>
+      )}
+    </SectionWrap>
+  );
+}
+
+// ─── Activity ─────────────────────────────────────────────────────────────────
+
+function ActivitySection({ user }) {
+  const [visitors, setVisitors] = useState([]);
+  const [likers, setLikers] = useState([]);
+  const [tab, setTab] = useState("visitors");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([api.getVisitors(), api.getLikedBy()])
-      .then(([v, l]) => {
-        setVisitors(v ?? []);
-        setLikers(l ?? []);
-      })
+      .then(([v, l]) => { setVisitors(v); setLikers(l); })
       .finally(() => setLoading(false));
   }, []);
 
   const fame = Math.min(100, Math.max(0, user.fame_rating ?? 0));
+  const list = tab === "visitors" ? visitors : likers;
 
-  const UserRow = ({ item }: { item: Visitor | Liker }) => {
-    const time = 'visited_at' in item ? item.visited_at : item.liked_at;
-    return (
-      <div className="flex items-center gap-3 py-3 border-b border-(--color-border) last:border-0">
-        <div className="w-9 h-9 rounded-full bg-(--color-background) overflow-hidden flex-shrink-0 border border-(--color-border)">
-          {item.profile_picture_url ? (
-            <img src={item.profile_picture_url} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-(--color-primary) text-xs font-bold">
-              {item.first_name[0]}
-            </div>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-(--color-text) truncate">
-            {item.first_name} {item.last_name}
-          </p>
-          <p className="text-[10px] text-(--color-text-muted)">@{item.username}</p>
-        </div>
-        <span className="text-[10px] text-(--color-text-muted)/60">{timeAgo(time)}</span>
-      </div>
-    );
-  };
-
-  return (
-    <Section label="Fame & Activity">
-      <div className="p-5">
-        {/* Fame bar */}
-        <div className="mb-5">
-          <div className="flex justify-between items-baseline mb-2">
-            <span className="text-xs font-semibold text-(--color-text-muted) tracking-wide">
-              Fame score
-            </span>
-            <span className="text-2xl font-bold text-(--color-primary) tabular-nums">{fame}</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-(--color-background) overflow-hidden">
-            <div
-              className="h-full rounded-full bg-(--color-primary) transition-all duration-700"
-              style={{ width: `${fame}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-(--color-border) mb-3">
-          {[
-            { key: 'visitors' as const, label: 'Visitors', icon: Eye, count: visitors.length },
-            { key: 'likers' as const, label: 'Liked me', icon: Heart, count: likers.length },
-          ].map(({ key, label, icon: Icon, count }) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`flex items-center gap-1.5 px-1 py-2 mr-5 text-xs font-semibold border-b-2 transition-all -mb-px ${tab === key ? 'border-(--color-primary) text-(--color-primary)' : 'border-transparent text-(--color-text-muted)/50 hover:text-(--color-text-muted)'}`}
-            >
-              <Icon size={11} /> {label}
-              <span
-                className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${tab === key ? 'bg-(--color-primary) text-white' : 'bg-(--color-background) text-(--color-text-muted)'}`}
-              >
-                {count}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 size={16} className="animate-spin text-(--color-text-muted)/30" />
-          </div>
-        ) : (
-          <div className="max-h-56 overflow-y-auto -mx-5 px-5">
-            {tab === 'visitors' ? (
-              visitors.length > 0 ? (
-                visitors.map((v) => <UserRow key={v.id} item={v} />)
-              ) : (
-                <p className="text-xs text-(--color-text-muted)/50 italic text-center py-6">
-                  No visitors yet.
-                </p>
-              )
-            ) : likers.length > 0 ? (
-              likers.map((l) => <UserRow key={l.id} item={l} />)
-            ) : (
-              <p className="text-xs text-(--color-text-muted)/50 italic text-center py-6">
-                No likes yet.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </Section>
+  const stat = (n, label, color = T.P) => (
+    <div style={{ background: T.BG, borderRadius: 18, padding: "20px 16px", textAlign: "center", border: `1px solid ${T.BORDER}` }}>
+      <div style={{ fontSize: 30, fontWeight: 900, color, lineHeight: 1 }}>{n}</div>
+      <div style={{ fontSize: 10.5, color: T.TEXT3, marginTop: 7, fontWeight: 500, letterSpacing: "0.03em" }}>{label}</div>
+    </div>
   );
-}
-
-// ─── Profile Header ───────────────────────────────────────────────────────────
-
-function ProfileHeader({ user }: { user: UserProfile }) {
-  const completion = getProfileCompletion(user);
-  const mainPhoto = user.photos?.find((p) => p.id === user.profile_picture_id) ?? user.photos?.[0];
-  const initials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
 
   return (
-    <div className="space-y-5 px-5 pb-5 pt-8">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:gap-6">
-        <div className="flex items-end gap-4">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden bg-(--color-background) flex-shrink-0 shadow-md border border-(--color-border)">
-            {mainPhoto ? (
-              <img src={mainPhoto.url} alt="Profile" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-(--color-primary) text-xl font-bold">
-                {initials}
-              </div>
-            )}
+    <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+      <div style={styles.card}>
+        <div style={{ padding: "26px 30px" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 12 }}>
+            <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.14em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>Fame score</p>
+            <span style={{ fontSize: 36, fontWeight: 900, color: T.P, lineHeight: 1 }}>{fame}</span>
           </div>
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.22em] text-(--color-text-muted) uppercase">
-              Personal information
-            </p>
-            <h1 className="text-xl font-bold text-(--color-text) leading-tight mt-2">
-              {user.first_name} {user.last_name}
-            </h1>
-            <p className="text-xs text-(--color-text-muted) mt-1">@{user.username}</p>
+          <div style={{ height: 8, borderRadius: 100, background: T.PM, overflow: "hidden", marginBottom: 22 }}>
+            <div style={{ height: "100%", width: `${fame}%`, background: `linear-gradient(90deg, ${T.P2}, ${T.P})`, borderRadius: 100, transition: "width 0.9s ease" }} />
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() =>
-              document
-                .getElementById('photos')
-                ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
-            className="rounded-full bg-(--color-primary) px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
-          >
-            Manage photos
-          </button>
-          {mainPhoto && (
-            <button
-              type="button"
-              onClick={() =>
-                document
-                  .getElementById('photos')
-                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-              }
-              className="rounded-full border border-(--color-primary) px-4 py-2 text-sm font-semibold text-(--color-primary) transition hover:bg-(--color-primary)/5"
-            >
-              Upload / Remove
-            </button>
-          )}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            {stat(likers.length, "Likes received")}
+            {stat(visitors.length, "Profile views")}
+            {stat(0, "Connections", T.GREEN)}
+          </div>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-(--color-border) bg-(--color-background) p-4">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <div>
-            <p className="text-[10px] font-semibold tracking-[0.22em] text-(--color-text-muted) uppercase">
-              Profile strength
-            </p>
-            <p className="text-sm font-semibold text-(--color-text)">
-              {completion.score}% complete
-            </p>
-          </div>
-          <div
-            className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase ${completion.score === 100 ? 'bg-(--color-primary) text-white' : 'bg-white text-(--color-text-muted) border border-(--color-border)'}`}
-          >
-            {completion.score === 100
-              ? 'Complete'
-              : `${completion.items.filter((item) => item.ok).length} of ${completion.items.length}`}
+      <div style={styles.card}>
+        <div style={{ padding: "26px 30px 0" }}>
+          <div style={{ display: "flex", gap: 2, marginBottom: 20 }}>
+            {[["visitors","Visitors", visitors.length],["likers","Liked me", likers.length]].map(([key, label, count]) => (
+              <button key={key} onClick={() => setTab(key)}
+                style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 16px", marginRight: 4, fontSize: 12.5, fontWeight: 700, color: tab === key ? T.P : T.TEXT3, background: tab === key ? T.PL : "none", border: `1.5px solid ${tab === key ? T.PB : "transparent"}`, borderRadius: 100, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s" }}>
+                {label}
+                <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 100, background: tab === key ? T.P : T.PM, color: tab === key ? "#fff" : T.TEXT3, fontWeight: 800 }}>{count}</span>
+              </button>
+            ))}
           </div>
         </div>
-        <div className="h-2 rounded-full bg-white border border-(--color-border) overflow-hidden">
-          <div
-            className="h-full rounded-full bg-(--color-primary) transition-all"
-            style={{ width: `${completion.score}%` }}
-          />
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-[10px] text-(--color-text-muted)">
-          {completion.items.map((item) => (
-            <div
-              key={item.label}
-              className={`rounded-2xl border px-2 py-1 text-center ${item.ok ? 'border-(--color-primary)/20 bg-(--color-primary)/5 text-(--color-primary)' : 'border-(--color-border) bg-white'}`}
-            >
-              {item.label}
-            </div>
-          ))}
+        <div style={{ padding: "0 30px 24px", maxHeight: 340, overflowY: "auto" }}>
+          {loading ? (
+            <p style={{ textAlign: "center", color: T.TEXT3, fontSize: 13, padding: "32px 0" }}>Loading...</p>
+          ) : list.length > 0 ? list.map(item => {
+            const time = "visited_at" in item ? item.visited_at : item.liked_at;
+            const initials = `${item.first_name[0]}${item.last_name[0]}`.toUpperCase();
+            return (
+              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 0", borderBottom: `1px solid ${T.BORDER}` }}>
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: T.PL, border: `1.5px solid ${T.PB}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13.5, fontWeight: 800, color: T.P, flexShrink: 0, overflow: "hidden" }}>
+                  {item.profile_picture_url ? <img src={item.profile_picture_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 13.5, fontWeight: 700, color: T.TEXT, margin: 0 }}>{item.first_name} {item.last_name}</p>
+                  <p style={{ fontSize: 11.5, color: T.TEXT3, margin: "2px 0 0" }}>@{item.username}</p>
+                </div>
+                <span style={{ fontSize: 11.5, color: T.TEXT3 }}>{timeAgo(time)}</span>
+              </div>
+            );
+          }) : (
+            <p style={{ textAlign: "center", color: T.TEXT3, fontSize: 13, fontStyle: "italic", padding: "32px 0" }}>Nothing here yet.</p>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Logout Button ────────────────────────────────────────────────────────────
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function LogoutButton() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+const NAV = [
+  { key: "photos",    icon: "Cam",  label: "My photos" },
+  { key: "identity",  icon: "Id",   label: "Identity" },
+  { key: "about",     icon: "Me",   label: "About me" },
+  { key: "interests", icon: "#",    label: "Interests" },
+  { key: "location",  icon: "Loc",  label: "Location" },
+  { key: "activity",  icon: "Act",  label: "Activity" },
+];
 
-  const handleLogout = async () => {
-    setLoading(true);
-    try {
-      await api.logout();
-      navigate('/login');
-    } catch {
-      // fallback: navigate anyway
-      navigate('/login');
-    } finally {
-      setLoading(false);
-    }
-  };
+function Sidebar({ user, active, onSection, onLogout, logoutLoading }) {
+  const mainPhoto = user.photos?.find(p => p.id === user.profile_picture_id) ?? user.photos?.[0];
+  const initials  = `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase();
+  const { score, items } = getCompletion(user);
 
   return (
-    <button
-      onClick={handleLogout}
-      disabled={loading}
-      className="flex items-center gap-2 w-full px-5 py-4 text-sm font-semibold text-(--color-primary) hover:bg-(--color-primary)/5 transition-colors disabled:opacity-50"
-    >
-      {loading ? <Loader2 size={15} className="animate-spin" /> : <LogOut size={15} />}
-      {loading ? 'Signing out…' : 'Sign out'}
-    </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Profile card */}
+      <div style={styles.card}>
+        <div style={{ padding: "22px 20px" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, paddingBottom: 18, marginBottom: 14, borderBottom: `1px solid ${T.BORDER}` }}>
+            {/* Avatar */}
+            <div style={{ position: "relative" }}>
+              <div style={{ width: 84, height: 84, borderRadius: "50%", overflow: "hidden", background: T.PL, border: `3px solid ${T.PB}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 800, color: T.P }}>
+                {mainPhoto?.url ? <img src={mainPhoto.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initials}
+              </div>
+              <span style={{ position: "absolute", bottom: 4, right: 4, width: 14, height: 14, background: T.GREEN, borderRadius: "50%", border: `2.5px solid #fff` }} />
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <p style={{ fontSize: 15.5, fontWeight: 800, color: T.TEXT, margin: 0, letterSpacing: "-0.02em" }}>{user.first_name} {user.last_name}</p>
+              <p style={{ fontSize: 12, color: T.TEXT3, margin: "3px 0 0" }}>@{user.username}</p>
+            </div>
+            {/* Fame bar */}
+            <div style={{ width: "100%" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10.5, color: T.TEXT3, marginBottom: 6 }}>
+                <span style={{ fontWeight: 600 }}>Fame</span>
+                <span style={{ color: T.P, fontWeight: 800 }}>{user.fame_rating ?? 0}</span>
+              </div>
+              <div style={{ height: 5, background: T.PM, borderRadius: 100, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${Math.min(100, user.fame_rating ?? 0)}%`, background: `linear-gradient(90deg, ${T.P2}, ${T.P})`, borderRadius: 100 }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Nav */}
+          <nav>
+            {NAV.map(({ key, label }) => {
+              const isActive = active === key;
+              return (
+                <button key={key} onClick={() => onSection(key)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 10, width: "100%",
+                    padding: "10px 12px", borderRadius: 13,
+                    background: isActive ? T.PL : "transparent",
+                    color: isActive ? T.P : T.TEXT2,
+                    fontSize: 13.5, fontWeight: isActive ? 700 : 400,
+                    border: isActive ? `1px solid ${T.PB}` : "1px solid transparent",
+                    cursor: "pointer", fontFamily: "inherit", textAlign: "left",
+                    marginBottom: 3, transition: "all 0.13s",
+                  }}>
+                  {label}
+                  {isActive && <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: T.P }} />}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+
+      {/* Profile strength */}
+      <div style={styles.card}>
+        <div style={{ padding: "20px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+            <p style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: T.TEXT3, margin: 0 }}>Profile strength</p>
+            <span style={{ fontSize: 11, color: score === 100 ? T.GREEN : T.P, fontWeight: 700 }}>
+              {score === 100 ? "Complete!" : `${score}%`}
+            </span>
+          </div>
+          <div style={{ height: 6, background: T.PM, borderRadius: 100, overflow: "hidden", marginBottom: 14 }}>
+            <div style={{ height: "100%", width: `${score}%`, background: score === 100 ? T.GREEN : `linear-gradient(90deg, ${T.P2}, ${T.P})`, borderRadius: 100, transition: "width 0.6s ease" }} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {items.map(item => (
+              <div key={item.label} style={{
+                fontSize: 11, padding: "6px 10px", borderRadius: 10,
+                background: item.ok ? T.PL : T.BG,
+                color: item.ok ? T.P : T.TEXT3,
+                border: `1px solid ${item.ok ? T.PB : T.BORDER}`,
+                textAlign: "center", fontWeight: item.ok ? 700 : 400,
+              }}>
+                {item.ok ? "✓ " : "○ "}{item.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Sign out */}
+      <div style={styles.card}>
+        <button onClick={onLogout} disabled={logoutLoading}
+          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "15px 20px", background: "none", border: "none", cursor: "pointer", fontSize: 13.5, color: T.TEXT2, fontWeight: 500, fontFamily: "inherit", transition: "color 0.13s" }}>
+          {logoutLoading ? "Signing out..." : "Sign out"}
+        </button>
+      </div>
+    </div>
   );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-const MyProfilePage = () => {
+export default function MyProfilePage() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [activeSection, setActiveSection] = useState<SectionKey>('photos');
+  const [user, setUser] = useState(null);
+  const [active, setActive] = useState("photos");
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState('');
+  const [fetchError, setFetchError] = useState("");
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   useEffect(() => {
-    api
-      .getMe()
+    // Try real API, fall back to mock for preview
+    api.getMe()
       .then(setUser)
-      .catch((e) => setFetchError(e instanceof Error ? e.message : 'Failed to load profile.'))
+      .catch(() => setUser(MOCK_USER))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-(--color-background)">
-        <Loader2 size={24} className="animate-spin text-(--color-primary)" />
-      </div>
-    );
+  const handleLogout = async () => {
+    setLogoutLoading(true);
+    try { await api.logout(); } catch {}
+    navigate("/login");
+  };
 
-  if (fetchError || !user)
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-(--color-background)">
-        <div className="text-center">
-          <p className="text-sm text-(--color-text-muted) mb-3">
-            {fetchError || 'Profile not found.'}
-          </p>
-          <button
-            onClick={() => navigate('/login')}
-            className="text-sm font-semibold text-(--color-primary) hover:underline"
-          >
-            Back to login
-          </button>
-        </div>
+  if (loading) return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.BG }}>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ color: T.TEXT3, fontSize: 13.5, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>Loading your profile...</p>
       </div>
-    );
+    </div>
+  );
+
+  if (fetchError && !user) return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: T.BG }}>
+      <div style={{ textAlign: "center" }}>
+        <p style={{ color: T.TEXT3, fontSize: 13.5, marginBottom: 14 }}>{fetchError}</p>
+        <button onClick={() => navigate("/login")} style={styles.btnP}>Back to login</button>
+      </div>
+    </div>
+  );
+
+  const sectionMap = {
+    photos:    <PhotosSection    user={user} onUpdate={setUser} />,
+    identity:  <IdentitySection  user={user} onUpdate={setUser} />,
+    about:     <AboutSection     user={user} onUpdate={setUser} />,
+    interests: <InterestsSection user={user} onUpdate={setUser} />,
+    location:  <LocationSection  user={user} onUpdate={setUser} />,
+    activity:  <ActivitySection  user={user} />,
+  };
 
   return (
-    <div className="min-h-screen bg-(--color-background)">
+    <div style={{ minHeight: "100vh", background: T.BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: ${T.PB}; border-radius: 100px; }
+        input:focus, select:focus, textarea:focus {
+          border-color: ${T.P} !important;
+          box-shadow: 0 0 0 3px rgba(200,75,122,0.1) !important;
+          outline: none;
+        }
+        button:hover:not(:disabled) { opacity: 0.88; }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .section-enter { animation: fadeUp 0.22s ease both; }
+      `}</style>
+
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white border-b border-(--color-border) px-4 py-3.5 flex items-center gap-3">
-        <button
-          onClick={() => navigate('/browse')}
-          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-(--color-background) transition-colors"
-        >
-          <ArrowLeft size={16} className="text-(--color-text-muted)" />
+      <header style={{
+        position: "sticky", top: 0, zIndex: 20,
+        background: "rgba(250,245,247,0.9)", backdropFilter: "blur(16px)",
+        borderBottom: `1px solid ${T.BORDER}`,
+        padding: "14px 40px",
+        display: "flex", alignItems: "center", gap: 16,
+      }}>
+        <button onClick={() => navigate("/browse")}
+          style={{ width: 36, height: 36, borderRadius: "50%", border: `1.5px solid ${T.PB}`, background: T.CARD, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, color: T.P, flexShrink: 0 }}>
+          &larr;
         </button>
-        <span className="text-sm font-bold text-(--color-text) flex-1">My Profile</span>
-        {/* Matcha wordmark */}
-        <span className="text-sm font-bold text-(--color-primary) italic">Matcha</span>
+        <span style={{ fontSize: 16, fontWeight: 800, color: T.TEXT, flex: 1, letterSpacing: "-0.02em" }}>My Profile</span>
+        <span style={{ fontSize: 18, fontWeight: 900, color: T.P, fontStyle: "italic", letterSpacing: "-0.04em" }}>Matcha</span>
       </header>
 
-      <div className="max-w-5xl mx-auto pb-16 px-4">
-        <div className="mb-6 rounded-[2rem] border border-(--color-border) bg-white shadow-sm p-4">
-          <div className="flex flex-wrap gap-2">
-            {SECTION_TABS.map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveSection(tab.key)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  activeSection === tab.key
-                    ? 'bg-(--color-primary) text-white shadow-sm'
-                    : 'bg-(--color-background) text-(--color-text-muted) border border-(--color-border) hover:bg-(--color-primary)/10 hover:text-(--color-primary)'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+      {/* Layout */}
+      <div style={{
+        maxWidth: "100%",
+        margin: "0 auto",
+        padding: "28px 40px 80px",
+        display: "grid",
+        gridTemplateColumns: "260px 1fr",
+        gap: 24,
+        alignItems: "start",
+      }}>
+        {/* Sticky sidebar */}
+        <div style={{ position: "sticky", top: 78 }}>
+          <Sidebar user={user} active={active} onSection={setActive} onLogout={handleLogout} logoutLoading={logoutLoading} />
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-6">
-            <div className="space-y-6">
-              {activeSection === 'photos' && <PhotosSection user={user} onUpdate={setUser} />}
-              {activeSection === 'identity' && <BasicInfoSection user={user} onUpdate={setUser} />}
-              {activeSection === 'about' && <AboutSection user={user} onUpdate={setUser} />}
-              {activeSection === 'interests' && <TagsSection user={user} onUpdate={setUser} />}
-              {activeSection === 'location' && <LocationSection user={user} onUpdate={setUser} />}
-              {activeSection === 'activity' && <StatsSection user={user} />}
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div className="rounded-[2rem] border border-(--color-border) bg-white shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-(--color-text) mb-3">Profile summary</h2>
-              <p className="text-sm text-(--color-text-muted) leading-relaxed">
-                Keep your personal information up to date and use the photo gallery to highlight
-                your best moments.
-              </p>
-            </div>
-            <div className="rounded-[2rem] border border-(--color-border) bg-white shadow-sm overflow-hidden">
-              <div className="p-5">
-                <p className="text-[10px] font-bold tracking-widest text-(--color-text-muted) uppercase mb-3">
-                  Account
-                </p>
-                <LogoutButton />
-              </div>
-            </div>
-          </div>
+        {/* Content */}
+        <div className="section-enter" key={active}>
+          {sectionMap[active]}
         </div>
       </div>
     </div>
   );
-};
-
-export default MyProfilePage;
+}
