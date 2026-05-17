@@ -95,4 +95,12 @@ export const authApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     }).then((res) => handleResponse<{ message: string }>(res)),
+
+  googleLogin: () => {
+    window.location.href = '/api/auth/google';
+  },
+
+  login42: () => {
+    window.location.href = '/api/auth/42';
+  },
 };

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Divider from '@/components/ui/Divider';
@@ -11,18 +11,25 @@ import { authApi } from '@/api/authApi';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ username: '', password: '' });
   const passwordVisibility = usePasswordVisibility();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Handle OAuth error redirect from backend (e.g. ?error=oauth_failed)
+  useEffect(() => {
+    if (searchParams.get('error') === 'oauth_failed') {
+      setError('OAuth sign-in failed. Please try again.');
+    }
+  }, [searchParams]);
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
   const handleGoogleLogin = () => {
-    // TODO: integrate Google OAuth
-    console.log('Google login');
+    authApi.googleLogin();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

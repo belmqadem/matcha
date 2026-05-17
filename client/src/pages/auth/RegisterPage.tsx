@@ -27,7 +27,7 @@ const RegisterPage = () => {
   };
 
   const handleGoogleSignup = () => {
-    // TODO: integrate Google OAuth
+    authApi.googleLogin();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +57,6 @@ const RegisterPage = () => {
         const data = axiosErr.response?.data;
 
         if (data) {
-          // Pick the first error value from the response object
           const firstValue = Object.values(data)[0];
           const message = Array.isArray(firstValue) ? firstValue[0] : firstValue;
           setError(typeof message === 'string' ? message : 'Registration failed.');
@@ -67,8 +66,7 @@ const RegisterPage = () => {
       } else {
         setError('Registration failed.');
       }
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
