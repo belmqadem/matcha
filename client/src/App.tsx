@@ -23,16 +23,15 @@ import VisitorsPage from './pages/VisitorsPage.jsx';
 // Setup page (no header — user hasn't finished onboarding yet)
 import ProfileSetupPage from './pages/Profilesetuppage.jsx';
 
-// Layout
+// Layout & guards
 import AppLayout from './layout/AppLayout';
+import { RequireAuth, RequireProfile } from './guards';
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* ── Public / Auth routes (no app header) ── */}
-
-=======
+        {/* ── Public / Auth routes ── */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -40,24 +39,28 @@ const App = () => {
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-        <Route path="/profile/setup" element={<ProfileSetupPage />} />
 
-        {/* ── Authenticated routes (with app header) ── */}
-        <Route element={<AppLayout />}>
-          <Route path="/browse" element={<BrowsePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/chat/:userid" element={<ChatPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/likes" element={<LikesPage />} />
-          <Route path="/visitors" element={<VisitorsPage />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/profile/me" element={<MyProfilePage />} />
-          <Route path="/profile/edit" element={<EditProfilePage />} />
-          <Route path="/profile/:id" element={<ProfilePage />} />
+        {/* ── Must be logged in (profile setup allowed before completing profile) ── */}
+        <Route element={<RequireAuth />}>
+          <Route path="/profile/setup" element={<ProfileSetupPage />} />
 
+          {/* ── Must be logged in AND have a complete profile ── */}
+          <Route element={<RequireProfile />}>
+            <Route element={<AppLayout />}>
+              <Route path="/browse" element={<BrowsePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/chat/:userid" element={<ChatPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/likes" element={<LikesPage />} />
+              <Route path="/visitors" element={<VisitorsPage />} />
+              <Route path="/map" element={<MapPage />} />
+              <Route path="/profile/me" element={<MyProfilePage />} />
+              <Route path="/profile/edit" element={<EditProfilePage />} />
+              <Route path="/profile/:id" element={<ProfilePage />} />
+            </Route>
+          </Route>
         </Route>
-
 
         {/* ── Fallback ── */}
         <Route path="*" element={<Navigate to="/browse" replace />} />
