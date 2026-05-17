@@ -50,11 +50,11 @@ const App = () => {
           <Route path="/likes" element={<LikesPage />} />
           <Route path="/visitors" element={<VisitorsPage />} />
           <Route path="/map" element={<MapPage />} />
-
+          <Route path="/profile/me" element={<MyProfilePage />} />
           <Route path="/profile/edit" element={<EditProfilePage />} />
           <Route path="/profile/:id" element={<ProfilePage />} />
         </Route>
-         <Route path="/profile/me" element={<MyProfilePage />} />
+
 
         {/* ── Fallback ── */}
         <Route path="*" element={<Navigate to="/browse" replace />} />
