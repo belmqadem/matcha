@@ -7,6 +7,7 @@ interface ButtonProps {
   variant?: 'primary' | 'google' | '42' | 'secondary' | 'danger';
   className?: string;
   disabled?: boolean;
+  withArrow?: boolean;
 }
 
 const Button = ({
@@ -16,13 +17,14 @@ const Button = ({
   variant = 'primary',
   className = '',
   disabled = false,
+  withArrow = true,
 }: ButtonProps) => {
   if (variant === 'google') {
     return (
       <button
         type={type}
         onClick={onClick}
-        className={`w-full flex items-center justify-center gap-2 border-2 border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
+        className={`w-full flex items-center justify-center gap-2 border border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
         disabled={disabled}
       >
         <svg width="18" height="18" viewBox="0 0 48 48">
@@ -43,7 +45,6 @@ const Button = ({
             d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
           />
         </svg>
-        {children}
       </button>
     );
   }
@@ -53,11 +54,16 @@ const Button = ({
       <button
         type={type}
         onClick={onClick}
-        className={`w-full flex items-center justify-center gap-2 border-2 border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
+        className={`w-full flex items-center justify-center gap-2 border border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
         disabled={disabled}
       >
-        <img src="/src/assets/42-logo.png" alt="42" width={22} height={22} className="object-contain" />
-        {children}
+        <img
+          src="/src/assets/42-logo.png"
+          alt="42"
+          width={22}
+          height={22}
+          className="object-contain"
+        />
       </button>
     );
   }
@@ -70,7 +76,7 @@ const Button = ({
       style={{ background: 'linear-gradient(90deg, #C4364A, #e05570)' }}
     >
       {children}
-      <span className="text-[10px]">▶</span>
+      {withArrow && <span className="text-[10px]">▶</span>}
     </button>
   );
 };

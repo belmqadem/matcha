@@ -578,16 +578,17 @@ const ProfileSetupPage = () => {
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center gap-1 px-4 py-2.5 rounded-xl border border-(--color-text)/15 text-sm text-(--color-text)/70 hover:border-(--color-primary)/40 transition-colors"
+            className="flex items-center gap-1 px-4 py-2.5 rounded-full border border-(--color-text)/15 text-sm text-(--color-text)/70 hover:border-(--color-primary)/40 transition-colors"
           >
             <ChevronLeft size={14} />
-            Back
+            {/* Back */}
           </button>
         )}
         <Button
           type="button"
           disabled={loading}
           onClick={isLast ? handleSubmit : handleNext}
+          withArrow={false}
         >
           {loading
             ? 'Saving…'

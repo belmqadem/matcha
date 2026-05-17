@@ -73,15 +73,6 @@ const RegisterPage = () => {
 
   return (
     <AuthLayout header="Create your account and find your person">
-      <Button variant="google" onClick={handleGoogleSignup}>
-        Signup with Google
-      </Button>
-      <Button variant="42" onClick={() => authApi.login42()}>
-        Signup with 42
-      </Button>
-
-      <Divider />
-
       <form onSubmit={handleSubmit}>
         <Input
           type="email"
@@ -137,6 +128,17 @@ const RegisterPage = () => {
           Login
         </Link>
       </p>
+
+      <Divider />
+
+      <div className="flex gap-4">
+        <Button variant="google" onClick={() => authApi.googleLogin()}>
+          Continue with Google
+        </Button>
+        <Button variant="42" onClick={() => authApi.login42()}>
+          Continue with 42
+        </Button>
+      </div>
     </AuthLayout>
   );
 };
