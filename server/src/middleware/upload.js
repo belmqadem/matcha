@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import AppError from "../utils/AppError.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -25,7 +26,10 @@ const upload = multer({
   fileFilter: (_req, file, cb) => {
     if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
       return cb(
-        new AppError("Only JPEG, PNG and WebP images are allowed", 400),
+        new AppError(
+          "Only JPEG, PNG and WebP images are allowed",
+          HTTP_STATUS.BAD_REQUEST,
+        ),
       );
     }
 
@@ -47,11 +51,21 @@ const uploadSinglePhoto = (req, res, next) => {
     }
 
     if (err.name === "MulterError" && err.code === "LIMIT_UNEXPECTED_FILE") {
-      return next(new AppError("Unexpected file field", 400));
+      return next(
+        new AppError("Unexpected file field", HTTP_STATUS.BAD_REQUEST),
+      );
+    }
+
+    if (err.name === "MulterError" && err.code === "LIMIT_FILE_COUNT") {
+      return next(
+        new AppError("Only one photo is allowed", HTTP_STATUS.BAD_REQUEST),
+      );
     }
 
     if (err.code === "LIMIT_FILE_SIZE") {
-      return next(new AppError("File exceeds 5MB limit", 400));
+      return next(
+        new AppError("File exceeds 5MB limit", HTTP_STATUS.BAD_REQUEST),
+      );
     }
 
     return next(err);
