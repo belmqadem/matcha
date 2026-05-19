@@ -32,7 +32,7 @@ GET /api/auth/verify/:token
 POST /api/auth/login
 
 **Body:** `{ username, password }`
-**Response 200:** `{ user: { id, username, email, first_name, last_name, profile_picture_id } }` + sets `token` cookie
+**Response 200:** `{ user: { id, username, email, first_name, last_name, profile_picture_id, is_profile_complete: boolean, missing_fields: string[] } }` + sets `token` cookie
 **Errors:** 401 invalid credentials, 401 not verified, 401 oauth account (password login not available)
 
 POST /api/auth/logout

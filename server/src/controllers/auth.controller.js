@@ -20,10 +20,11 @@ export const verifyEmail = async (req, res) => {
 
 export const login = async (req, res) => {
   const { username, password } = req.body;
-  const { user, hasLocation } = await authService.login({
-    username,
-    password,
-  });
+  const { user, hasLocation, isProfileComplete, missingFields } =
+    await authService.login({
+      username,
+      password,
+    });
 
   issueAuthCookie(res, user);
 
@@ -36,7 +37,13 @@ export const login = async (req, res) => {
     );
   }
 
-  return res.status(200).json({ user });
+  return res.status(200).json({
+    user: {
+      ...user,
+      is_profile_complete: isProfileComplete,
+      missing_fields: missingFields,
+    },
+  });
 };
 
 export const logout = async (req, res) => {

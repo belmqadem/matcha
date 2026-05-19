@@ -100,7 +100,36 @@ export const verifyEmail = async (token) => {
 
 export const login = async ({ username, password }) => {
   const uRes = await query(
-    "SELECT id, username, email, password_hash, is_verified, first_name, last_name, profile_picture_id, latitude, longitude FROM users WHERE username = $1",
+    `SELECT
+      id,
+      username,
+      email,
+      password_hash,
+      is_verified,
+      first_name,
+      last_name,
+      profile_picture_id,
+      latitude,
+      longitude,
+      gender,
+      sexual_preference,
+      biography,
+      EXISTS (SELECT 1 FROM user_tags WHERE user_id = users.id) AS has_tags,
+      EXISTS (SELECT 1 FROM photos WHERE user_id = users.id) AS has_photos,
+      CASE
+        WHEN gender IS NOT NULL
+          AND sexual_preference IS NOT NULL
+          AND biography IS NOT NULL
+          AND biography != ''
+          AND latitude IS NOT NULL
+          AND longitude IS NOT NULL
+          AND EXISTS (SELECT 1 FROM user_tags WHERE user_id = users.id)
+          AND EXISTS (SELECT 1 FROM photos WHERE user_id = users.id)
+        THEN true
+        ELSE false
+      END AS is_profile_complete
+     FROM users
+     WHERE username = $1`,
     [username],
   );
 
@@ -141,8 +170,19 @@ export const login = async ({ username, password }) => {
   };
 
   const hasLocation = user.latitude !== null && user.longitude !== null;
+  const isProfileComplete = Boolean(user.is_profile_complete);
+  const missingFields = [];
 
-  return { user: safeUser, hasLocation };
+  if (!user.gender) missingFields.push("gender");
+  if (!user.sexual_preference) missingFields.push("sexual_preference");
+  if (!user.biography || String(user.biography).trim() === "") {
+    missingFields.push("biography");
+  }
+  if (!hasLocation) missingFields.push("location");
+  if (!user.has_tags) missingFields.push("tags");
+  if (!user.has_photos) missingFields.push("photo");
+
+  return { user: safeUser, hasLocation, isProfileComplete, missingFields };
 };
 
 export const logout = async (userId) => {
