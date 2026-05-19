@@ -1,15 +1,24 @@
 import { z } from "zod";
 import { isCommonPassword } from "../utils/commonPasswords.js";
-
-const usernameRegex = /^[a-zA-Z0-9._-]{3,30}$/;
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-const nameRegex = /^[\p{L}\p{M}]+(?:[ '\-\.][\p{L}\p{M}]+)*$/u;
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  NAME_REGEX,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_REGEX,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_REGEX,
+} from "./validationConstants.js";
 
 const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters")
+  .min(
+    PASSWORD_MIN_LENGTH,
+    `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
+  )
   .regex(
-    passwordRegex,
+    PASSWORD_REGEX,
     "Password must include uppercase, lowercase, number, and special character",
   )
   .refine(
@@ -22,26 +31,38 @@ export const registerSchema = z
     email: z.string().email("Please enter a valid email address"),
     username: z
       .string()
-      .min(3, "Username must be at least 3 characters")
-      .max(30, "Username must be at most 30 characters")
+      .min(
+        USERNAME_MIN_LENGTH,
+        `Username must be at least ${USERNAME_MIN_LENGTH} characters`,
+      )
+      .max(
+        USERNAME_MAX_LENGTH,
+        `Username must be at most ${USERNAME_MAX_LENGTH} characters`,
+      )
       .regex(
-        usernameRegex,
+        USERNAME_REGEX,
         "Username can only contain letters, numbers, dots, underscores, or hyphens",
       ),
     first_name: z
       .string()
-      .min(1, "First name is required")
-      .max(50, "First name must be at most 50 characters")
+      .min(NAME_MIN_LENGTH, "First name is required")
+      .max(
+        NAME_MAX_LENGTH,
+        `First name must be at most ${NAME_MAX_LENGTH} characters`,
+      )
       .regex(
-        nameRegex,
+        NAME_REGEX,
         "First name may contain letters, spaces, apostrophes, hyphens, or periods",
       ),
     last_name: z
       .string()
-      .min(1, "Last name is required")
-      .max(50, "Last name must be at most 50 characters")
+      .min(NAME_MIN_LENGTH, "Last name is required")
+      .max(
+        NAME_MAX_LENGTH,
+        `Last name must be at most ${NAME_MAX_LENGTH} characters`,
+      )
       .regex(
-        nameRegex,
+        NAME_REGEX,
         "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
       ),
     password: passwordSchema,

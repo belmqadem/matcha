@@ -1,36 +1,41 @@
 import { z } from "zod";
-
-const usernameRegex = /^[A-Za-z0-9_]{3,30}$/;
-const nameRegex = /^[\p{L}\p{M}]+(?:[ '\-\.][\p{L}\p{M}]+)*$/u;
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  NAME_REGEX,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_REGEX,
+} from "./validationConstants.js";
 
 export const updateUserSchema = z
   .object({
     first_name: z
       .string()
-      .min(1)
-      .max(50)
+      .min(NAME_MIN_LENGTH)
+      .max(NAME_MAX_LENGTH)
       .regex(
-        nameRegex,
+        NAME_REGEX,
         "First name may contain letters, spaces, apostrophes, hyphens, or periods",
       )
       .optional(),
     last_name: z
       .string()
-      .min(1)
-      .max(50)
+      .min(NAME_MIN_LENGTH)
+      .max(NAME_MAX_LENGTH)
       .regex(
-        nameRegex,
+        NAME_REGEX,
         "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
       )
       .optional(),
     email: z.string().email().optional(),
     username: z
       .string()
-      .min(3)
-      .max(30)
+      .min(USERNAME_MIN_LENGTH)
+      .max(USERNAME_MAX_LENGTH)
       .regex(
-        usernameRegex,
-        "Username must be 3-30 characters and contain only letters, numbers, or underscores",
+        USERNAME_REGEX,
+        "Username can only contain letters, numbers, dots, underscores, or hyphens",
       )
       .optional(),
   })

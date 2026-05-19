@@ -1,18 +1,35 @@
 import { z } from "zod";
+import {
+  AGE_MAX,
+  AGE_MIN,
+  BROWSE_LIMIT_DEFAULT,
+  BROWSE_LIMIT_MAX,
+  FAME_MAX,
+  FAME_MIN,
+  LOCATION_CITY_MAX_LENGTH,
+  ORDER_OPTIONS,
+  PAGE_MIN,
+  SORT_OPTIONS,
+} from "./validationConstants.js";
 
 export const searchQuerySchema = z
   .object({
-    sort: z.enum(["distance", "age", "fame", "tags"]).optional(),
-    order: z.enum(["asc", "desc"]).optional(),
-    age_min: z.coerce.number().int().min(18).max(120).optional(),
-    age_max: z.coerce.number().int().min(18).max(120).optional(),
-    fame_min: z.coerce.number().min(0).max(100).optional(),
-    fame_max: z.coerce.number().min(0).max(100).optional(),
+    sort: z.enum(SORT_OPTIONS).optional(),
+    order: z.enum(ORDER_OPTIONS).optional(),
+    age_min: z.coerce.number().int().min(AGE_MIN).max(AGE_MAX).optional(),
+    age_max: z.coerce.number().int().min(AGE_MIN).max(AGE_MAX).optional(),
+    fame_min: z.coerce.number().min(FAME_MIN).max(FAME_MAX).optional(),
+    fame_max: z.coerce.number().min(FAME_MIN).max(FAME_MAX).optional(),
     max_km: z.coerce.number().min(0).optional(),
-    city: z.string().max(100).optional(),
+    city: z.string().max(LOCATION_CITY_MAX_LENGTH).optional(),
     tags: z.string().optional(),
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(50).default(20),
+    page: z.coerce.number().int().min(PAGE_MIN).default(PAGE_MIN),
+    limit: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(BROWSE_LIMIT_MAX)
+      .default(BROWSE_LIMIT_DEFAULT),
   })
   .strict()
   .refine((data) => !(data.max_km !== undefined && data.city !== undefined), {
