@@ -28,7 +28,7 @@ export const updateUserSchema = z
         "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
       )
       .optional(),
-    email: z.string().email().optional(),
+    email: z.string().email("Please provide a valid email address").optional(),
     username: z
       .string()
       .min(USERNAME_MIN_LENGTH)

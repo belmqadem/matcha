@@ -1,3 +1,4 @@
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 import { query } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
 import {
@@ -13,7 +14,7 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   );
 
   if (!userRes.rows.length) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const currentUser = userRes.rows[0];

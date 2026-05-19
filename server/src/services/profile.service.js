@@ -10,6 +10,7 @@ import sharp from "sharp";
 import { fileURLToPath } from "url";
 import logger from "../utils/logger.js";
 import { sanitizeObject } from "../utils/sanitize.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.resolve(__dirname, "..", "uploads");
@@ -47,7 +48,7 @@ const mapPhotoFormat = (mimetype) => {
 const assertUserExists = async (userId) => {
   const { rows } = await query("SELECT 1 FROM users WHERE id = $1", [userId]);
   if (!rows.length) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 };
 
@@ -182,7 +183,7 @@ export const updateTags = async (userId, tags) => {
 
 export const uploadPhoto = async (userId, file) => {
   if (!file) {
-    throw new AppError("Photo is required", 400);
+    throw new AppError("Photo is required", HTTP_STATUS.BAD_REQUEST);
   }
 
   const cleanupFile = async () => {
@@ -194,13 +195,13 @@ export const uploadPhoto = async (userId, file) => {
   const count = await getPhotoCount(userId);
   if (count >= MAX_PHOTOS) {
     await cleanupFile();
-    throw new AppError("Photo limit reached", 400);
+    throw new AppError("Photo limit reached", HTTP_STATUS.BAD_REQUEST);
   }
 
   const format = mapPhotoFormat(file.mimetype);
   if (!format) {
     await cleanupFile();
-    throw new AppError("Invalid file type", 400);
+    throw new AppError("Invalid file type", HTTP_STATUS.BAD_REQUEST);
   }
 
   const filePath = file.path;
@@ -212,18 +213,18 @@ export const uploadPhoto = async (userId, file) => {
     const allowedFormats = ["jpeg", "png", "webp"];
     if (!allowedFormats.includes(metadata.format)) {
       await cleanupFile();
-      throw new AppError("Invalid image file", 400);
+      throw new AppError("Invalid image file", HTTP_STATUS.BAD_REQUEST);
     }
     if (metadata.format !== format.format) {
       await cleanupFile();
-      throw new AppError("Invalid image file", 400);
+      throw new AppError("Invalid image file", HTTP_STATUS.BAD_REQUEST);
     }
   } catch (err) {
     if (err instanceof AppError) {
       throw err;
     }
     await cleanupFile();
-    throw new AppError("Invalid or corrupted image file", 400);
+    throw new AppError("Invalid or corrupted image file", HTTP_STATUS.BAD_REQUEST);
   }
 
   try {
@@ -277,7 +278,7 @@ export const uploadPhoto = async (userId, file) => {
 export const deletePhoto = async (userId, photoId) => {
   const id = Number(photoId);
   if (!Number.isInteger(id)) {
-    throw new AppError("Invalid photo id", 400);
+    throw new AppError("Invalid photo id", HTTP_STATUS.BAD_REQUEST);
   }
 
   const client = await getClient();
@@ -292,7 +293,7 @@ export const deletePhoto = async (userId, photoId) => {
     );
 
     if (!photoRes.rows.length) {
-      throw new AppError("Photo not found", 404);
+      throw new AppError("Photo not found", HTTP_STATUS.NOT_FOUND);
     }
 
     const photo = photoRes.rows[0];
@@ -349,7 +350,7 @@ export const deletePhoto = async (userId, photoId) => {
 export const setMainPhoto = async (userId, photoId) => {
   const id = Number(photoId);
   if (!Number.isInteger(id)) {
-    throw new AppError("Invalid photo id", 400);
+    throw new AppError("Invalid photo id", HTTP_STATUS.BAD_REQUEST);
   }
 
   const photoRes = await query(
@@ -358,7 +359,7 @@ export const setMainPhoto = async (userId, photoId) => {
   );
 
   if (!photoRes.rows.length) {
-    throw new AppError("Photo not found", 404);
+    throw new AppError("Photo not found", HTTP_STATUS.NOT_FOUND);
   }
 
   await query("UPDATE users SET profile_picture_id = $1 WHERE id = $2", [
@@ -413,7 +414,7 @@ export const getPublicProfile = async (viewerId, targetId) => {
   );
 
   if (!userRes.rows.length) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const userRow = userRes.rows[0];
@@ -422,7 +423,7 @@ export const getPublicProfile = async (viewerId, targetId) => {
   if (!isSelf) {
     const blockStatus = await getBlockStatus(viewerId, targetId);
     if (blockStatus.isBlocked) {
-      throw new AppError("User not found", 404);
+      throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
     }
     isBlockedByMe = blockStatus.isBlockedByMe;
 
@@ -514,7 +515,7 @@ export const getPublicProfile = async (viewerId, targetId) => {
 
 export const likeUser = async (likerId, likedId) => {
   if (likerId === likedId) {
-    throw new AppError("Cannot like yourself", 400);
+    throw new AppError("Cannot like yourself", HTTP_STATUS.BAD_REQUEST);
   }
 
   const likerRes = await query(
@@ -523,18 +524,18 @@ export const likeUser = async (likerId, likedId) => {
   );
 
   if (!likerRes.rows.length) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   if (!likerRes.rows[0].profile_picture_id) {
-    throw new AppError("You need a profile picture to like someone", 403);
+    throw new AppError("You need a profile picture to like someone", HTTP_STATUS.FORBIDDEN);
   }
 
   await assertUserExists(likedId);
 
   const blockStatus = await getBlockStatus(likerId, likedId);
   if (blockStatus.isBlocked) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const existingLike = await query(
@@ -543,7 +544,7 @@ export const likeUser = async (likerId, likedId) => {
   );
 
   if (existingLike.rows.length) {
-    throw new AppError("Already liked", 409);
+    throw new AppError("Already liked", HTTP_STATUS.CONFLICT);
   }
 
   const client = await getClient();
@@ -582,7 +583,7 @@ export const likeUser = async (likerId, likedId) => {
 
 export const unlikeUser = async (likerId, likedId) => {
   if (likerId === likedId) {
-    throw new AppError("Cannot unlike yourself", 400);
+    throw new AppError("Cannot unlike yourself", HTTP_STATUS.BAD_REQUEST);
   }
 
   const likeRes = await query(
@@ -591,7 +592,7 @@ export const unlikeUser = async (likerId, likedId) => {
   );
 
   if (!likeRes.rows.length) {
-    throw new AppError("Not liked", 404);
+    throw new AppError("Not liked", HTTP_STATUS.NOT_FOUND);
   }
 
   await query("DELETE FROM likes WHERE liker_id = $1 AND liked_id = $2", [
@@ -607,7 +608,7 @@ export const unlikeUser = async (likerId, likedId) => {
 
 export const blockUser = async (blockerId, blockedId) => {
   if (blockerId === blockedId) {
-    throw new AppError("Cannot block yourself", 400);
+    throw new AppError("Cannot block yourself", HTTP_STATUS.BAD_REQUEST);
   }
 
   await assertUserExists(blockedId);
@@ -618,7 +619,7 @@ export const blockUser = async (blockerId, blockedId) => {
   );
 
   if (existingBlock.rows.length) {
-    throw new AppError("Already blocked", 409);
+    throw new AppError("Already blocked", HTTP_STATUS.CONFLICT);
   }
 
   await query("INSERT INTO blocks (blocker_id, blocked_id) VALUES ($1, $2)", [
@@ -645,7 +646,7 @@ export const unblockUser = async (blockerId, blockedId) => {
   );
 
   if (!blockRes.rows.length) {
-    throw new AppError("Not blocked", 404);
+    throw new AppError("Not blocked", HTTP_STATUS.NOT_FOUND);
   }
 
   await query("DELETE FROM blocks WHERE blocker_id = $1 AND blocked_id = $2", [
@@ -660,14 +661,14 @@ export const unblockUser = async (blockerId, blockedId) => {
 
 export const reportUser = async (reporterId, reportedId, reason) => {
   if (reporterId === reportedId) {
-    throw new AppError("Cannot report yourself", 400);
+    throw new AppError("Cannot report yourself", HTTP_STATUS.BAD_REQUEST);
   }
 
   await assertUserExists(reportedId);
 
   const blockStatus = await getBlockStatus(reporterId, reportedId);
   if (blockStatus.isBlocked) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const existingReport = await query(
@@ -676,7 +677,7 @@ export const reportUser = async (reporterId, reportedId, reason) => {
   );
 
   if (existingReport.rows.length) {
-    throw new AppError("Already reported", 409);
+    throw new AppError("Already reported", HTTP_STATUS.CONFLICT);
   }
 
   await query(
