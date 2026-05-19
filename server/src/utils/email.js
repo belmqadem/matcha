@@ -36,21 +36,23 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
     <style>
       body {
         margin: 0;
-        background: #f7f7fb;
+        // background: #f7f7fb;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         color: #1f2937;
       }
       .container {
         width: 100%;
         max-width: 560px;
-        margin: 0 auto;
-        padding: 24px 16px;
+        // margin: 0 auto;
+        padding-top: 24px;
+				padding-left: 12px;
+				padding-right: 12px;
       }
       .card {
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        border-radius: 16px;
-        padding: 24px;
+        // background: #ffffff;
+        // border: 1px solid #e5e7eb;
+        // border-radius: 16px;
+        // padding: 24px;
       }
       h2 {
         margin: 0 0 12px;
