@@ -1,110 +1,77 @@
-export const commonPasswords = new Set([
+const WEAK_BASE_WORDS = [
   "password",
-  "123456",
-  "qwerty",
-  "letmein",
+  "admin",
   "welcome",
+  "login",
+  "qwerty",
+  "asdf",
+  "zxcv",
+  "letmein",
+  "iloveyou",
   "monkey",
   "dragon",
-  "123456789",
-  "12345",
-  "12345678",
-  "111111",
-  "1234567",
   "sunshine",
-  "iloveyou",
-  "princess",
-  "admin",
-  "123123",
   "football",
-  "654321",
-  "1234",
-  "1234567890",
-  "000000",
-  "555555",
-  "666666",
-  "7777777",
-  "888888",
-  "999999",
-  "00000000",
-  "123321",
-  "112233",
-  "121212",
-  "123455",
-  "1234567891",
-  "123qwe",
-  "1q2w3e4r",
-  "qwertyuiop",
-  "qwerty123",
-  "1q2w3e",
-  "1q2w3e4r5t",
-  "abc123",
-  "abc12345",
-  "qwerty1",
-  "password1",
-  "passw0rd",
-  "trustno1",
-  "iloveu",
-  "admin123",
-  "welcome1",
-  "login",
-  "login123",
-  "master",
   "baseball",
-  "soccer",
-  "shadow",
-  "superman",
-  "batman",
-  "starwars",
-  "michael",
-  "jordan",
-  "harley",
-  "killer",
-  "pepper",
-  "tigger",
-  "pokemon",
-  "qazwsx",
-  "asdfgh",
-  "asdfghjkl",
-  "zxcvbnm",
-  "zaq12wsx",
-  "123qweasdzxc",
-  "freedom",
-  "whatever",
-  "hello",
+  "master",
   "secret",
-  "baseball1",
-  "myspace1",
-  "123456a",
-  "1qaz2wsx",
-  "1qazxsw2",
-  "987654321",
-  "123654",
-  "123abc",
-  "123456q",
-  "qazwsxedc",
-  "asdfghj",
-  "asdf1234",
-  "1234qwer",
-  "11111111",
-  "222222",
-  "333333",
-  "444444",
-  "987654",
-  "696969",
-  "88888888",
-  "777777",
-  "55555555",
-  "0000000",
-  "66666666",
-  "123123123",
-  "147258369",
-]);
+];
+
+const hasSequentialRun = (value, sequence, minLen) => {
+  let asc = 1;
+  let desc = 1;
+
+  for (let i = 1; i < value.length; i += 1) {
+    const prev = sequence.indexOf(value[i - 1]);
+    const curr = sequence.indexOf(value[i]);
+
+    if (prev === -1 || curr === -1) {
+      asc = 1;
+      desc = 1;
+      continue;
+    }
+
+    if (curr === prev + 1) {
+      asc += 1;
+      desc = 1;
+    } else if (curr === prev - 1) {
+      desc += 1;
+      asc = 1;
+    } else {
+      asc = 1;
+      desc = 1;
+    }
+
+    if (asc >= minLen || desc >= minLen) {
+      return true;
+    }
+  }
+
+  return false;
+};
 
 export const isCommonPassword = (password) => {
   if (typeof password !== "string" || password.length === 0) {
     return false;
   }
 
-  return commonPasswords.has(password.toLowerCase());
+  const normalized = password.toLowerCase();
+
+  if (WEAK_BASE_WORDS.some((word) => normalized.includes(word))) {
+    return true;
+  }
+
+  if (/(.)\1{5,}/.test(password)) {
+    return true;
+  }
+
+  if (hasSequentialRun(normalized, "abcdefghijklmnopqrstuvwxyz", 5)) {
+    return true;
+  }
+
+  if (hasSequentialRun(normalized, "0123456789", 5)) {
+    return true;
+  }
+
+  return false;
 };

@@ -8,6 +8,7 @@ import {
 } from "../utils/email.js";
 import { isCommonPassword } from "../utils/commonPasswords.js";
 import { sanitizeObject } from "../utils/sanitize.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const SALT_ROUNDS = 12;
 
@@ -28,18 +29,27 @@ export const register = async ({
     safeUsername,
   ]);
   if (uRes.rows.length) {
-    throw new AppError("Username already taken", 409);
+    throw new AppError(
+      "Username already taken. Please choose another.",
+      HTTP_STATUS.CONFLICT,
+    );
   }
 
   const eRes = await query("SELECT id FROM users WHERE email = $1", [
     safeEmail,
   ]);
   if (eRes.rows.length) {
-    throw new AppError("Email already in use", 409);
+    throw new AppError(
+      "Email already in use. Please choose another.",
+      HTTP_STATUS.CONFLICT,
+    );
   }
 
   if (isCommonPassword(password)) {
-    throw new AppError("Password is too common", 400);
+    throw new AppError(
+      "Password is too common. Please choose another.",
+      HTTP_STATUS.BAD_REQUEST,
+    );
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -53,10 +63,11 @@ export const register = async ({
   const userId = insertRes.rows[0].id;
 
   const token = crypto.randomBytes(32).toString("hex");
+  const tokenType = "verification";
   await query(
     `INSERT INTO email_tokens (user_id, token, type, expires_at)
 		 VALUES ($1, $2, $3, NOW() + INTERVAL '24 hours')`,
-    [userId, token, "verification"],
+    [userId, token, tokenType],
   );
 
   await sendVerificationEmail(safeEmail, token);
@@ -70,14 +81,14 @@ export const verifyEmail = async (token) => {
     [token, "verification"],
   );
   if (!tRes.rows.length) {
-    throw new AppError("Invalid or expired token", 400);
+    throw new AppError("Invalid or expired token", HTTP_STATUS.BAD_REQUEST);
   }
 
   const row = tRes.rows[0];
   const expiresAt = new Date(row.expires_at);
   if (expiresAt < new Date()) {
     await query("DELETE FROM email_tokens WHERE id = $1", [row.id]);
-    throw new AppError("Token expired", 400);
+    throw new AppError("Token expired", HTTP_STATUS.BAD_REQUEST);
   }
 
   await query("UPDATE users SET is_verified = true WHERE id = $1", [
@@ -89,27 +100,30 @@ export const verifyEmail = async (token) => {
 
 export const login = async ({ username, password }) => {
   const uRes = await query(
-    "SELECT id, username, email, password_hash, oauth_provider, is_verified, first_name, last_name, profile_picture_id, latitude, longitude FROM users WHERE username = $1",
+    "SELECT id, username, email, password_hash, is_verified, first_name, last_name, profile_picture_id, latitude, longitude FROM users WHERE username = $1",
     [username],
   );
 
   if (!uRes.rows.length) {
-    throw new AppError("Invalid credentials", 401);
+    throw new AppError("Invalid credentials", HTTP_STATUS.UNAUTHORIZED);
   }
 
   const user = uRes.rows[0];
 
   if (!user.password_hash) {
-    throw new AppError("Invalid credentials", 401);
+    throw new AppError("Invalid credentials", HTTP_STATUS.UNAUTHORIZED);
   }
 
-  const match = await bcrypt.compare(password, user.password_hash || "");
+  const match = await bcrypt.compare(password, user.password_hash);
   if (!match) {
-    throw new AppError("Invalid credentials", 401);
+    throw new AppError("Invalid credentials", HTTP_STATUS.UNAUTHORIZED);
   }
 
   if (!user.is_verified) {
-    throw new AppError("Please verify your email first.", 401);
+    throw new AppError(
+      "Please verify your email first.",
+      HTTP_STATUS.FORBIDDEN,
+    );
   }
 
   await query(
@@ -162,10 +176,11 @@ export const forgotPassword = async (email) => {
   ]);
 
   const token = crypto.randomBytes(32).toString("hex");
+  const tokenType = "reset";
   await query(
     `INSERT INTO email_tokens (user_id, token, type, expires_at)
 		 VALUES ($1, $2, $3, NOW() + INTERVAL '1 hour')`,
-    [userId, token, "reset"],
+    [userId, token, tokenType],
   );
 
   await sendPasswordResetEmail(email, token);
@@ -183,6 +198,9 @@ export const resendVerification = async (email) => {
   }
 
   const user = uRes.rows[0];
+  if (user.oauth_provider) {
+    return true;
+  }
   if (user.is_verified) {
     return true;
   }
@@ -193,10 +211,11 @@ export const resendVerification = async (email) => {
   ]);
 
   const token = crypto.randomBytes(32).toString("hex");
+  const tokenType = "verification";
   await query(
     `INSERT INTO email_tokens (user_id, token, type, expires_at)
      VALUES ($1, $2, $3, NOW() + INTERVAL '24 hours')`,
-    [user.id, token, "verification"],
+    [user.id, token, tokenType],
   );
 
   await sendVerificationEmail(email, token);
@@ -209,18 +228,34 @@ export const resetPassword = async (token, newPassword) => {
     [token, "reset"],
   );
   if (!tRes.rows.length) {
-    throw new AppError("Invalid or expired token", 400);
+    throw new AppError("Invalid or expired token", HTTP_STATUS.BAD_REQUEST);
   }
 
   const row = tRes.rows[0];
   const expiresAt = new Date(row.expires_at);
   if (expiresAt < new Date()) {
     await query("DELETE FROM email_tokens WHERE id = $1", [row.id]);
-    throw new AppError("Token expired", 400);
+    throw new AppError("Token expired", HTTP_STATUS.BAD_REQUEST);
   }
 
   if (isCommonPassword(newPassword)) {
-    throw new AppError("Password is too common", 400);
+    throw new AppError("Password is too common", HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const currentRes = await query(
+    "SELECT password_hash FROM users WHERE id = $1",
+    [row.user_id],
+  );
+
+  if (currentRes.rows.length) {
+    const currentHash = currentRes.rows[0].password_hash;
+    const isSame = await bcrypt.compare(newPassword, currentHash || "");
+    if (isSame) {
+      throw new AppError(
+        "New password must be different from the current password",
+        HTTP_STATUS.BAD_REQUEST,
+      );
+    }
   }
 
   const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);

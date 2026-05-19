@@ -3,13 +3,13 @@ import AppError from "../utils/AppError.js";
 import crypto from "crypto";
 import { sendVerificationEmail } from "../utils/email.js";
 import { sanitizeObject } from "../utils/sanitize.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const buildUserResponse = async (userId) => {
   const userRes = await query(
     `SELECT id, username, email, first_name, last_name,
-            gender, sexual_preference, biography, fame_rating,
-          birth_date,
-          latitude, longitude, location_city,
+            gender, sexual_preference, biography, fame_rating, birth_date,
+            latitude, longitude, location_city,
             is_verified, is_online, last_seen, profile_picture_id,
             created_at, updated_at
      FROM users WHERE id = $1`,
@@ -17,7 +17,7 @@ const buildUserResponse = async (userId) => {
   );
 
   if (!userRes.rows.length) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const tagsRes = await query(
@@ -53,14 +53,14 @@ const mapUniqueConstraintError = (err) => {
   const constraint = err.constraint || "";
 
   if (detail.includes("(username)") || constraint.includes("username")) {
-    return new AppError("Username already taken", 409);
+    return new AppError("Username already taken", HTTP_STATUS.CONFLICT);
   }
 
   if (detail.includes("(email)") || constraint.includes("email")) {
-    return new AppError("Email already in use", 409);
+    return new AppError("Email already in use", HTTP_STATUS.CONFLICT);
   }
 
-  return new AppError("User already exists", 409);
+  return new AppError("User already exists", HTTP_STATUS.CONFLICT);
 };
 
 export const getMe = async (userId) => buildUserResponse(userId);
@@ -72,7 +72,7 @@ export const updateMe = async (userId, updates) => {
   ]);
 
   if (!currentRes.rows.length) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const currentEmail = currentRes.rows[0].email;
