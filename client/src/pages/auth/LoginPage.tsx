@@ -17,11 +17,26 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Handle OAuth error redirect from backend (e.g. ?error=oauth_failed)
   useEffect(() => {
     if (searchParams.get('error') === 'oauth_failed') {
       setError('OAuth sign-in failed. Please try again.');
+      return;
     }
+
+    const checkOAuthRedirect = async () => {
+      try {
+        const { user } = await authApi.me();
+        if (user.gender) {
+          navigate('/browse');
+        } else {
+          navigate('/profile/setup');
+        }
+      } catch {
+        // Not logged in, stay on login page
+      }
+    };
+
+    checkOAuthRedirect();
   }, [searchParams]);
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
