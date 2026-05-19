@@ -2,11 +2,40 @@ import logger from "../utils/logger.js";
 import { query } from "./pool.js";
 
 const schema = `
-CREATE TYPE gender AS ENUM ('male', 'female', 'non-binary', 'other');
-CREATE TYPE sexual_preference AS ENUM ('heterosexual', 'homosexual', 'bisexual');
-CREATE TYPE token_type AS ENUM ('verification', 'reset');
-CREATE TYPE oauth_provider AS ENUM ('google', '42');
-CREATE TYPE notif_type AS ENUM ('like', 'visit', 'message', 'match', 'unlike');
+DO $$
+BEGIN
+  CREATE TYPE gender AS ENUM ('male', 'female', 'non-binary', 'other');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE sexual_preference AS ENUM ('heterosexual', 'homosexual', 'bisexual');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE token_type AS ENUM ('verification', 'reset');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE oauth_provider AS ENUM ('google', '42');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE notif_type AS ENUM ('like', 'visit', 'message', 'match', 'unlike');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS users (
   id                UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
