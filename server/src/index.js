@@ -30,16 +30,62 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.resolve(__dirname, "uploads");
 
 // Middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  }),
+);
 app.set("trust proxy", 1);
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowed = [env.CORS_ORIGIN];
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        logger.warn({ origin }, "CORS blocked");
+        callback(new Error(`CORS blocked: ${origin}`));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type"],
+    maxAge: 86400,
+  }),
+);
 app.use(httpLogger);
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(cookieParser());
 app.use(passport.initialize());
-app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 200 }));
-app.use("/uploads", express.static(uploadsDir));
+app.use(createRateLimiter());
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Content-Security-Policy", "default-src 'none'");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    next();
+  },
+  express.static(uploadsDir),
+);
 
 // Routes
 app.get("/health", (req, res) => {

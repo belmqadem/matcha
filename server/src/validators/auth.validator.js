@@ -14,49 +14,59 @@ const passwordSchema = z
   )
   .refine((pwd) => !isCommonPassword(pwd), "Password is too common");
 
-export const registerSchema = z.object({
-  email: z.string().email(),
-  username: z
-    .string()
-    .min(3)
-    .max(30)
-    .regex(
-      usernameRegex,
-      "Username can only contain letters, numbers, dots, underscores, or hyphens",
-    ),
-  first_name: z
-    .string()
-    .min(1)
-    .max(50)
-    .regex(
-      nameRegex,
-      "First name may contain letters, spaces, apostrophes, hyphens, or periods",
-    ),
-  last_name: z
-    .string()
-    .min(1)
-    .max(50)
-    .regex(
-      nameRegex,
-      "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
-    ),
-  password: passwordSchema,
-});
+export const registerSchema = z
+  .object({
+    email: z.string().email(),
+    username: z
+      .string()
+      .min(3)
+      .max(30)
+      .regex(
+        usernameRegex,
+        "Username can only contain letters, numbers, dots, underscores, or hyphens",
+      ),
+    first_name: z
+      .string()
+      .min(1)
+      .max(50)
+      .regex(
+        nameRegex,
+        "First name may contain letters, spaces, apostrophes, hyphens, or periods",
+      ),
+    last_name: z
+      .string()
+      .min(1)
+      .max(50)
+      .regex(
+        nameRegex,
+        "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
+      ),
+    password: passwordSchema,
+  })
+  .strict();
 
-export const loginSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
-});
+export const loginSchema = z
+  .object({
+    username: z.string().min(1),
+    password: z.string().min(1),
+  })
+  .strict();
 
-export const forgotSchema = z.object({
-  email: z.string().email(),
-});
+export const forgotSchema = z
+  .object({
+    email: z.string().email(),
+  })
+  .strict();
 
-export const resendVerificationSchema = z.object({
-  email: z.string().email(),
-});
+export const resendVerificationSchema = z
+  .object({
+    email: z.string().email(),
+  })
+  .strict();
 
-export const resetSchema = z.object({
-  token: z.string().min(1),
-  password: passwordSchema,
-});
+export const resetSchema = z
+  .object({
+    token: z.string().min(1),
+    password: passwordSchema,
+  })
+  .strict();

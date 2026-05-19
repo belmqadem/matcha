@@ -1,19 +1,43 @@
 import multer from "multer";
+import crypto from "crypto";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 import AppError from "../utils/AppError.js";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const EXTENSIONS = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const uploadsDir = path.resolve(__dirname, "..", "uploads");
+fs.mkdirSync(uploadsDir, { recursive: true });
 
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: MAX_FILE_SIZE },
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+    files: 1,
+  },
   fileFilter: (_req, file, cb) => {
-    if (ALLOWED_MIME_TYPES.has(file.mimetype)) {
-      return cb(null, true);
+    if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
+      return cb(
+        new AppError("Only JPEG, PNG and WebP images are allowed", 400),
+      );
     }
 
-    return cb(new AppError("Invalid file type", 400));
+    return cb(null, true);
   },
+  storage: multer.diskStorage({
+    destination: uploadsDir,
+    filename: (_req, file, cb) => {
+      const ext = EXTENSIONS[file.mimetype];
+      cb(null, `${crypto.randomUUID()}${ext}`);
+    },
+  }),
 });
 
 const uploadSinglePhoto = (req, res, next) => {

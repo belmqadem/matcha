@@ -4,33 +4,16 @@ import { recalculateFameRating } from "../utils/fameRating.js";
 import { emitNotification } from "../socket/notifications.js";
 import { haversineKm } from "../utils/haversine.js";
 import { getMe } from "./users.service.js";
-import crypto from "crypto";
 import path from "path";
 import fs from "fs/promises";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
 import logger from "../utils/logger.js";
+import { sanitizeObject } from "../utils/sanitize.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_DIR = path.resolve(__dirname, "..", "uploads");
 const MAX_PHOTOS = 5;
-
-const ESCAPE_MAP = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "'": "&#39;",
-};
-
-const escapeHtml = (value) =>
-  typeof value === "string"
-    ? value.replace(/[&<>"']/g, (char) => ESCAPE_MAP[char])
-    : value;
-
-const ensureUploadsDir = async () => {
-  await fs.mkdir(UPLOADS_DIR, { recursive: true });
-};
 
 const getPhotoCount = async (userId) => {
   const { rows } = await query(
@@ -116,6 +99,7 @@ const calculateDistanceKm = (viewer, target) => {
 };
 
 export const updateProfile = async (userId, updates) => {
+  const sanitizedUpdates = sanitizeObject(updates);
   const setClauses = [];
   const values = [];
 
@@ -124,26 +108,26 @@ export const updateProfile = async (userId, updates) => {
     setClauses.push(`${key} = $${values.length}`);
   };
 
-  if (updates.gender !== undefined) {
-    setField("gender", updates.gender);
+  if (sanitizedUpdates.gender !== undefined) {
+    setField("gender", sanitizedUpdates.gender);
   }
-  if (updates.sexual_preference !== undefined) {
-    setField("sexual_preference", updates.sexual_preference);
+  if (sanitizedUpdates.sexual_preference !== undefined) {
+    setField("sexual_preference", sanitizedUpdates.sexual_preference);
   }
-  if (updates.biography !== undefined) {
-    setField("biography", escapeHtml(updates.biography));
+  if (sanitizedUpdates.biography !== undefined) {
+    setField("biography", sanitizedUpdates.biography);
   }
-  if (updates.latitude !== undefined) {
-    setField("latitude", Math.round(updates.latitude * 100) / 100);
+  if (sanitizedUpdates.latitude !== undefined) {
+    setField("latitude", Math.round(sanitizedUpdates.latitude * 100) / 100);
   }
-  if (updates.longitude !== undefined) {
-    setField("longitude", Math.round(updates.longitude * 100) / 100);
+  if (sanitizedUpdates.longitude !== undefined) {
+    setField("longitude", Math.round(sanitizedUpdates.longitude * 100) / 100);
   }
-  if (updates.location_city !== undefined) {
-    setField("location_city", updates.location_city);
+  if (sanitizedUpdates.location_city !== undefined) {
+    setField("location_city", sanitizedUpdates.location_city);
   }
-  if (updates.birth_date !== undefined) {
-    setField("birth_date", updates.birth_date);
+  if (sanitizedUpdates.birth_date !== undefined) {
+    setField("birth_date", sanitizedUpdates.birth_date);
   }
 
   if (setClauses.length > 0) {
@@ -201,35 +185,68 @@ export const uploadPhoto = async (userId, file) => {
     throw new AppError("Photo is required", 400);
   }
 
+  const cleanupFile = async () => {
+    if (file?.path) {
+      await fs.unlink(file.path).catch(() => {});
+    }
+  };
+
   const count = await getPhotoCount(userId);
   if (count >= MAX_PHOTOS) {
+    await cleanupFile();
     throw new AppError("Photo limit reached", 400);
   }
 
   const format = mapPhotoFormat(file.mimetype);
   if (!format) {
+    await cleanupFile();
     throw new AppError("Invalid file type", 400);
   }
 
-  await ensureUploadsDir();
+  const filePath = file.path;
+  const filename = file.filename;
+  const processedPath = `${filePath}.tmp`;
 
-  const filename = `${crypto.randomUUID()}.${format.ext}`;
-  const filePath = path.join(UPLOADS_DIR, filename);
-
-  let image = sharp(file.buffer).rotate().resize({
-    width: 1200,
-    withoutEnlargement: true,
-  });
-
-  if (format.format === "jpeg") {
-    image = image.jpeg({ quality: 80 });
-  } else if (format.format === "png") {
-    image = image.png({ quality: 80 });
-  } else {
-    image = image.webp({ quality: 80 });
+  try {
+    const metadata = await sharp(filePath).metadata();
+    const allowedFormats = ["jpeg", "png", "webp"];
+    if (!allowedFormats.includes(metadata.format)) {
+      await cleanupFile();
+      throw new AppError("Invalid image file", 400);
+    }
+    if (metadata.format !== format.format) {
+      await cleanupFile();
+      throw new AppError("Invalid image file", 400);
+    }
+  } catch (err) {
+    if (err instanceof AppError) {
+      throw err;
+    }
+    await cleanupFile();
+    throw new AppError("Invalid or corrupted image file", 400);
   }
 
-  await image.toFile(filePath);
+  try {
+    let image = sharp(filePath).rotate().resize({
+      width: 1200,
+      withoutEnlargement: true,
+    });
+
+    if (format.format === "jpeg") {
+      image = image.jpeg({ quality: 80 });
+    } else if (format.format === "png") {
+      image = image.png({ quality: 80 });
+    } else {
+      image = image.webp({ quality: 80 });
+    }
+
+    await image.toFile(processedPath);
+    await fs.rename(processedPath, filePath);
+  } catch (err) {
+    await fs.unlink(processedPath).catch(() => {});
+    await cleanupFile();
+    throw err;
+  }
 
   const orderIndex = await getNextOrderIndex(userId);
   const url = `/uploads/${filename}`;

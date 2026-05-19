@@ -14,6 +14,7 @@ export const searchQuerySchema = z
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(50).default(20),
   })
+  .strict()
   .refine((data) => !(data.max_km !== undefined && data.city !== undefined), {
     message: "Cannot filter by both max_km and city at the same time",
   })

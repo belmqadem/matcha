@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const messagesQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(30),
-});
+export const messagesQuerySchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(50).default(30),
+  })
+  .strict();

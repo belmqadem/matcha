@@ -7,6 +7,7 @@ import {
   sendPasswordResetEmail,
 } from "../utils/email.js";
 import { isCommonPassword } from "../utils/commonPasswords.js";
+import { sanitizeObject } from "../utils/sanitize.js";
 
 const SALT_ROUNDS = 12;
 
@@ -17,14 +18,22 @@ export const register = async ({
   first_name,
   last_name,
 }) => {
+  const sanitized = sanitizeObject({ username, email, first_name, last_name });
+  const safeUsername = sanitized.username;
+  const safeEmail = sanitized.email;
+  const safeFirstName = sanitized.first_name;
+  const safeLastName = sanitized.last_name;
+
   const uRes = await query("SELECT id FROM users WHERE username = $1", [
-    username,
+    safeUsername,
   ]);
   if (uRes.rows.length) {
     throw new AppError("Username already taken", 409);
   }
 
-  const eRes = await query("SELECT id FROM users WHERE email = $1", [email]);
+  const eRes = await query("SELECT id FROM users WHERE email = $1", [
+    safeEmail,
+  ]);
   if (eRes.rows.length) {
     throw new AppError("Email already in use", 409);
   }
@@ -38,7 +47,7 @@ export const register = async ({
   const insertRes = await query(
     `INSERT INTO users (username, email, password_hash, first_name, last_name)
 		 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-    [username, email, passwordHash, first_name, last_name],
+    [safeUsername, safeEmail, passwordHash, safeFirstName, safeLastName],
   );
 
   const userId = insertRes.rows[0].id;
@@ -50,7 +59,7 @@ export const register = async ({
     [userId, token, "verification"],
   );
 
-  await sendVerificationEmail(email, token);
+  await sendVerificationEmail(safeEmail, token);
 
   return { id: userId };
 };
@@ -141,10 +150,7 @@ export const forgotPassword = async (email) => {
 
   const user = uRes.rows[0];
   if (user.oauth_provider) {
-    throw new AppError(
-      `This account uses ${user.oauth_provider} login. Password reset is not available.`,
-      400,
-    );
+    return true;
   }
 
   const userId = user.id;

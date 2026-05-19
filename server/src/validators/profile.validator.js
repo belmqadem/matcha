@@ -87,10 +87,13 @@ export const updateProfileSchema = z
       })
       .optional(),
   })
+  .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",
   });
 
-export const tagsSchema = z.object({
-  tags: z.array(z.string().min(2).max(30)).max(10),
-});
+export const tagsSchema = z
+  .object({
+    tags: z.array(z.string().min(2).max(30)).max(10),
+  })
+  .strict();
