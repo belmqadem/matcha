@@ -32,8 +32,8 @@ GET /api/auth/verify/:token
 POST /api/auth/login
 
 **Body:** `{ username, password }`
-**Response 200:** `{ user: { id, username, email, first_name, last_name, profile_picture_id } }` + sets `token` cookie
-**Errors:** 401 invalid credentials, 401 not verified, 401 oauth account (password login not available)
+**Response 200:** `{ user: { id, username, email, first_name, last_name, profile_picture_id, is_profile_complete: boolean, missing_fields: string[] } }` + sets `token` cookie
+**Errors:** 401 invalid credentials, 403 not verified, 401 oauth account (password login not available)
 
 POST /api/auth/logout
 
@@ -44,7 +44,7 @@ POST /api/auth/forgot-password
 
 **Body:** `{ email }`
 **Response 200:** `{ message: "If that email exists, a reset link has been sent." }`
-**Errors:** 400 validation, 400 oauth account (password reset not available)
+**Errors:** 400 validation
 
 POST /api/auth/resend-verification
 

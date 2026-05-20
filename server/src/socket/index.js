@@ -22,7 +22,11 @@ const authenticateSocket = (socket, next) => {
     if (parts.length !== 3) {
       return next(new Error("Authentication failed"));
     }
-    const decoded = jwt.verify(token, env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET, {
+      algorithms: ["HS256"],
+      issuer: "matcha",
+      audience: "matcha-client",
+    });
     socket.userId = decoded.id;
     return next();
   } catch (err) {

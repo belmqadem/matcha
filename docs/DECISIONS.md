@@ -45,7 +45,7 @@
 
 Suggested profiles must:
 
-- Respect sexual orientation (hetero / homosexual / bisexual — default bisexual)
+- Respect sexual orientation (heterosexual / homosexual / bisexual)
 - Exclude blocked users (both directions)
 - Exclude already-connected users
 - Be ranked by: geographic proximity (primary), shared tags, fame rating

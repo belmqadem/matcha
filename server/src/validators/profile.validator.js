@@ -1,4 +1,12 @@
 import { z } from "zod";
+import {
+  AGE_MIN,
+  BIO_MAX_LENGTH,
+  LOCATION_CITY_MAX_LENGTH,
+  TAG_MAX_LENGTH,
+  TAG_MIN_LENGTH,
+  TAGS_MAX,
+} from "./validationConstants.js";
 
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -54,10 +62,10 @@ export const updateProfileSchema = z
     sexual_preference: z
       .enum(["heterosexual", "homosexual", "bisexual"])
       .optional(),
-    biography: z.string().max(500).optional(),
+    biography: z.string().max(BIO_MAX_LENGTH).optional(),
     latitude: z.preprocess(toNumber, z.number()).optional(),
     longitude: z.preprocess(toNumber, z.number()).optional(),
-    location_city: z.string().max(100).optional(),
+    location_city: z.string().max(LOCATION_CITY_MAX_LENGTH).optional(),
     birth_date: z
       .string()
       .superRefine((value, ctx) => {
@@ -78,19 +86,24 @@ export const updateProfileSchema = z
           });
         }
 
-        if (!isAtLeastAge(date, 18)) {
+        if (!isAtLeastAge(date, AGE_MIN)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "birth_date requires age 18+",
+            message: `birth_date requires age ${AGE_MIN}+`,
           });
         }
       })
       .optional(),
   })
+  .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided",
   });
 
-export const tagsSchema = z.object({
-  tags: z.array(z.string().min(2).max(30)).max(10),
-});
+export const tagsSchema = z
+  .object({
+    tags: z
+      .array(z.string().min(TAG_MIN_LENGTH).max(TAG_MAX_LENGTH))
+      .max(TAGS_MAX),
+  })
+  .strict();

@@ -2,6 +2,7 @@ import { query } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
 import { getLocationFromIp } from "../utils/geoip.js";
 import { recalculateFameRating } from "../utils/fameRating.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const isValidLat = (lat) => typeof lat === "number" && lat >= -90 && lat <= 90;
 const isValidLng = (lng) =>
@@ -14,7 +15,7 @@ export const setLocationFromCoords = async (
   locationCity = null,
 ) => {
   if (!isValidLat(latitude) || !isValidLng(longitude)) {
-    throw new AppError("Invalid coordinates", 400);
+    throw new AppError("Invalid coordinates", HTTP_STATUS.BAD_REQUEST);
   }
 
   const result = await query(
@@ -23,7 +24,7 @@ export const setLocationFromCoords = async (
   );
 
   if (result.rowCount === 0) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   await recalculateFameRating(userId);
@@ -39,7 +40,7 @@ export const setLocationFromIp = async (userId, ip) => {
   const location = await getLocationFromIp(ip);
 
   if (!location) {
-    throw new AppError("Could not determine location from IP", 400);
+    throw new AppError("Could not determine location from IP", HTTP_STATUS.BAD_REQUEST);
   }
 
   return setLocationFromCoords(
@@ -57,7 +58,7 @@ export const getMyLocation = async (userId) => {
   );
 
   if (!rows.length) {
-    throw new AppError("User not found", 404);
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
   }
 
   return rows[0];

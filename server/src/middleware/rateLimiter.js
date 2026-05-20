@@ -8,7 +8,7 @@ const createRateLimiter = (options = {}) => {
   const message = options.message || DEFAULT_MESSAGE;
   return rateLimit({
     windowMs: options.windowMs || 15 * 60 * 1000,
-    limit: options.limit || 100,
+    limit: options.limit || 200,
     standardHeaders: true,
     legacyHeaders: false,
     message,
@@ -23,32 +23,31 @@ const createRateLimiter = (options = {}) => {
 const loginLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 5,
-  message: "Too many login attempts, please try again after 15 minutes.",
+  message: "Too many attempts, please try again after 15 minutes.",
 });
 
 const registerLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
-  limit: 3,
-  message: "Too many registration attempts, please try again after 1 hour.",
+  limit: 5,
+  message: "Too many attempts, please try again after 1 hour.",
 });
 
 const forgotPasswordLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
   limit: 5,
-  message: "Too many forgot password attempts, please try again after 1 hour.",
+  message: "Too many attempts, please try again after 1 hour.",
 });
 
 const resetPasswordLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
   limit: 5,
-  message: "Too many reset password attempts, please try again after 1 hour.",
+  message: "Too many attempts, please try again after 1 hour.",
 });
 
 const resendVerificationLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
   limit: 5,
-  message:
-    "Too many resend verification attempts, please try again after 1 hour.",
+  message: "Too many attempts, please try again after 1 hour.",
 });
 
 export {
@@ -57,5 +56,5 @@ export {
   registerLimiter,
   forgotPasswordLimiter,
   resetPasswordLimiter,
-  resendVerificationLimiter
+  resendVerificationLimiter,
 };

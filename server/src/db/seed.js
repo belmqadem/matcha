@@ -91,11 +91,9 @@ async function seed() {
 
       // Batch all tag inserts for this user in one query
       const userTags = faker.helpers.arrayElements(TAGS, { min: 1, max: 5 });
-      const tagValues = userTags
-        .map((tag) => `('${userId}', ${tagMap[tag]})`)
-        .join(", ");
       await client.query(
-        `INSERT INTO user_tags (user_id, tag_id) VALUES ${tagValues} ON CONFLICT DO NOTHING`,
+        "INSERT INTO user_tags (user_id, tag_id) SELECT $1, unnest($2::int[]) ON CONFLICT DO NOTHING",
+        [userId, userTags.map((tag) => tagMap[tag])],
       );
 
       if ((i + 1) % 50 === 0) {
