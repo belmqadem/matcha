@@ -62,4 +62,4 @@ server/coverage/
 # ========================
 # Uploads (user files — never commit)
 # ========================
-server/src/uploads/
+server/uploads/

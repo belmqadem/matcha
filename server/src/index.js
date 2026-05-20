@@ -27,7 +27,7 @@ import chatRoutes from "./routes/chat.route.js";
 const app = express();
 const httpServer = createServer(app);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, "uploads");
+const uploadsDir = path.resolve(__dirname, "..", "uploads");
 
 // Middleware
 app.use(
@@ -61,7 +61,7 @@ app.use(
         callback(null, true);
       } else {
         logger.warn({ origin }, "CORS blocked");
-        callback(new Error(`CORS blocked: ${origin}`));
+        callback(null, false);
       }
     },
     credentials: true,

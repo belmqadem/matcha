@@ -229,7 +229,7 @@ export const forgotPassword = async (email) => {
 
 export const resendVerification = async (email) => {
   const uRes = await query(
-    "SELECT id, is_verified FROM users WHERE email = $1",
+    "SELECT id, is_verified, oauth_provider FROM users WHERE email = $1",
     [email],
   );
 

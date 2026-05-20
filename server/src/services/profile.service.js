@@ -13,7 +13,7 @@ import { sanitizeObject } from "../utils/sanitize.js";
 import { HTTP_STATUS } from "../constants/httpStatus.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOADS_DIR = path.resolve(__dirname, "..", "uploads");
+const UPLOADS_DIR = path.resolve(__dirname, "..", "..", "uploads");
 const MAX_PHOTOS = 5;
 
 const getPhotoCount = async (userId) => {
@@ -224,7 +224,10 @@ export const uploadPhoto = async (userId, file) => {
       throw err;
     }
     await cleanupFile();
-    throw new AppError("Invalid or corrupted image file", HTTP_STATUS.BAD_REQUEST);
+    throw new AppError(
+      "Invalid or corrupted image file",
+      HTTP_STATUS.BAD_REQUEST,
+    );
   }
 
   try {
@@ -528,7 +531,10 @@ export const likeUser = async (likerId, likedId) => {
   }
 
   if (!likerRes.rows[0].profile_picture_id) {
-    throw new AppError("You need a profile picture to like someone", HTTP_STATUS.FORBIDDEN);
+    throw new AppError(
+      "You need a profile picture to like someone",
+      HTTP_STATUS.FORBIDDEN,
+    );
   }
 
   await assertUserExists(likedId);

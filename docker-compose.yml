@@ -33,7 +33,7 @@ services:
     volumes:
       - ./server:/app
       - /app/node_modules
-      - ./server/src/uploads:/app/src/uploads
+      - uploads:/app/uploads
     healthcheck:
       test:
         [
@@ -69,3 +69,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads:

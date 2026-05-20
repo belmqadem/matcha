@@ -36,23 +36,29 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
     <style>
       body {
         margin: 0;
-        // background: #f7f7fb;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
         color: #1f2937;
       }
       .container {
         width: 100%;
         max-width: 560px;
-        // margin: 0 auto;
         padding-top: 24px;
 				padding-left: 12px;
 				padding-right: 12px;
       }
       .card {
-        // background: #ffffff;
-        // border: 1px solid #e5e7eb;
-        // border-radius: 16px;
-        // padding: 24px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        padding: 24px;
+      }
+      .logo {
+        margin: 0 0 24px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .logo .brand-mark {
+        color: #e94057;
       }
       h2 {
         margin: 0 0 12px;
@@ -86,6 +92,7 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
   <body>
     <div class="container">
       <div class="card">
+        <h1 class="logo"><span class="brand-mark">m</span>atcha<span class="brand-mark">.</span></h1>
         <h2>${heading}</h2>
         <p>${message}</p>
         <p>

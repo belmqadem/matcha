@@ -15,7 +15,7 @@ const EXTENSIONS = {
 };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, "..", "uploads");
+const uploadsDir = path.resolve(__dirname, "..", "..", "uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
 
 const upload = multer({
