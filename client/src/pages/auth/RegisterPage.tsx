@@ -30,6 +30,10 @@ const RegisterPage = () => {
     authApi.googleLogin();
   };
 
+  const handle42Signup = () => {
+    authApi.login42();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -75,37 +79,42 @@ const RegisterPage = () => {
     <AuthLayout header="Create your account and find your person">
       <form onSubmit={handleSubmit}>
         <Input
+          id="email"
           type="email"
-          placeholder="Email"
+          label="Email"
           value={form.email}
           onChange={handleChange('email')}
           required
           icon={Mail}
         />
         <Input
-          placeholder="Username"
+          id="username"
+          label="Username"
           value={form.username}
           onChange={handleChange('username')}
           required
           icon={User}
         />
         <Input
-          placeholder="First Name"
+          id="firstName"
+          label="First Name"
           value={form.firstName}
           onChange={handleChange('firstName')}
           required
           icon={User}
         />
         <Input
-          placeholder="Last Name"
+          id="lastName"
+          label="Last Name"
           value={form.lastName}
           onChange={handleChange('lastName')}
           required
           icon={User}
         />
         <Input
+          id="password"
           type={passwordVisibility.inputType}
-          placeholder="Password"
+          label="Password"
           value={form.password}
           onChange={handleChange('password')}
           required
@@ -132,10 +141,10 @@ const RegisterPage = () => {
       <Divider />
 
       <div className="flex gap-4">
-        <Button variant="google" onClick={() => authApi.googleLogin()}>
+        <Button variant="google" onClick={handleGoogleSignup}>
           Continue with Google
         </Button>
-        <Button variant="42" onClick={() => authApi.login42()}>
+        <Button variant="42" onClick={handle42Signup}>
           Continue with 42
         </Button>
       </div>

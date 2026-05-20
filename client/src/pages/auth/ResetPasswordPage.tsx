@@ -57,8 +57,9 @@ const ResetPasswordPage = () => {
     <AuthLayout header="Reset your Password">
       <form onSubmit={handleSubmit}>
         <Input
+          id="password"
           type={passwordVisibility.inputType}
-          placeholder="New Password"
+          label="New Password"
           value={form.password}
           onChange={handleChange('password')}
           required
@@ -66,8 +67,9 @@ const ResetPasswordPage = () => {
           showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
         />
         <Input
+          id="confirm"
           type={confirmVisibility.inputType}
-          placeholder="Confirm Password"
+          label="Confirm Password"
           value={form.confirm}
           onChange={handleChange('confirm')}
           required

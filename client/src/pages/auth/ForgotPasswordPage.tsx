@@ -53,10 +53,14 @@ const ForgotPasswordPage = () => {
       ) : (
         <form onSubmit={handleSubmit}>
           <Input
+            id="email"
             type="email"
-            placeholder="Email"
+            label="Email"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(''); }}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setError('');
+            }}
             required
             icon={Mail}
           />

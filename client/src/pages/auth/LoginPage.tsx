@@ -80,16 +80,18 @@ const LoginPage = () => {
     <AuthLayout header="Log in to find your match">
       <form onSubmit={handleSubmit}>
         <Input
+          id="username"
           type="text"
-          placeholder="Username"
+          label="Username"
           value={form.username}
           onChange={handleChange('username')}
           required
           icon={User}
         />
         <Input
+          id="password"
           type={passwordVisibility.inputType}
-          placeholder="Password"
+          label="Password"
           value={form.password}
           onChange={handleChange('password')}
           required
