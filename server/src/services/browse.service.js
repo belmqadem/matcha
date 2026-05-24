@@ -1,6 +1,8 @@
 import { HTTP_STATUS } from "../constants/httpStatus.js";
 import { query } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
+import { get as redisGet, set as redisSet } from "../db/redis.js";
+import { CacheKeys } from "../utils/cacheKeys.js";
 import {
   buildOrientationFilter,
   parseTags,
@@ -8,6 +10,12 @@ import {
 } from "../utils/queryHelpers.js";
 
 export const getSuggestedProfiles = async (currentUserId, queryParams) => {
+  const cacheKey = CacheKeys.browse(currentUserId, queryParams);
+  const cached = await redisGet(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const userRes = await query(
     "SELECT id, gender, sexual_preference, latitude, longitude FROM users WHERE id = $1",
     [currentUserId],
@@ -168,12 +176,15 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     params,
   );
 
-  return {
+  const result = {
     users: dataRes.rows,
     total: countRes.rows[0]?.total ?? 0,
     page,
     limit,
   };
+
+  await redisSet(cacheKey, result, 120);
+  return result;
 };
 
 export default { getSuggestedProfiles };

@@ -4,6 +4,12 @@ import crypto from "crypto";
 import { sendVerificationEmail } from "../utils/email.js";
 import { sanitizeObject } from "../utils/sanitize.js";
 import { HTTP_STATUS } from "../constants/httpStatus.js";
+import { get as redisGet, set as redisSet } from "../db/redis.js";
+import { CacheKeys } from "../utils/cacheKeys.js";
+import {
+  invalidateProfileCache,
+  invalidateUserCaches,
+} from "../utils/invalidateCache.js";
 
 const buildUserResponse = async (userId) => {
   const userRes = await query(
@@ -63,7 +69,17 @@ const mapUniqueConstraintError = (err) => {
   return new AppError("User already exists", HTTP_STATUS.CONFLICT);
 };
 
-export const getMe = async (userId) => buildUserResponse(userId);
+export const getMe = async (userId) => {
+  const cacheKey = CacheKeys.myProfile(userId);
+  const cached = await redisGet(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const result = await buildUserResponse(userId);
+  await redisSet(cacheKey, result, 60);
+  return result;
+};
 
 export const updateMe = async (userId, updates) => {
   const sanitizedUpdates = sanitizeObject(updates);
@@ -129,6 +145,9 @@ export const updateMe = async (userId, updates) => {
     );
     await sendVerificationEmail(sanitizedUpdates.email, token);
   }
+
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
 
   return buildUserResponse(userId);
 };

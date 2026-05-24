@@ -47,8 +47,8 @@ export const login = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  await authService.logout(req.user.id);
-  res.clearCookie("token");
+  await authService.logout(req.user.id, req.user.jti, req.user.exp);
+  res.clearCookie("token", { path: "/" });
   return res.status(200).json({ message: "Logged out." });
 };
 

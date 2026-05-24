@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import env from "./config/env.js";
 import pool from "./db/pool.js";
+import redis from "./db/redis.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import { initSocket } from "./socket/index.js";
 import passport from "./config/passport.js";
@@ -118,10 +119,19 @@ const startServer = async () => {
   }
 
   // 2. Init Socket.io
+  try {
+    await redis.ping();
+    logger.info("Redis connected");
+  } catch (err) {
+    logger.error({ err }, "Redis connection failed");
+    process.exit(1);
+  }
+
+  // 3. Init Socket.io
   initSocket(httpServer);
   logger.info("Socket.io initialized");
 
-  // 3. Start listening
+  // 4. Start listening
   const PORT = env.PORT;
   httpServer.listen(PORT, () => {
     logger.info(`Matcha Server running on http://localhost:${PORT}`);

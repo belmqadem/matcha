@@ -9,6 +9,9 @@ import {
 import { isCommonPassword } from "../utils/commonPasswords.js";
 import { sanitizeObject } from "../utils/sanitize.js";
 import { HTTP_STATUS } from "../constants/httpStatus.js";
+import { set as redisSet } from "../db/redis.js";
+import { CacheKeys } from "../utils/cacheKeys.js";
+import { invalidateUserCaches } from "../utils/invalidateCache.js";
 
 const SALT_ROUNDS = 12;
 
@@ -185,11 +188,20 @@ export const login = async ({ username, password }) => {
   return { user: safeUser, hasLocation, isProfileComplete, missingFields };
 };
 
-export const logout = async (userId) => {
+export const logout = async (userId, jti, exp) => {
   await query(
     "UPDATE users SET is_online = false, last_seen = NOW() WHERE id = $1",
     [userId],
   );
+
+  if (jti && exp) {
+    const ttl = exp - Math.floor(Date.now() / 1000);
+    if (ttl > 0) {
+      await redisSet(CacheKeys.blocklist(jti), "1", ttl);
+    }
+  }
+
+  await invalidateUserCaches(userId);
   return true;
 };
 
