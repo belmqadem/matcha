@@ -8,7 +8,9 @@ import { CacheKeys } from "../utils/cacheKeys.js";
 const authenticate = async (req, res, next) => {
   const token = req.cookies && req.cookies.token;
   if (!token) {
-    return next(new AppError("Authentication required", HTTP_STATUS.UNAUTHORIZED));
+    return next(
+      new AppError("Authentication required", HTTP_STATUS.UNAUTHORIZED),
+    );
   }
 
   let decoded;
