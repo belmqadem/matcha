@@ -24,6 +24,7 @@ import likesRoutes from "./routes/likes.route.js";
 import blocksRoutes from "./routes/blocks.route.js";
 import reportsRoutes from "./routes/reports.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import notificationsRoutes from "./routes/notifications.route.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -103,6 +104,7 @@ app.use("/api/likes", likesRoutes);
 app.use("/api/blocks", blocksRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

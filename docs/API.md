@@ -263,6 +263,58 @@ POST /api/chat/:userId/read
 
 ---
 
+## Notifications
+
+GET /api/notifications
+
+**Auth:** required
+**Response 200:**
+
+```
+{
+  "notifications": [
+    {
+      "id": 1,
+      "type": "like | visit | message | match | unlike",
+      "is_read": false,
+      "created_at": "ISO8601",
+      "from_id": "uuid",
+      "from_username": "string",
+      "from_first_name": "string",
+      "from_last_name": "string",
+      "from_profile_picture_id": null
+    }
+  ],
+  "unread_count": 3
+}
+```
+
+**Notes:** Cached 30s TTL per user, invalidated on read/delete.
+
+PATCH /api/notifications/read-all
+
+**Auth:** required
+**Response 200:** `{ "updated": N }`
+**Notes:** Invalidates notifications cache.
+
+PATCH /api/notifications/:id/read
+
+**Auth:** required
+**Params:** `id` (integer)
+**Response 200:** `{ "id": 1 }`
+**Errors:** 404 not found or not owned by current user
+**Notes:** Invalidates notifications cache.
+
+DELETE /api/notifications/:id
+
+**Auth:** required
+**Params:** `id` (integer)
+**Response 200:** `{ "deleted": true }`
+**Errors:** 404 not found or not owned by current user
+**Notes:** Invalidates notifications cache.
+
+---
+
 ## WebSocket (Socket.io)
 
 **Endpoint:** same host as API (Socket.io path: `/socket.io`)
