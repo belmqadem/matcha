@@ -33,7 +33,7 @@ interface UserProfile {
   email: string;
   first_name: string;
   last_name: string;
-  age: number | null;
+  birth_date: string | null;
   gender: string | null;
   sexual_preference: string | null;
   biography: string | null;
@@ -66,11 +66,52 @@ interface Liker {
   liked_at: string;
 }
 
+interface Conversation {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  profile_picture_id: number | null;
+  is_online: boolean;
+  last_message: string | null;
+  last_message_at: string | null;
+  unread_count: number;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function ageFromBirthDate(birth_date: string | null): number | null {
+  if (!birth_date) return null;
+  const dob = new Date(birth_date);
+  if (isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+function birthDateFromAge(age: number): string {
+  const year = new Date().getFullYear() - age;
+  return `${year}-01-01`;
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  if (diff < 0) return 'just now';
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 const api = {
-  getMe: () =>
-    fetch('/api/users/me', { credentials: 'include' })
+  getMe: (signal?: AbortSignal) =>
+    fetch('/api/users/me', { credentials: 'include', signal })
       .then((r) => r.json())
       .then((d) => d.user as UserProfile),
 
@@ -140,20 +181,24 @@ const api = {
     }).then(async (r) => {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-      return d.user as UserProfile;
     }),
 
-  getVisitors: () =>
-    fetch('/api/profile/me/visitors', { credentials: 'include' })
+  getVisitors: (signal?: AbortSignal) =>
+    fetch('/api/profile/me/visitors', { credentials: 'include', signal })
       .then((r) => r.json())
-      .then((d) => d.visitors as Visitor[]),
+      .then((d) => (Array.isArray(d.visitors) ? d.visitors : []) as Visitor[]),
 
-  getLikedBy: () =>
-    fetch('/api/profile/me/liked-by', { credentials: 'include' })
+  getLikedBy: (signal?: AbortSignal) =>
+    fetch('/api/profile/me/liked-by', { credentials: 'include', signal })
       .then((r) => r.json())
-      .then((d) => d.likers as Liker[]),
+      .then((d) => (Array.isArray(d.likers) ? d.likers : []) as Liker[]),
 
-  updateLocation: (body: object) =>
+  getConversations: (signal?: AbortSignal) =>
+    fetch('/api/chat/conversations', { credentials: 'include', signal })
+      .then((r) => r.json())
+      .then((d) => (Array.isArray(d.conversations) ? d.conversations : []) as Conversation[]),
+
+  updateLocation: (body: { latitude: number; longitude: number; location_city?: string } | { location_city: string }) =>
     fetch('/api/profile/me/location', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -167,12 +212,17 @@ const api = {
 
   logout: () =>
     fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).then(async (r) => {
-      if (!r.ok) throw new Error('Logout failed');
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        throw new Error(d.error ?? 'Logout failed');
+      }
     }),
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+// These are tag suggestions only — not fake data. They're filtered against the
+// user's real tags from the backend so only unselected ones appear.
 const SUGGESTED_TAGS = [
   '#vegan', '#geek', '#piercing', '#fitness', '#travel', '#music',
   '#art', '#gaming', '#hiking', '#foodie', '#cinema', '#yoga',
@@ -194,17 +244,6 @@ const PREFERENCES = [
 
 const DEFAULT_PREFERENCE = 'bisexual';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function timeAgo(iso: string) {
-  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-}
-
 // ─── Shared input styles ──────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
@@ -218,6 +257,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   fontFamily: 'inherit',
   transition: 'border-color 0.15s',
+  boxSizing: 'border-box',
 };
 
 const labelStyle: React.CSSProperties = {
@@ -239,14 +279,14 @@ function SaveBar({ saving, error, onSave, onCancel }: {
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px', paddingTop: '12px', marginTop: '12px', borderTop: '1px solid #f5f5f5' }}>
       {error && (
         <p style={{ flex: 1, fontSize: '11px', color: '#e94057', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <AlertTriangle size={10} /> {error}
+          <AlertTriangle size={10} aria-hidden="true" /> {error}
         </p>
       )}
       <button type="button" onClick={onCancel} style={{ padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '8px', border: '1.5px solid #eee', background: '#fff', color: '#888', cursor: 'pointer' }}>
         Cancel
       </button>
-      <button type="button" onClick={onSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '8px', background: '#e94057', color: '#fff', border: 'none', cursor: 'pointer', opacity: saving ? 0.6 : 1 }}>
-        {saving ? <Loader2 size={10} /> : <Check size={10} />} Save
+      <button type="button" onClick={onSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '7px 14px', fontSize: '12px', fontWeight: 600, borderRadius: '8px', background: '#e94057', color: '#fff', border: 'none', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+        {saving ? <Loader2 size={10} aria-hidden="true" /> : <Check size={10} aria-hidden="true" />} Save
       </button>
     </div>
   );
@@ -256,13 +296,18 @@ function SaveBar({ saving, error, onSave, onCancel }: {
 
 function EditModal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', backdropFilter: 'blur(2px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
       <div style={{ background: '#fff', borderRadius: '20px', padding: '24px', width: '100%', maxWidth: '480px', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', margin: '0 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>{title}</h3>
-          <button onClick={onClose} style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1.5px solid #eee', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#888' }}>
-            <X size={14} />
+          <button onClick={onClose} aria-label="Close dialog" style={{ width: '30px', height: '30px', borderRadius: '50%', border: '1.5px solid #eee', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#888' }}>
+            <X size={14} aria-hidden="true" />
           </button>
         </div>
         {children}
@@ -280,6 +325,7 @@ function EditIdentityModal({ user, onUpdate, onClose }: { user: UserProfile; onU
 
   const handleSave = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) { setError('Name is required.'); return; }
+    if (!form.username.trim()) { setError('Username is required.'); return; }
     setSaving(true); setError('');
     try { const u = await api.patchUser(form); onUpdate(u); onClose(); }
     catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
@@ -292,19 +338,26 @@ function EditIdentityModal({ user, onUpdate, onClose }: { user: UserProfile; onU
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           {(['first_name', 'last_name'] as const).map(f => (
             <div key={f}>
-              <label style={labelStyle}>{f === 'first_name' ? 'First name' : 'Last name'}</label>
-              <input value={form[f]} onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))} style={inputStyle} />
+              <label style={labelStyle} htmlFor={`identity-${f}`}>{f === 'first_name' ? 'First name' : 'Last name'}</label>
+              <input
+                id={`identity-${f}`}
+                value={form[f]}
+                onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))}
+                style={inputStyle}
+              />
             </div>
           ))}
         </div>
         <div>
-          <label style={labelStyle}>Username</label>
-          <input value={form.username} onChange={e => setForm(p => ({ ...p, username: e.target.value }))} style={inputStyle} />
+          <label style={labelStyle} htmlFor="identity-username">Username</label>
+          <input id="identity-username" value={form.username} onChange={e => setForm(p => ({ ...p, username: e.target.value }))} style={inputStyle} />
         </div>
         <div>
-          <label style={labelStyle}>Email</label>
-          <input value={form.email} type="email" onChange={e => setForm(p => ({ ...p, email: e.target.value }))} style={inputStyle} />
-          <p style={{ fontSize: '10px', color: '#bbb', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Shield size={9} /> Changing your email requires re-verification.</p>
+          <label style={labelStyle} htmlFor="identity-email">Email</label>
+          <input id="identity-email" value={form.email} type="email" onChange={e => setForm(p => ({ ...p, email: e.target.value }))} style={inputStyle} />
+          <p style={{ fontSize: '10px', color: '#bbb', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Shield size={9} aria-hidden="true" /> Changing your email requires re-verification.
+          </p>
         </div>
         <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
       </div>
@@ -313,14 +366,40 @@ function EditIdentityModal({ user, onUpdate, onClose }: { user: UserProfile; onU
 }
 
 function EditAboutModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdate: (u: UserProfile) => void; onClose: () => void }) {
-  const [form, setForm] = useState({ gender: user.gender ?? '', sexual_preference: user.sexual_preference ?? '', biography: user.biography ?? '', age: user.age?.toString() ?? '' });
+  const currentAge = ageFromBirthDate(user.birth_date);
+  const [form, setForm] = useState({
+    gender: user.gender ?? '',
+    sexual_preference: user.sexual_preference ?? '',
+    biography: user.biography ?? '',
+    ageInput: currentAge !== null ? String(currentAge) : '',
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const handleSave = async () => {
+    if (form.ageInput) {
+      const age = parseInt(form.ageInput, 10);
+      if (isNaN(age) || age < 18 || age > 120) {
+        setError('Age must be between 18 and 120.');
+        return;
+      }
+    }
     setSaving(true); setError('');
-    try { const u = await api.patchProfile({ ...form, age: form.age ? parseInt(form.age) : null }); onUpdate(u); onClose(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
+    try {
+      const body: Record<string, unknown> = {
+        gender: form.gender || null,
+        sexual_preference: form.sexual_preference || null,
+        biography: form.biography || null,
+      };
+      if (form.ageInput) {
+        body.birth_date = birthDateFromAge(parseInt(form.ageInput, 10));
+      } else {
+        body.birth_date = null;
+      }
+      const u = await api.patchProfile(body);
+      onUpdate(u);
+      onClose();
+    } catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
     finally { setSaving(false); }
   };
 
@@ -329,34 +408,55 @@ function EditAboutModal({ user, onUpdate, onClose }: { user: UserProfile; onUpda
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
           <div>
-            <label style={labelStyle}>Age</label>
-            <input value={form.age} type="number" min={18} max={99} onChange={e => setForm(p => ({ ...p, age: e.target.value }))} style={inputStyle} placeholder="Your age" />
+            <label style={labelStyle} htmlFor="about-age">Age</label>
+            <input
+              id="about-age"
+              value={form.ageInput}
+              type="number"
+              min={18}
+              max={120}
+              onChange={e => setForm(p => ({ ...p, ageInput: e.target.value }))}
+              style={inputStyle}
+              placeholder="Your age"
+            />
           </div>
           <div>
-            <label style={labelStyle}>Gender</label>
+            <label style={labelStyle} htmlFor="about-gender">Gender</label>
             <div style={{ position: 'relative' }}>
-              <select value={form.gender} onChange={e => setForm(p => ({ ...p, gender: e.target.value }))} style={{ ...inputStyle, appearance: 'none', paddingRight: '28px' }}>
+              <select id="about-gender" value={form.gender} onChange={e => setForm(p => ({ ...p, gender: e.target.value }))} style={{ ...inputStyle, appearance: 'none', paddingRight: '28px' }}>
                 <option value="">Not specified</option>
                 {GENDERS.map(g => <option key={g.value} value={g.value}>{g.label}</option>)}
               </select>
-              <ChevronDown size={12} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
+              <ChevronDown size={12} aria-hidden="true" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
             </div>
           </div>
         </div>
         <div>
-          <label style={labelStyle}>Sexual orientation</label>
+          <label style={labelStyle} htmlFor="about-orientation">Sexual orientation</label>
           <div style={{ position: 'relative' }}>
-            <select value={form.sexual_preference} onChange={e => setForm(p => ({ ...p, sexual_preference: e.target.value }))} style={{ ...inputStyle, appearance: 'none', paddingRight: '28px' }}>
+            <select id="about-orientation" value={form.sexual_preference} onChange={e => setForm(p => ({ ...p, sexual_preference: e.target.value }))} style={{ ...inputStyle, appearance: 'none', paddingRight: '28px' }}>
               <option value="">Not specified (defaults to bisexual)</option>
               {PREFERENCES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
-            <ChevronDown size={12} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
+            <ChevronDown size={12} aria-hidden="true" style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: '#aaa', pointerEvents: 'none' }} />
           </div>
-          {!form.sexual_preference && <p style={{ fontSize: '10px', color: '#f59e0b', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Info size={9} /> Will default to bisexual.</p>}
+          {!form.sexual_preference && (
+            <p style={{ fontSize: '10px', color: '#f59e0b', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Info size={9} aria-hidden="true" /> Will default to bisexual.
+            </p>
+          )}
         </div>
         <div>
-          <label style={labelStyle}>Biography</label>
-          <textarea value={form.biography} onChange={e => setForm(p => ({ ...p, biography: e.target.value }))} maxLength={500} rows={4} placeholder="Tell others who you are…" style={{ ...inputStyle, resize: 'none' }} />
+          <label style={labelStyle} htmlFor="about-bio">Biography</label>
+          <textarea
+            id="about-bio"
+            value={form.biography}
+            onChange={e => setForm(p => ({ ...p, biography: e.target.value }))}
+            maxLength={500}
+            rows={4}
+            placeholder="Tell others who you are…"
+            style={{ ...inputStyle, resize: 'none' }}
+          />
           <p style={{ textAlign: 'right', fontSize: '10px', color: '#ccc', marginTop: '2px' }}>{form.biography.length}/500</p>
         </div>
         <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
@@ -371,10 +471,16 @@ function EditTagsModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdat
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const addTag = (tag: string) => {
-    const n = tag.startsWith('#') ? tag.toLowerCase() : `#${tag.toLowerCase()}`;
-    if (!n || n === '#' || tags.includes(n) || n.length < 2) return;
-    setTags(t => [...t, n]); setInput('');
+  const addTag = (raw: string) => {
+    const n = raw.trim().toLowerCase();
+    if (!n) return;
+    const tag = n.startsWith('#') ? n : `#${n}`;
+    if (tag === '#' || tag.length < 2) return;
+    setTags(prev => {
+      if (prev.includes(tag)) return prev;
+      return [...prev, tag];
+    });
+    setInput('');
   };
 
   const handleSave = async () => {
@@ -384,23 +490,38 @@ function EditTagsModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdat
     finally { setSaving(false); }
   };
 
+  // Only show suggestions that the user hasn't already added
   const available = SUGGESTED_TAGS.filter(t => !tags.includes(t));
 
   return (
     <EditModal title="Edit Interests" onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <input value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(input.trim()); } }}
-            placeholder="#sport, #music…" style={{ ...inputStyle, flex: 1 }} />
-          <button type="button" onClick={() => addTag(input.trim())} style={{ padding: '9px 14px', borderRadius: '10px', background: '#e94057', color: '#fff', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>Add</button>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(input); } }}
+            placeholder="#sport, #music…"
+            style={{ ...inputStyle, flex: 1 }}
+            aria-label="Add a tag"
+          />
+          <button type="button" onClick={() => addTag(input)} style={{ padding: '9px 14px', borderRadius: '10px', background: '#e94057', color: '#fff', fontSize: '12px', fontWeight: 700, border: 'none', cursor: 'pointer' }}>
+            Add
+          </button>
         </div>
         {tags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {tags.map(tag => (
               <span key={tag} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 12px', borderRadius: '999px', background: '#e94057', color: '#fff', fontSize: '12px', fontWeight: 500 }}>
                 {tag}
-                <button type="button" onClick={() => setTags(t => t.filter(x => x !== tag))} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={9} /></button>
+                <button
+                  type="button"
+                  onClick={() => setTags(t => t.filter(x => x !== tag))}
+                  aria-label={`Remove ${tag}`}
+                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', padding: 0, display: 'flex' }}
+                >
+                  <X size={9} aria-hidden="true" />
+                </button>
               </span>
             ))}
           </div>
@@ -410,7 +531,9 @@ function EditTagsModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdat
             <p style={labelStyle}>Quick add</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {available.map(tag => (
-                <button key={tag} type="button" onClick={() => addTag(tag)} style={{ padding: '4px 12px', borderRadius: '999px', border: '1.5px solid #eee', background: '#fff', color: '#888', fontSize: '12px', cursor: 'pointer' }}>{tag}</button>
+                <button key={tag} type="button" onClick={() => addTag(tag)} style={{ padding: '4px 12px', borderRadius: '999px', border: '1.5px solid #eee', background: '#fff', color: '#888', fontSize: '12px', cursor: 'pointer' }}>
+                  {tag}
+                </button>
               ))}
             </div>
           </div>
@@ -425,7 +548,9 @@ function EditLocationModal({ user, onUpdate, onClose }: { user: UserProfile; onU
   const [cityInput, setCityInput] = useState(user.location_city ?? '');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(
-    user.latitude && user.longitude ? { lat: user.latitude, lng: user.longitude } : null
+    user.latitude != null && user.longitude != null
+      ? { lat: user.latitude, lng: user.longitude }
+      : null
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -440,14 +565,27 @@ function EditLocationModal({ user, onUpdate, onClose }: { user: UserProfile; onU
   };
 
   const handleSave = async () => {
-    if (!cityInput.trim() && !gpsCoords) { setError('Location is required for matching.'); return; }
+    const city = cityInput.trim();
+    if (!gpsCoords && !city) { setError('Please provide a GPS location or enter a city.'); return; }
     setSaving(true); setError('');
     try {
-      const body: Record<string, unknown> = {};
-      if (gpsCoords) { body.latitude = gpsCoords.lat; body.longitude = gpsCoords.lng; }
-      if (cityInput.trim()) body.location_city = cityInput.trim();
-      await api.updateLocation(body);
-      onUpdate({ ...user, location_city: cityInput.trim() || user.location_city, latitude: gpsCoords?.lat ?? user.latitude, longitude: gpsCoords?.lng ?? user.longitude });
+      let body: Parameters<typeof api.updateLocation>[0];
+      if (gpsCoords) {
+        body = {
+          latitude: gpsCoords.lat,
+          longitude: gpsCoords.lng,
+          ...(city ? { location_city: city } : {}),
+        };
+      } else {
+        body = { location_city: city } as { location_city: string };
+      }
+      const result = await api.updateLocation(body);
+      onUpdate({
+        ...user,
+        location_city: result.location_city ?? city ?? user.location_city,
+        latitude: result.latitude ?? gpsCoords?.lat ?? user.latitude,
+        longitude: result.longitude ?? gpsCoords?.lng ?? user.longitude,
+      });
       onClose();
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
     finally { setSaving(false); }
@@ -458,11 +596,32 @@ function EditLocationModal({ user, onUpdate, onClose }: { user: UserProfile; onU
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div>
           <label style={labelStyle}>GPS location</label>
-          <button type="button" onClick={useGPS} disabled={gpsLoading} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', borderRadius: '10px', border: `1.5px solid ${gpsCoords ? '#e94057' : '#eee'}`, background: gpsCoords ? 'rgba(233,64,87,0.06)' : '#fafafa', color: gpsCoords ? '#e94057' : '#888', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
-            {gpsLoading ? <Loader2 size={14} /> : <MapPin size={14} />}
+          <button
+            type="button"
+            onClick={useGPS}
+            disabled={gpsLoading}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '10px',
+              borderRadius: '10px',
+              border: `1.5px solid ${gpsCoords ? '#e94057' : '#eee'}`,
+              background: gpsCoords ? 'rgba(233,64,87,0.06)' : '#fafafa',
+              color: gpsCoords ? '#e94057' : '#888',
+              fontSize: '13px',
+              fontWeight: 500,
+              cursor: gpsLoading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {gpsLoading ? <Loader2 size={14} aria-hidden="true" /> : <MapPin size={14} aria-hidden="true" />}
             {gpsLoading ? 'Detecting…' : gpsCoords ? '✓ GPS detected' : 'Use my current location'}
           </button>
-          <p style={{ fontSize: '10px', color: '#bbb', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Shield size={9} /> Only used for matching. You consent by clicking above.</p>
+          <p style={{ fontSize: '10px', color: '#bbb', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Shield size={9} aria-hidden="true" /> Only used for matching. You consent by clicking above.
+          </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ flex: 1, height: '1px', background: '#f0f0f0' }} />
@@ -470,8 +629,14 @@ function EditLocationModal({ user, onUpdate, onClose }: { user: UserProfile; onU
           <div style={{ flex: 1, height: '1px', background: '#f0f0f0' }} />
         </div>
         <div>
-          <label style={labelStyle}>City (manual)</label>
-          <input value={cityInput} onChange={e => setCityInput(e.target.value)} placeholder="e.g. Paris, Marais district" style={inputStyle} />
+          <label style={labelStyle} htmlFor="location-city">City (manual)</label>
+          <input
+            id="location-city"
+            value={cityInput}
+            onChange={e => setCityInput(e.target.value)}
+            placeholder="e.g. Paris, Marais district"
+            style={inputStyle}
+          />
         </div>
         <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
       </div>
@@ -487,7 +652,8 @@ function PhotosPanel({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
   const [error, setError] = useState('');
   const photos = user.photos ?? [];
   const sorted = photos.slice().sort((a, b) => a.order_index - b.order_index);
-  const slots: (Photo | null)[] = [...sorted, ...Array(5 - sorted.length).fill(null)].slice(0, 5);
+  const emptyCount = Math.max(0, 5 - sorted.length);
+  const slots: (Photo | null)[] = [...sorted, ...Array(emptyCount).fill(null)].slice(0, 5);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -496,18 +662,20 @@ function PhotosPanel({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
     if (photos.length + files.length > 5) { setError('Max 5 photos.'); return; }
     setUploading(true); setError('');
     try {
-      let updated = { ...user };
+      const newPhotos = [...photos];
+      let newProfilePictureId = user.profile_picture_id;
       for (const file of files) {
         const p = await api.uploadPhoto(file);
-        updated = { ...updated, photos: [...updated.photos, p] };
-        if (!updated.profile_picture_id) updated.profile_picture_id = p.id;
+        newPhotos.push(p);
+        if (!newProfilePictureId) newProfilePictureId = p.id;
       }
-      onUpdate(updated);
+      onUpdate({ ...user, photos: newPhotos, profile_picture_id: newProfilePictureId });
     } catch (e) { setError(e instanceof Error ? e.message : 'Upload failed.'); }
     finally { setUploading(false); }
   };
 
   const handleDelete = async (id: number) => {
+    setError('');
     try {
       await api.deletePhoto(id);
       const remaining = photos.filter(p => p.id !== id);
@@ -517,8 +685,11 @@ function PhotosPanel({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
   };
 
   const handleSetMain = async (id: number) => {
-    try { const u = await api.setMainPhoto(id); onUpdate(u); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Failed.'); }
+    setError('');
+    try {
+      await api.setMainPhoto(id);
+      onUpdate({ ...user, profile_picture_id: id });
+    } catch (e) { setError(e instanceof Error ? e.message : 'Failed to set main photo.'); }
   };
 
   return (
@@ -528,8 +699,12 @@ function PhotosPanel({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '11px', color: '#bbb' }}>{photos.length}/5</span>
           {photos.length < 5 && (
-            <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-              style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'rgba(233,64,87,0.08)', border: 'none', borderRadius: '8px', padding: '5px 12px', cursor: 'pointer' }}>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'rgba(233,64,87,0.08)', border: 'none', borderRadius: '8px', padding: '5px 12px', cursor: uploading ? 'not-allowed' : 'pointer' }}
+            >
               + Add photo
             </button>
           )}
@@ -538,57 +713,97 @@ function PhotosPanel({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
 
       <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
         {slots.map((photo, i) => (
-          <div key={photo?.id ?? `empty-${i}`} style={{ position: 'relative', flexShrink: 0, width: '140px', height: '180px', borderRadius: '14px', overflow: 'hidden', background: '#f9f9f9', border: '1.5px solid #f0f0f0', cursor: photo ? 'default' : 'pointer' }}
-            onClick={() => !photo && fileRef.current?.click()}>
+          <div
+            key={photo?.id ?? `empty-${i}`}
+            style={{ position: 'relative', flexShrink: 0, width: '140px', height: '180px', borderRadius: '14px', overflow: 'hidden', background: '#f9f9f9', border: '1.5px solid #f0f0f0', cursor: photo ? 'default' : 'pointer' }}
+            onClick={() => !photo && fileRef.current?.click()}
+            role={!photo ? 'button' : undefined}
+            aria-label={!photo ? 'Upload a photo' : undefined}
+            tabIndex={!photo ? 0 : undefined}
+            onKeyDown={!photo ? (e) => { if (e.key === 'Enter' || e.key === ' ') fileRef.current?.click(); } : undefined}
+          >
             {photo ? (
               <>
-                <img src={photo.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <img src={photo.url} alt={`Photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 {photo.id === user.profile_picture_id && (
                   <span style={{ position: 'absolute', top: '8px', left: '8px', background: '#e94057', color: '#fff', fontSize: '9px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', letterSpacing: '0.05em' }}>MAIN</span>
                 )}
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', transition: 'background 0.15s' }}
+                <div
+                  style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0)', transition: 'background 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.25)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0)')}>
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(0,0,0,0)')}
+                >
                   <div style={{ position: 'absolute', top: '8px', right: '8px', display: 'flex', gap: '4px' }}>
                     {photo.id !== user.profile_picture_id && (
-                      <button type="button" onClick={() => handleSetMain(photo.id)} title="Set as main" style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#e94057' }}>
-                        <Star size={12} />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleSetMain(photo.id); }}
+                        aria-label="Set as main photo"
+                        style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#e94057' }}
+                      >
+                        <Star size={12} aria-hidden="true" />
                       </button>
                     )}
-                    <button type="button" onClick={() => handleDelete(photo.id)} style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555' }}>
-                      <X size={12} />
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleDelete(photo.id); }}
+                      aria-label="Delete photo"
+                      style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#555' }}
+                    >
+                      <X size={12} aria-hidden="true" />
                     </button>
                   </div>
                 </div>
               </>
             ) : (
               <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#ccc' }}>
-                {uploading && i === photos.length ? <Loader2 size={20} /> : <Camera size={20} />}
-                <span style={{ fontSize: '11px', fontWeight: 500 }}>Add</span>
+                {uploading && i === photos.length
+                  ? <Loader2 size={20} aria-hidden="true" />
+                  : <Camera size={20} aria-hidden="true" />
+                }
+                <span style={{ fontSize: '11px', fontWeight: 500 }}>{uploading && i === photos.length ? 'Uploading…' : 'Add'}</span>
               </div>
             )}
           </div>
         ))}
       </div>
 
-      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleUpload} style={{ display: 'none' }} />
-      {error && <p style={{ fontSize: '11px', color: '#e94057', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={10} /> {error}</p>}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        onChange={handleUpload}
+        style={{ display: 'none' }}
+        aria-hidden="true"
+      />
+      {error && (
+        <p style={{ fontSize: '11px', color: '#e94057', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <AlertTriangle size={10} aria-hidden="true" /> {error}
+        </p>
+      )}
     </div>
   );
 }
 
 // ─── About panel ──────────────────────────────────────────────────────────────
 
-function AboutPanel({ user, onEditAbout, onEditLocation }: { user: UserProfile; onEditAbout: () => void; onEditLocation: () => void }) {
+function AboutPanel({ user, onEditAbout, onEditLocation }: {
+  user: UserProfile;
+  onEditAbout: () => void;
+  onEditLocation: () => void;
+}) {
   const genderLabel = GENDERS.find(g => g.value === user.gender)?.label;
-  const prefLabel = PREFERENCES.find(p => p.value === user.sexual_preference)?.label
-    ?? `${PREFERENCES.find(p => p.value === DEFAULT_PREFERENCE)?.label} (default)`;
+  const prefLabel =
+    PREFERENCES.find(p => p.value === user.sexual_preference)?.label ??
+    `${PREFERENCES.find(p => p.value === DEFAULT_PREFERENCE)?.label} (default)`;
   const lat = user.latitude != null ? Number(user.latitude) : null;
   const lng = user.longitude != null ? Number(user.longitude) : null;
+  const displayAge = ageFromBirthDate(user.birth_date);
 
-  const rows = [
-    { label: 'City', value: user.location_city ?? (lat ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation },
-    { label: 'Age', value: user.age ? `${user.age} years old` : null, action: onEditAbout },
+  const rows: { label: string; value: string | null; action: () => void }[] = [
+    { label: 'City', value: user.location_city ?? (lat != null ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation },
+    { label: 'Age', value: displayAge !== null ? `${displayAge} years old` : null, action: onEditAbout },
     { label: 'Gender', value: genderLabel ?? null, action: onEditAbout },
     { label: 'Orientation', value: prefLabel, action: onEditAbout },
   ];
@@ -597,13 +812,24 @@ function AboutPanel({ user, onEditAbout, onEditLocation }: { user: UserProfile; 
     <div style={{ background: '#fff', borderRadius: '20px', padding: '20px 22px', border: '1px solid #f0f0f0' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>About</h3>
-        <button onClick={onEditAbout} style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <Edit2 size={11} /> Edit
+        <button
+          onClick={onEditAbout}
+          style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+        >
+          <Edit2 size={11} aria-hidden="true" /> Edit
         </button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
-        {rows.map(({ label, value }) => (
-          <div key={label} style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+        {rows.map(({ label, value, action }) => (
+          <div
+            key={label}
+            onClick={action}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') action(); }}
+            aria-label={`Edit ${label}`}
+            style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5', cursor: 'pointer' }}
+          >
             <p style={{ fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>{label}</p>
             <p style={{ fontSize: '13px', fontWeight: 500, color: value ? '#333' : '#ddd' }}>
               {value ?? '—'}
@@ -617,60 +843,90 @@ function AboutPanel({ user, onEditAbout, onEditLocation }: { user: UserProfile; 
 
 // ─── Activity panel ───────────────────────────────────────────────────────────
 
-function ActivityPanel({ user }: { user: UserProfile }) {
-  const [visitors, setVisitors] = useState<Visitor[]>([]);
+function ActivityPanel({ user, visitors }: { user: UserProfile; visitors: Visitor[] }) {
+  const navigate = useNavigate();
   const [likers, setLikers] = useState<Liker[]>([]);
   const [tab, setTab] = useState<'visitors' | 'likers'>('visitors');
   const [loading, setLoading] = useState(true);
   const fame = Math.min(100, Math.max(0, user.fame_rating ?? 0));
 
   useEffect(() => {
-    Promise.all([api.getVisitors(), api.getLikedBy()])
-      .then(([v, l]) => { setVisitors(v ?? []); setLikers(l ?? []); })
+    const controller = new AbortController();
+    api.getLikedBy(controller.signal)
+      .then(setLikers)
+      .catch((e) => { if (e.name !== 'AbortError') console.error('Failed to load likers', e); })
       .finally(() => setLoading(false));
+    return () => controller.abort();
   }, []);
 
   const list = tab === 'visitors' ? visitors : likers;
+
+  const goToProfile = (id: number, name: string) => {
+    navigate(`/profile/${id}`);
+  };
 
   return (
     <div style={{ background: '#fff', borderRadius: '20px', padding: '20px 22px', border: '1px solid #f0f0f0' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>Fame & Activity</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Star size={12} style={{ color: '#e94057' }} />
-          <span style={{ fontSize: '13px', fontWeight: 700, color: '#e94057' }}>{fame}</span>
+          <Star size={12} style={{ color: '#e94057' }} aria-hidden="true" />
+          <span style={{ fontSize: '13px', fontWeight: 700, color: '#e94057' }} aria-label={`Fame rating: ${fame}`}>{fame}</span>
         </div>
       </div>
 
-      <div style={{ height: '6px', borderRadius: '999px', background: '#f5f5f5', marginBottom: '16px', overflow: 'hidden' }}>
+      <div style={{ height: '6px', borderRadius: '999px', background: '#f5f5f5', marginBottom: '16px', overflow: 'hidden' }} role="progressbar" aria-valuenow={fame} aria-valuemin={0} aria-valuemax={100} aria-label="Fame rating">
         <div style={{ height: '100%', borderRadius: '999px', background: '#e94057', width: `${fame}%`, transition: 'width 0.7s ease' }} />
       </div>
 
-      <div style={{ display: 'flex', borderBottom: '1px solid #f5f5f5', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid #f5f5f5', marginBottom: '12px' }} role="tablist">
         {[
           { key: 'visitors' as const, label: 'Visitors', icon: Eye, count: visitors.length },
           { key: 'likers' as const, label: 'Liked me', icon: Heart, count: likers.length },
         ].map(({ key, label, icon: Icon, count }) => (
-          <button key={key} onClick={() => setTab(key)} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 0', marginRight: '20px', fontSize: '12px', fontWeight: 600, color: tab === key ? '#e94057' : '#bbb', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#e94057' : 'transparent'}`, cursor: 'pointer', marginBottom: '-1px' }}>
-            <Icon size={11} /> {label}
+          <button
+            key={key}
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 0', marginRight: '20px', fontSize: '12px', fontWeight: 600, color: tab === key ? '#e94057' : '#bbb', background: 'none', border: 'none', borderBottom: `2px solid ${tab === key ? '#e94057' : 'transparent'}`, cursor: 'pointer', marginBottom: '-1px' }}
+          >
+            <Icon size={11} aria-hidden="true" /> {label}
             <span style={{ marginLeft: '2px', padding: '1px 6px', borderRadius: '999px', background: tab === key ? '#e94057' : '#f5f5f5', color: tab === key ? '#fff' : '#aaa', fontSize: '9px', fontWeight: 700 }}>{count}</span>
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}><Loader2 size={16} style={{ color: '#ddd' }} /></div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+          <Loader2 size={16} style={{ color: '#ddd' }} aria-label="Loading" />
+        </div>
       ) : list.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0', maxHeight: '200px', overflowY: 'auto' }}>
           {list.map(item => {
             const time = 'visited_at' in item ? item.visited_at : item.liked_at;
             return (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderBottom: '1px solid #f9f9f9' }}>
+              <div
+                key={item.id}
+                onClick={() => goToProfile(item.id, item.first_name)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') goToProfile(item.id, item.first_name); }}
+                role="button"
+                tabIndex={0}
+                aria-label={`View ${item.first_name} ${item.last_name}'s profile`}
+                style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 0', borderBottom: '1px solid #f9f9f9', cursor: 'pointer', borderRadius: '8px', transition: 'background 0.1s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#f5f5f5', overflow: 'hidden', flexShrink: 0, border: '1.5px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#e94057' }}>
-                  {item.profile_picture_url ? <img src={item.profile_picture_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : item.first_name[0]}
+                  {item.profile_picture_url
+                    ? <img src={item.profile_picture_url} alt={`${item.first_name}'s avatar`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <span aria-hidden="true">{item.first_name[0]}</span>
+                  }
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.first_name} {item.last_name}</p>
+                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.first_name} {item.last_name}
+                  </p>
                   <p style={{ fontSize: '10px', color: '#bbb' }}>@{item.username}</p>
                 </div>
                 <span style={{ fontSize: '10px', color: '#ccc', flexShrink: 0 }}>{timeAgo(time)}</span>
@@ -689,84 +945,143 @@ function ActivityPanel({ user }: { user: UserProfile }) {
 
 function MessagesSidebar() {
   const navigate = useNavigate();
-  // Placeholder messages — in real app these come from the chat API
-  const mockChats = [
-    { id: 1, name: 'Sofia M.', avatar: null, initials: 'SM', preview: "Hey, how are you doing?", time: '4:20 am', online: true },
-    { id: 2, name: 'Lucas B.', avatar: null, initials: 'LB', preview: "I'm down for coffee!", time: '2:09 am', online: true },
-    { id: 3, name: 'Amira K.', avatar: null, initials: 'AK', preview: "Lol that's so funny 😂", time: '2:02 am', online: true },
-    { id: 4, name: 'Remi C.', avatar: null, initials: 'RC', preview: "Did you see my last message?", time: '1:56 am', online: false },
-    { id: 5, name: 'Yuki T.', avatar: null, initials: 'YT', preview: "You: Aww, thank you!", time: '1:04 am', online: false },
-  ];
-  const [activeTab, setActiveTab] = useState<'chats' | 'requests'>('chats');
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    api.getConversations(controller.signal)
+      .then(setConversations)
+      .catch((e) => { if (e.name !== 'AbortError') console.error('Failed to load conversations', e); })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, []);
 
   return (
     <div style={{ background: '#fff', borderRadius: '20px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
-      <div style={{ padding: '18px 20px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+      <div style={{ padding: '18px 20px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>Messages</h3>
-          <button onClick={() => navigate('/chat')} style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer' }}>See all</button>
-        </div>
-        <div style={{ display: 'flex', borderBottom: '1px solid #f5f5f5' }}>
-          {(['chats', 'requests'] as const).map(t => (
-            <button key={t} onClick={() => setActiveTab(t)} style={{ flex: 1, padding: '8px 0', fontSize: '12px', fontWeight: 600, color: activeTab === t ? '#e94057' : '#bbb', background: 'none', border: 'none', borderBottom: `2px solid ${activeTab === t ? '#e94057' : 'transparent'}`, cursor: 'pointer', marginBottom: '-1px', textTransform: 'capitalize' }}>
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
+          <button
+            onClick={() => navigate('/chat')}
+            style={{ fontSize: '12px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            See all
+          </button>
         </div>
       </div>
 
-      <div style={{ padding: '4px 0' }}>
-        {mockChats.map(chat => (
-          <div key={chat.id} onClick={() => navigate('/chat')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px', cursor: 'pointer', transition: 'background 0.1s' }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffe4e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#e94057', overflow: 'hidden' }}>
-                {chat.avatar ? <img src={chat.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : chat.initials}
-              </div>
-              {chat.online && <span style={{ position: 'absolute', bottom: 0, right: 0, width: '11px', height: '11px', borderRadius: '50%', background: '#4ade80', border: '2px solid #fff' }} />}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: '13px', fontWeight: 600, color: '#222', marginBottom: '1px' }}>{chat.name}</p>
-              <p style={{ fontSize: '11px', color: '#bbb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chat.preview}</p>
-            </div>
-            <span style={{ fontSize: '10px', color: '#ccc', flexShrink: 0 }}>{chat.time}</span>
+      <div style={{ padding: '0 0 8px' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '20px' }}>
+            <Loader2 size={16} style={{ color: '#ddd' }} aria-label="Loading conversations" />
           </div>
-        ))}
+        ) : conversations.length === 0 ? (
+          <p style={{ fontSize: '12px', color: '#ccc', textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>
+            No conversations yet.
+          </p>
+        ) : (
+          conversations.map(chat => (
+            <div
+              key={chat.id}
+              onClick={() => navigate(`/chat/${chat.id}`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/chat/${chat.id}`); }}
+              aria-label={`Open conversation with ${chat.first_name} ${chat.last_name}`}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 20px', cursor: 'pointer', transition: 'background 0.1s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#fafafa')}
+              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#ffe4e8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: '#e94057', overflow: 'hidden' }}>
+                  <span aria-hidden="true">{chat.first_name[0]}{chat.last_name[0]}</span>
+                </div>
+                {chat.is_online && (
+                  <span
+                    style={{ position: 'absolute', bottom: 0, right: 0, width: '11px', height: '11px', borderRadius: '50%', background: '#4ade80', border: '2px solid #fff' }}
+                    aria-label="Online"
+                  />
+                )}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '13px', fontWeight: 600, color: '#222', marginBottom: '1px' }}>
+                  {chat.first_name} {chat.last_name}
+                </p>
+                <p style={{ fontSize: '11px', color: '#bbb', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {chat.last_message ?? 'No messages yet'}
+                </p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+                {chat.last_message_at && (
+                  <span style={{ fontSize: '10px', color: '#ccc' }}>{timeAgo(chat.last_message_at)}</span>
+                )}
+                {chat.unread_count > 0 && (
+                  <span style={{ padding: '1px 6px', borderRadius: '999px', background: '#e94057', color: '#fff', fontSize: '9px', fontWeight: 700 }}>
+                    {chat.unread_count}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-// ─── Sidebar: Online contacts ─────────────────────────────────────────────────
+// ─── Sidebar: Recent visitors ─────────────────────────────────────────────────
 
-function OnlineContactsSidebar({ visitors }: { visitors: Visitor[] }) {
+function RecentVisitorsSidebar({ visitors }: { visitors: Visitor[] }) {
   const navigate = useNavigate();
-  // Show visitors as "contacts online" — in real app use a dedicated endpoint
-  const online = visitors.slice(0, 8);
-  const colors = ['#e94057', '#f97316', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#6366f1'];
+  // Show up to 8 most-recent visitors
+  const recent = visitors.slice(0, 8);
 
   return (
     <div style={{ background: '#fff', borderRadius: '20px', border: '1px solid #f0f0f0', padding: '18px 20px' }}>
-      <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222', marginBottom: '14px' }}>Online now</h3>
-      {online.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
-            {online.map((v, i) => (
-              <div key={v.id} onClick={() => navigate(`/profile/${v.username}`)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                <div style={{ position: 'relative' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: `${colors[i % colors.length]}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, color: colors[i % colors.length], overflow: 'hidden', border: `2px solid ${colors[i % colors.length]}44` }}>
-                    {v.profile_picture_url ? <img src={v.profile_picture_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : v.first_name[0]}
-                  </div>
-                  <span style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80', border: '2px solid #fff' }} />
-                </div>
-                <span style={{ fontSize: '10px', color: '#888', textAlign: 'center', maxWidth: '44px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{v.first_name}</span>
+      <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222', marginBottom: '14px' }}>Recent visitors</h3>
+      {recent.length > 0 ? (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
+          {recent.map((v) => (
+            <div
+              key={v.id}
+              onClick={() => navigate(`/profile/${v.id}`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(`/profile/${v.id}`); }}
+              aria-label={`View ${v.first_name} ${v.last_name}'s profile`}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+            >
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '50%',
+                background: '#ffe4e8',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '14px',
+                fontWeight: 700,
+                color: '#e94057',
+                overflow: 'hidden',
+                border: '2px solid #ffd6db',
+              }}>
+                {v.profile_picture_url
+                  ? <img src={v.profile_picture_url} alt={`${v.first_name}'s avatar`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span aria-hidden="true">{v.first_name[0]}</span>
+                }
               </div>
-            ))}
-          </div>
+              <span style={{ fontSize: '10px', color: '#888', textAlign: 'center', maxWidth: '44px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {v.first_name}
+              </span>
+              <span style={{ fontSize: '9px', color: '#ccc' }}>
+                {timeAgo(v.visited_at)}
+              </span>
+            </div>
+          ))}
         </div>
       ) : (
-        <p style={{ fontSize: '12px', color: '#ccc', fontStyle: 'italic' }}>No one online right now.</p>
+        <p style={{ fontSize: '12px', color: '#ccc', fontStyle: 'italic' }}>No recent visitors.</p>
       )}
     </div>
   );
@@ -780,40 +1095,55 @@ const MyProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
   const [visitors, setVisitors] = useState<Visitor[]>([]);
-
-  // Edit modal state
   const [editModal, setEditModal] = useState<'identity' | 'about' | 'tags' | 'location' | null>(null);
-
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
 
   useEffect(() => {
-    api.getMe()
-      .then(setUser)
-      .catch(e => setFetchError(e instanceof Error ? e.message : 'Failed to load profile.'))
+    const controller = new AbortController();
+    Promise.all([
+      api.getMe(controller.signal),
+      api.getVisitors(controller.signal),
+    ])
+      .then(([me, v]) => { setUser(me); setVisitors(v); })
+      .catch(e => {
+        if (e.name === 'AbortError') return;
+        setFetchError(e instanceof Error ? e.message : 'Failed to load profile.');
+      })
       .finally(() => setLoading(false));
-    api.getVisitors().then(setVisitors).catch(() => {});
+
+    return () => controller.abort();
   }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setLogoutError('');
+    try {
+      await api.logout();
+      navigate('/login');
+    } catch (e) {
+      setLogoutError(e instanceof Error ? e.message : 'Sign out failed. Please try again.');
+      setLoggingOut(false);
+    }
+  };
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Loader2 size={28} style={{ color: '#e94057' }} />
+      <Loader2 size={28} style={{ color: '#e94057' }} aria-label="Loading profile" />
     </div>
   );
 
   if (fetchError || !user) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px' }}>
       <p style={{ fontSize: '14px', color: '#aaa' }}>{fetchError || 'Profile not found.'}</p>
-      <button onClick={() => navigate('/login')} style={{ fontSize: '13px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer' }}>Back to login</button>
+      <button onClick={() => navigate('/login')} style={{ fontSize: '13px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer' }}>
+        Back to login
+      </button>
     </div>
   );
 
   const mainPhoto = user.photos?.find(p => p.id === user.profile_picture_id) ?? user.photos?.[0];
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    try { await api.logout(); } catch {}
-    navigate('/login');
-  };
+  const displayAge = ageFromBirthDate(user.birth_date);
 
   return (
     <div style={{ minHeight: '100vh', background: '#f7f4f4', fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif" }}>
@@ -829,23 +1159,29 @@ const MyProfilePage = () => {
         {/* ══ LEFT COLUMN ══ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
-          {/* ── Hero card: photo + info ── */}
+          {/* ── Hero card ── */}
           <div style={{ background: '#fff', borderRadius: '24px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', minHeight: '260px' }}>
 
               {/* Profile photo */}
               <div style={{ position: 'relative', background: '#f5f5f5' }}>
                 {mainPhoto ? (
-                  <img src={mainPhoto.url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <img src={mainPhoto.url} alt="Your profile photo" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 ) : (
-                  <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#ccc', minHeight: '260px', cursor: 'pointer' }}
-                    onClick={() => document.getElementById('photo-upload')?.click()}>
-                    <Camera size={32} />
+                  <div
+                    style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#ccc', minHeight: '260px', cursor: 'pointer' }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Add a profile photo"
+                  >
+                    <Camera size={32} aria-hidden="true" />
                     <span style={{ fontSize: '12px' }}>Add photo</span>
                   </div>
                 )}
                 {user.is_online && (
-                  <span style={{ position: 'absolute', bottom: '12px', left: '12px', background: '#4ade80', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', letterSpacing: '0.05em' }}>● ONLINE</span>
+                  <span style={{ position: 'absolute', bottom: '12px', left: '12px', background: '#4ade80', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', letterSpacing: '0.05em' }}>
+                    ● ONLINE
+                  </span>
                 )}
               </div>
 
@@ -856,23 +1192,30 @@ const MyProfilePage = () => {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a1a', lineHeight: 1.2 }}>
-                        {user.first_name} {user.last_name}{user.age ? `, ${user.age}` : ''}
+                        {user.first_name} {user.last_name}{displayAge !== null ? `, ${displayAge}` : ''}
                       </h1>
-                      <CheckCircle2 size={18} style={{ color: '#e94057', flexShrink: 0 }} />
+                      <CheckCircle2 size={18} style={{ color: '#e94057', flexShrink: 0 }} aria-label="Verified profile" />
                     </div>
-                    <button onClick={() => setEditModal('identity')} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, color: '#e94057', background: 'rgba(233,64,87,0.08)', border: 'none', borderRadius: '8px', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>
-                      <Edit2 size={10} /> Edit
+                    <button
+                      onClick={() => setEditModal('identity')}
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600, color: '#e94057', background: 'rgba(233,64,87,0.08)', border: 'none', borderRadius: '8px', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      <Edit2 size={10} aria-hidden="true" /> Edit
                     </button>
                   </div>
 
                   {/* Location */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '14px' }}>
-                    <MapPin size={12} style={{ color: '#e94057' }} />
+                    <MapPin size={12} style={{ color: '#e94057' }} aria-hidden="true" />
                     <span style={{ fontSize: '13px', color: '#aaa' }}>
-                      {user.location_city ?? (user.latitude ? `${Number(user.latitude).toFixed(2)}, ${Number(user.longitude).toFixed(2)}` : 'Location not set')}
+                      {user.location_city ?? (user.latitude != null ? `${Number(user.latitude).toFixed(2)}, ${Number(user.longitude).toFixed(2)}` : 'Location not set')}
                     </span>
-                    <button onClick={() => setEditModal('location')} style={{ marginLeft: '4px', fontSize: '10px', color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}>
-                      <Edit2 size={9} />
+                    <button
+                      onClick={() => setEditModal('location')}
+                      aria-label="Edit location"
+                      style={{ marginLeft: '4px', fontSize: '10px', color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7, display: 'flex', alignItems: 'center' }}
+                    >
+                      <Edit2 size={9} aria-hidden="true" />
                     </button>
                   </div>
 
@@ -881,7 +1224,10 @@ const MyProfilePage = () => {
                     {user.biography ? (
                       <p style={{ fontSize: '13.5px', color: '#555', lineHeight: 1.6 }}>{user.biography}</p>
                     ) : (
-                      <button onClick={() => setEditModal('about')} style={{ fontSize: '13px', color: '#bbb', fontStyle: 'italic', background: 'none', border: '1.5px dashed #eee', borderRadius: '10px', padding: '8px 14px', cursor: 'pointer' }}>
+                      <button
+                        onClick={() => setEditModal('about')}
+                        style={{ fontSize: '13px', color: '#bbb', fontStyle: 'italic', background: 'none', border: '1.5px dashed #eee', borderRadius: '10px', padding: '8px 14px', cursor: 'pointer' }}
+                      >
                         + Add a bio
                       </button>
                     )}
@@ -900,7 +1246,10 @@ const MyProfilePage = () => {
                     ) : (
                       <span style={{ fontSize: '12px', color: '#ddd', fontStyle: 'italic' }}>No interests yet</span>
                     )}
-                    <button onClick={() => setEditModal('tags')} style={{ padding: '4px 10px', borderRadius: '999px', background: '#fafafa', color: '#bbb', fontSize: '12px', fontWeight: 600, border: '1.5px dashed #eee', cursor: 'pointer' }}>
+                    <button
+                      onClick={() => setEditModal('tags')}
+                      style={{ padding: '4px 10px', borderRadius: '999px', background: '#fafafa', color: '#bbb', fontSize: '12px', fontWeight: 600, border: '1.5px dashed #eee', cursor: 'pointer' }}
+                    >
                       + Edit
                     </button>
                   </div>
@@ -916,12 +1265,21 @@ const MyProfilePage = () => {
           <AboutPanel user={user} onEditAbout={() => setEditModal('about')} onEditLocation={() => setEditModal('location')} />
 
           {/* ── Activity ── */}
-          <ActivityPanel user={user} />
+          <ActivityPanel user={user} visitors={visitors} />
 
           {/* ── Logout ── */}
           <div style={{ background: '#fff', borderRadius: '20px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
-            <button onClick={handleLogout} disabled={loggingOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '16px 22px', fontSize: '13px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', opacity: loggingOut ? 0.6 : 1 }}>
-              {loggingOut ? <Loader2 size={15} /> : <LogOut size={15} />}
+            {logoutError && (
+              <p style={{ fontSize: '11px', color: '#e94057', padding: '10px 22px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <AlertTriangle size={10} aria-hidden="true" /> {logoutError}
+              </p>
+            )}
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '16px 22px', fontSize: '13px', fontWeight: 600, color: '#e94057', background: 'none', border: 'none', cursor: loggingOut ? 'not-allowed' : 'pointer', opacity: loggingOut ? 0.6 : 1 }}
+            >
+              {loggingOut ? <Loader2 size={15} aria-hidden="true" /> : <LogOut size={15} aria-hidden="true" />}
               {loggingOut ? 'Signing out…' : 'Sign out'}
             </button>
           </div>
@@ -930,7 +1288,7 @@ const MyProfilePage = () => {
         {/* ══ RIGHT SIDEBAR ══ */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'sticky', top: '88px' }}>
           <MessagesSidebar />
-          <OnlineContactsSidebar visitors={visitors} />
+          <RecentVisitorsSidebar visitors={visitors} />
         </div>
       </div>
     </div>
