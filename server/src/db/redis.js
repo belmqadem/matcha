@@ -48,7 +48,22 @@ export const del = async (...keys) => {
 
 export const keys = async (pattern) => {
   try {
-    return await redis.keys(pattern);
+    const matchedKeys = [];
+    let cursor = "0";
+
+    do {
+      const [nextCursor, batch] = await redis.scan(
+        cursor,
+        "MATCH",
+        pattern,
+        "COUNT",
+        100,
+      );
+      cursor = nextCursor;
+      matchedKeys.push(...batch);
+    } while (cursor !== "0");
+
+    return matchedKeys;
   } catch (err) {
     logger.error({ err, pattern }, "Redis keys failed");
     return [];
