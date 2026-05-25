@@ -77,7 +77,7 @@ export const markOneAsRead = async (userId, notificationId) => {
   const result = await query(
     `UPDATE notifications
      SET is_read = true
-     WHERE id = $1 AND user_id = $2 AND is_read = false
+     WHERE id = $1 AND user_id = $2
      RETURNING id`,
     [id, userId],
   );

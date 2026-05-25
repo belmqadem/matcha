@@ -27,8 +27,12 @@ const scanKeysByPattern = async (pattern) => {
 };
 
 export const invalidateUserCaches = async (userId) => {
-  const browseKeys = await scanKeysByPattern(CacheKeys.patterns.allBrowse(userId));
-  const searchKeys = await scanKeysByPattern(CacheKeys.patterns.allSearch(userId));
+  const browseKeys = await scanKeysByPattern(
+    CacheKeys.patterns.allBrowse(userId),
+  );
+  const searchKeys = await scanKeysByPattern(
+    CacheKeys.patterns.allSearch(userId),
+  );
   const keysToDelete = [
     CacheKeys.myProfile(userId),
     CacheKeys.notifications(userId),
@@ -52,9 +56,23 @@ export const invalidateProfileCache = async (profileId) => {
   }
 };
 
+export const invalidateUserProfileCaches = async (userId) => {
+  const keysToDelete = [CacheKeys.myProfile(userId)];
+
+  if (keysToDelete.length > 0) {
+    await del(...keysToDelete);
+  }
+
+  await invalidateProfileCache(userId);
+};
+
 export const invalidateBrowseForUser = async (userId) => {
-  const browseKeys = await scanKeysByPattern(CacheKeys.patterns.allBrowse(userId));
-  const searchKeys = await scanKeysByPattern(CacheKeys.patterns.allSearch(userId));
+  const browseKeys = await scanKeysByPattern(
+    CacheKeys.patterns.allBrowse(userId),
+  );
+  const searchKeys = await scanKeysByPattern(
+    CacheKeys.patterns.allSearch(userId),
+  );
   const keysToDelete = [...browseKeys, ...searchKeys];
 
   if (keysToDelete.length > 0) {

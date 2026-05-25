@@ -2,8 +2,9 @@ import jwt from "jsonwebtoken";
 import AppError from "../utils/AppError.js";
 import env from "../config/env.js";
 import { HTTP_STATUS } from "../constants/httpStatus.js";
-import { get as redisGet } from "../db/redis.js";
+import redis from "../db/redis.js";
 import { CacheKeys } from "../utils/cacheKeys.js";
+import logger from "../utils/logger.js";
 
 const authenticate = async (req, res, next) => {
   const token = req.cookies && req.cookies.token;
@@ -27,8 +28,20 @@ const authenticate = async (req, res, next) => {
   }
 
   if (decoded.jti) {
-    const isBlocked = await redisGet(CacheKeys.blocklist(decoded.jti));
-    if (isBlocked) {
+    let blocklistValue = null;
+    try {
+      blocklistValue = await redis.get(CacheKeys.blocklist(decoded.jti));
+    } catch (err) {
+      logger.error({ err }, "Blocklist check failed");
+      return next(
+        new AppError(
+          "Session validation unavailable",
+          HTTP_STATUS.SERVICE_UNAVAILABLE,
+        ),
+      );
+    }
+
+    if (blocklistValue !== null) {
       return next(
         new AppError("Session has been invalidated", HTTP_STATUS.UNAUTHORIZED),
       );

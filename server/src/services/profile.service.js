@@ -9,6 +9,7 @@ import { CacheKeys } from "../utils/cacheKeys.js";
 import {
   invalidateProfileCache,
   invalidateUserCaches,
+  invalidateUserProfileCaches,
 } from "../utils/invalidateCache.js";
 import { isUserOnline } from "../socket/index.js";
 import path from "path";
@@ -182,7 +183,7 @@ const recordVisit = async (viewerId, targetId) => {
     targetId,
   ]);
 
-  await invalidateUserCaches(targetId);
+  await invalidateUserProfileCaches(targetId);
 
   return fameRes.rows[0]?.fame_rating ?? null;
 };

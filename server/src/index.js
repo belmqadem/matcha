@@ -120,10 +120,9 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  // 2. Init Socket.io
+  // 2. Init Redis
   try {
     await redis.ping();
-    logger.info("Redis connected");
   } catch (err) {
     logger.error({ err }, "Redis connection failed");
     process.exit(1);
