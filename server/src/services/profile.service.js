@@ -4,6 +4,14 @@ import { recalculateFameRating } from "../utils/fameRating.js";
 import { emitNotification } from "../socket/notifications.js";
 import { haversineKm } from "../utils/haversine.js";
 import { getMe } from "./users.service.js";
+import { get as redisGet, set as redisSet } from "../db/redis.js";
+import { CacheKeys } from "../utils/cacheKeys.js";
+import {
+  invalidateProfileCache,
+  invalidateUserCaches,
+  invalidateUserProfileCaches,
+} from "../utils/invalidateCache.js";
+import { isUserOnline } from "../socket/index.js";
 import path from "path";
 import fs from "fs/promises";
 import sharp from "sharp";
@@ -99,6 +107,87 @@ const calculateDistanceKm = (viewer, target) => {
   return Math.round(distance * 10) / 10;
 };
 
+const buildPublicProfileBase = async (targetId) => {
+  const userRes = await query(
+    `SELECT id, username, first_name, last_name,
+            gender, sexual_preference, biography, fame_rating,
+            location_city, is_online, last_seen, profile_picture_id,
+            birth_date, created_at, latitude, longitude
+     FROM users
+     WHERE id = $1`,
+    [targetId],
+  );
+
+  if (!userRes.rows.length) {
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
+  }
+
+  const userRow = userRes.rows[0];
+  const [photosRes, tagsRes] = await Promise.all([
+    query(
+      `SELECT id, url, order_index, created_at
+       FROM photos
+       WHERE user_id = $1
+       ORDER BY order_index`,
+      [targetId],
+    ),
+    query(
+      `SELECT t.name
+       FROM user_tags ut
+       JOIN tags t ON t.id = ut.tag_id
+       WHERE ut.user_id = $1
+       ORDER BY t.name`,
+      [targetId],
+    ),
+  ]);
+
+  return {
+    user: {
+      id: userRow.id,
+      username: userRow.username,
+      first_name: userRow.first_name,
+      last_name: userRow.last_name,
+      gender: userRow.gender,
+      sexual_preference: userRow.sexual_preference,
+      biography: userRow.biography,
+      fame_rating: userRow.fame_rating,
+      location_city: userRow.location_city,
+      is_online: userRow.is_online,
+      last_seen: userRow.last_seen,
+      profile_picture_id: userRow.profile_picture_id,
+      birth_date: userRow.birth_date,
+      created_at: userRow.created_at,
+      photos: photosRes.rows,
+      tags: tagsRes.rows.map((row) => row.name),
+    },
+    location: {
+      latitude: userRow.latitude,
+      longitude: userRow.longitude,
+    },
+  };
+};
+
+const recordVisit = async (viewerId, targetId) => {
+  await query(
+    `INSERT INTO visits (visitor_id, visited_id, visited_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (visitor_id, visited_id)
+     DO UPDATE SET visited_at = NOW()`,
+    [viewerId, targetId],
+  );
+
+  await recalculateFameRating(targetId);
+  await notifyUser(targetId, "visit", viewerId);
+
+  const fameRes = await query("SELECT fame_rating FROM users WHERE id = $1", [
+    targetId,
+  ]);
+
+  await invalidateUserProfileCaches(targetId);
+
+  return fameRes.rows[0]?.fame_rating ?? null;
+};
+
 export const updateProfile = async (userId, updates) => {
   const sanitizedUpdates = sanitizeObject(updates);
   const setClauses = [];
@@ -138,6 +227,8 @@ export const updateProfile = async (userId, updates) => {
   }
 
   await recalculateFameRating(userId);
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
   return getMe(userId);
 };
 
@@ -178,6 +269,8 @@ export const updateTags = async (userId, tags) => {
   }
 
   await recalculateFameRating(userId);
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
   return tags;
 };
 
@@ -275,6 +368,8 @@ export const uploadPhoto = async (userId, file) => {
   }
 
   await recalculateFameRating(userId);
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
   return insertRes.rows[0];
 };
 
@@ -347,6 +442,8 @@ export const deletePhoto = async (userId, photoId) => {
   }
 
   await recalculateFameRating(userId);
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
   return true;
 };
 
@@ -370,6 +467,8 @@ export const setMainPhoto = async (userId, photoId) => {
     userId,
   ]);
 
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
   return true;
 };
 
@@ -405,22 +504,6 @@ export const getLikedBy = async (userId) => {
 
 export const getPublicProfile = async (viewerId, targetId) => {
   const isSelf = viewerId === targetId;
-
-  const userRes = await query(
-    `SELECT id, username, first_name, last_name,
-            gender, sexual_preference, biography, fame_rating,
-            location_city, is_online, last_seen, profile_picture_id,
-            birth_date, created_at, latitude, longitude
-     FROM users
-     WHERE id = $1`,
-    [targetId],
-  );
-
-  if (!userRes.rows.length) {
-    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
-  }
-
-  const userRow = userRes.rows[0];
   let isBlockedByMe = false;
 
   if (!isSelf) {
@@ -429,85 +512,60 @@ export const getPublicProfile = async (viewerId, targetId) => {
       throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
     }
     isBlockedByMe = blockStatus.isBlockedByMe;
+  }
 
-    await query(
-      `INSERT INTO visits (visitor_id, visited_id, visited_at)
-       VALUES ($1, $2, NOW())
-       ON CONFLICT (visitor_id, visited_id)
-       DO UPDATE SET visited_at = NOW()`,
-      [viewerId, targetId],
-    );
+  let base = null;
+  if (!isSelf) {
+    base = await redisGet(CacheKeys.publicProfile(targetId));
+  }
 
-    await recalculateFameRating(targetId);
-    await notifyUser(targetId, "visit", viewerId);
+  if (!base) {
+    base = await buildPublicProfileBase(targetId);
+  }
 
-    const fameRes = await query("SELECT fame_rating FROM users WHERE id = $1", [
-      targetId,
-    ]);
-    if (fameRes.rows.length) {
-      userRow.fame_rating = fameRes.rows[0].fame_rating;
+  if (!isSelf) {
+    const updatedFame = await recordVisit(viewerId, targetId);
+    if (updatedFame !== null) {
+      base.user.fame_rating = updatedFame;
     }
   }
 
-  const [photosRes, tagsRes, likesRes, viewerRes] = await Promise.all([
-    query(
-      `SELECT id, url, order_index, created_at
-       FROM photos
-       WHERE user_id = $1
-       ORDER BY order_index`,
-      [targetId],
-    ),
-    query(
-      `SELECT t.name
-       FROM user_tags ut
-       JOIN tags t ON t.id = ut.tag_id
-       WHERE ut.user_id = $1
-       ORDER BY t.name`,
-      [targetId],
-    ),
-    query(
-      `SELECT
-        EXISTS(
-          SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2
-        ) AS liked_by_me,
-        EXISTS(
-          SELECT 1 FROM likes WHERE liker_id = $2 AND liked_id = $1
-        ) AS liked_me`,
-      [viewerId, targetId],
-    ),
-    isSelf
-      ? Promise.resolve({ rows: [] })
-      : query("SELECT latitude, longitude FROM users WHERE id = $1", [
+  const [likesRes, viewerRes] = isSelf
+    ? [{ rows: [] }, { rows: [] }]
+    : await Promise.all([
+        query(
+          `SELECT
+            EXISTS(
+              SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2
+            ) AS liked_by_me,
+            EXISTS(
+              SELECT 1 FROM likes WHERE liker_id = $2 AND liked_id = $1
+            ) AS liked_me`,
+          [viewerId, targetId],
+        ),
+        query("SELECT latitude, longitude FROM users WHERE id = $1", [
           viewerId,
         ]),
-  ]);
+      ]);
 
   const likedByMe = likesRes.rows[0]?.liked_by_me ?? false;
   const likedMe = likesRes.rows[0]?.liked_me ?? false;
   const isConnected = likedByMe && likedMe;
   const distanceKm = isSelf
     ? null
-    : calculateDistanceKm(viewerRes.rows[0], userRow);
+    : calculateDistanceKm(viewerRes.rows[0], base.location);
+
+  const isOnline = await isUserOnline(targetId);
+
+  if (!isSelf) {
+    await redisSet(CacheKeys.publicProfile(targetId), base, 300);
+  }
 
   return {
     user: {
-      id: userRow.id,
-      username: userRow.username,
-      first_name: userRow.first_name,
-      last_name: userRow.last_name,
-      gender: userRow.gender,
-      sexual_preference: userRow.sexual_preference,
-      biography: userRow.biography,
-      fame_rating: userRow.fame_rating,
-      location_city: userRow.location_city,
-      is_online: userRow.is_online,
-      last_seen: userRow.last_seen,
-      profile_picture_id: userRow.profile_picture_id,
-      birth_date: userRow.birth_date,
-      created_at: userRow.created_at,
+      ...base.user,
+      is_online: isOnline,
       distance_km: distanceKm,
-      photos: photosRes.rows,
-      tags: tagsRes.rows.map((row) => row.name),
       liked_by_me: likedByMe,
       liked_me: likedMe,
       is_connected: isConnected,
@@ -578,6 +636,11 @@ export const likeUser = async (likerId, likedId) => {
     }
 
     await client.query("COMMIT");
+
+    await invalidateUserCaches(likerId);
+    await invalidateUserCaches(likedId);
+    await invalidateProfileCache(likedId);
+
     return { liked: true, connected: isConnected };
   } catch (err) {
     await client.query("ROLLBACK");
@@ -608,6 +671,10 @@ export const unlikeUser = async (likerId, likedId) => {
 
   await recalculateFameRating(likedId);
   await notifyUser(likedId, "unlike", likerId);
+
+  await invalidateUserCaches(likerId);
+  await invalidateUserCaches(likedId);
+  await invalidateProfileCache(likedId);
 
   return { liked: false, connected: false };
 };
@@ -642,6 +709,10 @@ export const blockUser = async (blockerId, blockedId) => {
 
   await recalculateFameRating(blockedId);
 
+  await invalidateUserCaches(blockerId);
+  await invalidateUserCaches(blockedId);
+  await invalidateProfileCache(blockedId);
+
   return { blocked: true };
 };
 
@@ -661,6 +732,10 @@ export const unblockUser = async (blockerId, blockedId) => {
   ]);
 
   await recalculateFameRating(blockedId);
+
+  await invalidateUserCaches(blockerId);
+  await invalidateUserCaches(blockedId);
+  await invalidateProfileCache(blockedId);
 
   return { blocked: false };
 };

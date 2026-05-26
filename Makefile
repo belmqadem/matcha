@@ -45,4 +45,7 @@ format-client-check:
 psql:
 	@docker compose exec matcha_db sh -lc 'psql -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"'
 
-.PHONY: up down restart logs down-volumes restart-server psql migrate seed reset format-client format-client-check logs-server logs-db logs-client
+redis-monitor:
+	@docker compose exec matcha_redis redis-cli monitor
+
+.PHONY: up down restart logs down-volumes restart-server psql migrate seed reset format-client format-client-check logs-server logs-db logs-client redis-monitor

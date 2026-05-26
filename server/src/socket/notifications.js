@@ -1,4 +1,6 @@
 import { query } from "../db/pool.js";
+import { del as redisDel } from "../db/redis.js";
+import { CacheKeys } from "../utils/cacheKeys.js";
 import logger from "../utils/logger.js";
 
 let io = null;
@@ -32,6 +34,8 @@ export const emitNotification = async (toUserId, type, fromUserId) => {
        VALUES ($1, $2, $3)`,
       [toUserId, type, fromUserId],
     );
+
+    await redisDel(CacheKeys.notifications(toUserId));
   } catch (err) {
     logger.error({ err, toUserId, type }, "Failed to persist notification");
   }

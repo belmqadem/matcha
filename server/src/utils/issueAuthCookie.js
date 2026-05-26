@@ -1,9 +1,12 @@
+import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
 import env from "../config/env.js";
 
 export const issueAuthCookie = (res, user) => {
+  const jti = uuidv4();
+
   const token = jwt.sign(
-    { id: user.id, username: user.username },
+    { id: user.id, username: user.username, jti },
     env.JWT_SECRET,
     {
       expiresIn: env.JWT_EXPIRES_IN,
@@ -22,5 +25,5 @@ export const issueAuthCookie = (res, user) => {
     signed: false,
   });
 
-  return token;
+  return { token, jti };
 };

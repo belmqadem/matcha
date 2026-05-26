@@ -10,6 +10,8 @@ const env = cleanEnv(process.env, {
   CORS_ORIGIN: str(),
   CLIENT_URL: str(),
 
+  REDIS_URL: str({ default: "redis://localhost:6379" }),
+
   POSTGRES_HOST: str(),
   POSTGRES_PORT: port(),
   POSTGRES_DB: str(),

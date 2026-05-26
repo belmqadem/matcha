@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import env from "./config/env.js";
 import pool from "./db/pool.js";
+import redis from "./db/redis.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import { initSocket } from "./socket/index.js";
 import passport from "./config/passport.js";
@@ -23,6 +24,7 @@ import likesRoutes from "./routes/likes.route.js";
 import blocksRoutes from "./routes/blocks.route.js";
 import reportsRoutes from "./routes/reports.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import notificationsRoutes from "./routes/notifications.route.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -102,6 +104,7 @@ app.use("/api/likes", likesRoutes);
 app.use("/api/blocks", blocksRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -117,11 +120,19 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  // 2. Init Socket.io
+  // 2. Init Redis
+  try {
+    await redis.ping();
+  } catch (err) {
+    logger.error({ err }, "Redis connection failed");
+    process.exit(1);
+  }
+
+  // 3. Init Socket.io
   initSocket(httpServer);
   logger.info("Socket.io initialized");
 
-  // 3. Start listening
+  // 4. Start listening
   const PORT = env.PORT;
   httpServer.listen(PORT, () => {
     logger.info(`Matcha Server running on http://localhost:${PORT}`);

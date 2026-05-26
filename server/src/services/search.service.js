@@ -1,12 +1,37 @@
 import { query } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
+import { get as redisGet, set as redisSet } from "../db/redis.js";
+import { CacheKeys } from "../utils/cacheKeys.js";
+import { isUserOnline } from "../socket/index.js";
 import {
   buildOrientationFilter,
   parseTags,
   buildSort,
 } from "../utils/queryHelpers.js";
 
+const applyOnlineStatus = async (users) => {
+  if (!users || users.length === 0) {
+    return [];
+  }
+
+  const statuses = await Promise.all(
+    users.map((user) => isUserOnline(user.id)),
+  );
+
+  return users.map((user, index) => ({
+    ...user,
+    is_online: statuses[index],
+  }));
+};
+
 export const searchProfiles = async (currentUserId, queryParams) => {
+  const cacheKey = CacheKeys.search(currentUserId, queryParams);
+  const cached = await redisGet(cacheKey);
+  if (cached) {
+    const usersWithOnline = await applyOnlineStatus(cached.users);
+    return { ...cached, users: usersWithOnline };
+  }
+
   const userRes = await query(
     "SELECT id, gender, sexual_preference, latitude, longitude FROM users WHERE id = $1",
     [currentUserId],
@@ -188,12 +213,16 @@ export const searchProfiles = async (currentUserId, queryParams) => {
     params,
   );
 
-  return {
-    users: dataRes.rows,
+  const result = {
+    users: dataRes.rows.map((row) => ({ ...row, is_online: null })),
     total: countRes.rows[0]?.total ?? 0,
     page,
     limit,
   };
+
+  await redisSet(cacheKey, result, 120);
+  const usersWithOnline = await applyOnlineStatus(result.users);
+  return { ...result, users: usersWithOnline };
 };
 
 export default { searchProfiles };
