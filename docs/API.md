@@ -275,7 +275,7 @@ GET /api/notifications
   "notifications": [
     {
       "id": 1,
-      "type": "like | visit | message | match | unlike",
+      "type": "like | visit | message | match | unlike | date_proposed | date_accepted | date_declined | date_cancelled",
       "is_read": false,
       "created_at": "ISO8601",
       "from_id": "uuid",
@@ -315,6 +315,72 @@ DELETE /api/notifications/:id
 
 ---
 
+## Dates
+
+POST /api/dates
+
+**Auth:** required
+**Body:** `{ receiver_id, scheduled_at, location? }`
+**Response 201:** `{ date }`
+**Notes:** Only connected users can propose. `scheduled_at` must be in the future. `status` defaults to `pending`.
+**Errors:** 400 validation, 403 not connected, 409 pending date exists
+
+GET /api/dates
+
+**Auth:** required
+**Response 200:**
+
+```
+{
+  "dates": [
+    {
+      "id": 1,
+      "proposer_id": "uuid",
+      "receiver_id": "uuid",
+      "scheduled_at": "ISO8601",
+      "location": "string",
+      "status": "pending | accepted | declined | cancelled",
+      "created_at": "ISO8601",
+      "updated_at": "ISO8601",
+      "my_role": "proposer | receiver",
+      "other_user_id": "uuid",
+      "other_username": "string",
+      "other_first_name": "string",
+      "other_last_name": "string",
+      "other_profile_picture_id": null
+    }
+  ],
+  "upcoming": 2,
+  "total": 5
+}
+```
+
+GET /api/dates/:id
+
+**Auth:** required
+**Params:** `id` (integer)
+**Response 200:** `{ date }`
+**Errors:** 404 not found
+
+PATCH /api/dates/:id
+
+**Auth:** required
+**Params:** `id` (integer)
+**Body:** `{ status: "accepted" | "declined", scheduled_at? }`
+**Response 200:** `{ date }`
+**Notes:** Only the receiver can respond. Only pending proposals can be updated.
+**Errors:** 403 forbidden, 404 not found, 409 not pending
+
+DELETE /api/dates/:id
+
+**Auth:** required
+**Params:** `id` (integer)
+**Response 200:** `{ date }`
+**Notes:** Only the proposer can cancel. Only pending or accepted dates can be cancelled.
+**Errors:** 403 forbidden, 404 not found, 409 not cancellable
+
+---
+
 ## WebSocket (Socket.io)
 
 **Endpoint:** same host as API (Socket.io path: `/socket.io`)
@@ -342,7 +408,7 @@ DELETE /api/notifications/:id
 | --------------- | ------------------ | ----------------------------------- |
 | server → client | `notification:new` | `{ type, from: userId, createdAt }` |
 
-**Types:** `like` | `visit` | `message` | `match` | `unlike`
+**Types:** `like` | `visit` | `message` | `match` | `unlike` | `date_proposed` | `date_accepted` | `date_declined` | `date_cancelled`
 
 ---
 
