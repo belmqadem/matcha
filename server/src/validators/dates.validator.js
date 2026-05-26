@@ -17,4 +17,21 @@ export const updateDateSchema = z
     status: z.enum(["accepted", "declined"]),
     scheduled_at: z.string().datetime().optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((data, ctx) => {
+    if (data.status === "declined" && !data.scheduled_at) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "scheduled_at is required when declining",
+        path: ["scheduled_at"],
+      });
+    }
+
+    if (data.status === "accepted" && data.scheduled_at !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "scheduled_at must be omitted when accepting",
+        path: ["scheduled_at"],
+      });
+    }
+  });
