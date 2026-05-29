@@ -32,7 +32,17 @@ END $$;
 
 DO $$
 BEGIN
-  CREATE TYPE notif_type AS ENUM ('like', 'visit', 'message', 'match', 'unlike');
+  CREATE TYPE notif_type AS ENUM (
+    'like',
+    'visit',
+    'message',
+    'match',
+    'unlike',
+    'date_proposed',
+    'date_accepted',
+    'date_declined',
+    'date_cancelled'
+  );
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;
