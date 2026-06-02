@@ -34,6 +34,7 @@ interface UserProfile {
   first_name: string;
   last_name: string;
   age: number | null;
+  birth_date: string | null;
   gender: string | null;
   sexual_preference: string | null;
   biography: string | null;
@@ -366,16 +367,29 @@ const handleSave = async () => {
 }
 
 function EditAboutModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdate: (u: UserProfile) => void; onClose: () => void }) {
-  const [form, setForm] = useState({ gender: user.gender ?? '', sexual_preference: user.sexual_preference ?? '', biography: user.biography ?? '', age: user.age?.toString() ?? '' });
+  const [form, setForm] = useState({ gender: user.gender ?? '', sexual_preference: user.sexual_preference ?? '', biography: user.biography ?? '', age: user.birth_date
+    ? String(new Date().getFullYear() - new Date(user.birth_date).getFullYear())
+    : ''  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSave = async () => {
-    setSaving(true); setError('');
-    try { const u = await api.patchProfile({ ...form, age: form.age ? parseInt(form.age) : null }); onUpdate(u); onClose(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
-    finally { setSaving(false); }
-  };
+const handleSave = async () => {
+  setSaving(true); setError('');
+  try {
+    const birthDate = form.age
+      ? new Date(new Date().getFullYear() - parseInt(form.age), 0, 1).toISOString().split('T')[0]
+      : null;
+    const u = await api.patchProfile({
+      ...form,
+      birth_date: birthDate,
+      age: undefined
+    });
+    onUpdate(u);
+    onClose();
+  }
+  catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
+  finally { setSaving(false); }
+};
 
   return (
     <EditModal title="Edit About" onClose={onClose}>
@@ -649,7 +663,9 @@ function AboutPanel({ user, onEditAbout, onEditLocation }: { user: UserProfile; 
   const rows = [
     // { label: 'City', value: user.location_city ?? (lat ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation },
     { label: 'City', value: user.location_city ?? (lat ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation, lat, lng },
-    { label: 'Age', value: user.age ? `${user.age} years old` : null, action: onEditAbout },
+    { label: 'Age', value: user.birth_date
+    ? `${new Date().getFullYear() - new Date(user.birth_date).getFullYear()} years old`
+    : null, action: onEditAbout },
     { label: 'Gender', value: genderLabel ?? null, action: onEditAbout },
     { label: 'Orientation', value: prefLabel, action: onEditAbout },
   ];
@@ -927,7 +943,7 @@ const MyProfilePage = () => {
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#1a1a1a', lineHeight: 1.2 }}>
-                        {user.first_name} {user.last_name}{user.age ? `, ${user.age}` : ''}
+                        {user.first_name} {user.last_name}{user.birth_date ? `, ${new Date().getFullYear() - new Date(user.birth_date).getFullYear()}` : ''}
                       </h1>
                       <CheckCircle2 size={18} style={{ color: '#e94057', flexShrink: 0 }} />
                     </div>
