@@ -639,7 +639,7 @@ const ProfileSetupPage = () => {
     setLoading(true);
     try {
       const profileBody: Record<string, unknown> = {
-        birthdate: form.birthdate || undefined,
+        birth_date: form.birthdate || undefined,
         gender: form.gender || undefined,
         sexual_preference: form.sexual_preference || undefined,
         biography: form.biography || undefined,
