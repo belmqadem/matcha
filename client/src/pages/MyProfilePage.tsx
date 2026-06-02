@@ -205,6 +205,33 @@ function timeAgo(iso: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+      { headers: { 'Accept-Language': 'en' } }
+    );
+    const data = await res.json();
+    return data.address?.city
+      ?? data.address?.town
+      ?? data.address?.village
+      ?? data.address?.county
+      ?? null;
+  } catch {
+    return null;
+  }
+}
+function CityName({ lat, lng, fallback }: { lat: number; lng: number; fallback: string | null }) {
+  const [city, setCity] = useState<string | null>(fallback);
+
+  useEffect(() => {
+    if (!fallback && lat && lng) {
+      reverseGeocode(lat, lng).then(c => { if (c) setCity(c); });
+    }
+  }, [lat, lng, fallback]);
+
+  return <span>{city ?? `${lat.toFixed(2)}, ${lng.toFixed(2)}`}</span>;
+}
 // ─── Shared input styles ──────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
@@ -274,18 +301,44 @@ function EditModal({ title, onClose, children }: { title: string; onClose: () =>
 // ─── Edit modals ──────────────────────────────────────────────────────────────
 
 function EditIdentityModal({ user, onUpdate, onClose }: { user: UserProfile; onUpdate: (u: UserProfile) => void; onClose: () => void }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ first_name: user.first_name, last_name: user.last_name, username: user.username, email: user.email });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSave = async () => {
-    if (!form.first_name.trim() || !form.last_name.trim()) { setError('Name is required.'); return; }
-    setSaving(true); setError('');
-    try { const u = await api.patchUser(form); onUpdate(u); onClose(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
-    finally { setSaving(false); }
-  };
+  // const handleSave = async () => {
+  //   if (!form.first_name.trim() || !form.last_name.trim()) { setError('Name is required.'); return; }
+  //   setSaving(true); setError('');
+  //   try { const u = await api.patchUser(form); onUpdate(u); onClose(); }
+  //   catch (e) { setError(e instanceof Error ? e.message : 'Failed to save.'); }
+  //   finally { setSaving(false); }
+  // };
+const handleSave = async () => {
+  if (!form.first_name.trim() || !form.last_name.trim()) { setError('Name is required.'); return; }
 
+  const emailChanged = form.email !== user.email;
+
+  if (emailChanged) {
+    const confirmed = window.confirm('Changing your email will sign you out. You will need to verify your new email before logging back in. Continue?');
+    if (!confirmed) return;
+  }
+
+  setSaving(true); setError('');
+  try {
+    const u = await api.patchUser(form);
+    if (emailChanged) {
+      await api.logout();
+      navigate('/login');
+      return;
+    }
+    onUpdate(u);
+    onClose();
+  } catch (e) {
+    setError(e instanceof Error ? e.message : 'Failed to save.');
+  } finally {
+    setSaving(false);
+  }
+};
   return (
     <EditModal title="Edit Identity" onClose={onClose}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -594,7 +647,8 @@ function AboutPanel({ user, onEditAbout, onEditLocation }: { user: UserProfile; 
   const lng = user.longitude != null ? Number(user.longitude) : null;
 
   const rows = [
-    { label: 'City', value: user.location_city ?? (lat ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation },
+    // { label: 'City', value: user.location_city ?? (lat ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation },
+    { label: 'City', value: user.location_city ?? (lat ? `${lat.toFixed(3)}, ${lng?.toFixed(3)}` : null), action: onEditLocation, lat, lng },
     { label: 'Age', value: user.age ? `${user.age} years old` : null, action: onEditAbout },
     { label: 'Gender', value: genderLabel ?? null, action: onEditAbout },
     { label: 'Orientation', value: prefLabel, action: onEditAbout },
@@ -609,11 +663,21 @@ function AboutPanel({ user, onEditAbout, onEditLocation }: { user: UserProfile; 
         </button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
-        {rows.map(({ label, value }) => (
+        {/* {rows.map(({ label, value }) => (
           <div key={label} style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
             <p style={{ fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>{label}</p>
             <p style={{ fontSize: '13px', fontWeight: 500, color: value ? '#333' : '#ddd' }}>
               {value ?? '—'}
+            </p>
+          </div>
+        ))} */}
+        {rows.map(({ label, value, lat, lng }) => (
+          <div key={label} style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
+            <p style={{ fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>{label}</p>
+            <p style={{ fontSize: '13px', fontWeight: 500, color: value ? '#333' : '#ddd' }}>
+              {label === 'City' && lat
+                ? <CityName lat={lat} lng={lng!} fallback={user.location_city} />
+                : value ?? '—'}
             </p>
           </div>
         ))}
@@ -876,7 +940,12 @@ const MyProfilePage = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '14px' }}>
                     <MapPin size={12} style={{ color: '#e94057' }} />
                     <span style={{ fontSize: '13px', color: '#aaa' }}>
-                      {user.location_city ?? (user.latitude ? `${Number(user.latitude).toFixed(2)}, ${Number(user.longitude).toFixed(2)}` : 'Location not set')}
+                      {/* {user.location_city ?? (user.latitude ? `${Number(user.latitude).toFixed(2)}, ${Number(user.longitude).toFixed(2)}` : 'Location not set')} */}
+                      {user.location_city
+                        ? user.location_city
+                        : user.latitude
+                          ? <CityName lat={Number(user.latitude)} lng={Number(user.longitude)} fallback={null} />
+                          : 'Location not set'}
                     </span>
                     <button onClick={() => setEditModal('location')} style={{ marginLeft: '4px', fontSize: '10px', color: '#e94057', background: 'none', border: 'none', cursor: 'pointer', opacity: 0.7 }}>
                       <Edit2 size={9} />
