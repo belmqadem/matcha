@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import env from "./config/env.js";
 import pool from "./db/pool.js";
+import redis from "./db/redis.js";
 import logger, { httpLogger } from "./utils/logger.js";
 import { initSocket } from "./socket/index.js";
 import passport from "./config/passport.js";
@@ -23,23 +24,71 @@ import likesRoutes from "./routes/likes.route.js";
 import blocksRoutes from "./routes/blocks.route.js";
 import reportsRoutes from "./routes/reports.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import notificationsRoutes from "./routes/notifications.route.js";
+import datesRoutes from "./routes/dates.route.js";
 
 const app = express();
 const httpServer = createServer(app);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.resolve(__dirname, "uploads");
+const uploadsDir = path.resolve(__dirname, "..", "uploads");
 
 // Middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameSrc: ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  }),
+);
 app.set("trust proxy", 1);
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const allowed = [env.CORS_ORIGIN];
+      if (!origin || allowed.includes(origin)) {
+        callback(null, true);
+      } else {
+        logger.warn({ origin }, "CORS blocked");
+        callback(null, false);
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type"],
+    maxAge: 86400,
+  }),
+);
 app.use(httpLogger);
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "100kb" }));
+app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(cookieParser());
 app.use(passport.initialize());
-app.use(createRateLimiter({ windowMs: 15 * 60 * 1000, limit: 200 }));
-app.use("/uploads", express.static(uploadsDir));
+app.use(createRateLimiter());
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader("Content-Security-Policy", "default-src 'none'");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Cache-Control", "public, max-age=31536000");
+    next();
+  },
+  express.static(uploadsDir),
+);
 
 // Routes
 app.get("/health", (req, res) => {
@@ -56,6 +105,8 @@ app.use("/api/likes", likesRoutes);
 app.use("/api/blocks", blocksRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/notifications", notificationsRoutes);
+app.use("/api/dates", datesRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
@@ -71,11 +122,19 @@ const startServer = async () => {
     process.exit(1);
   }
 
-  // 2. Init Socket.io
+  // 2. Init Redis
+  try {
+    await redis.ping();
+  } catch (err) {
+    logger.error({ err }, "Redis connection failed");
+    process.exit(1);
+  }
+
+  // 3. Init Socket.io
   initSocket(httpServer);
   logger.info("Socket.io initialized");
 
-  // 3. Start listening
+  // 4. Start listening
   const PORT = env.PORT;
   httpServer.listen(PORT, () => {
     logger.info(`Matcha Server running on http://localhost:${PORT}`);

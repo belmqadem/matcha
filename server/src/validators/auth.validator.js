@@ -1,62 +1,96 @@
 import { z } from "zod";
 import { isCommonPassword } from "../utils/commonPasswords.js";
-
-const usernameRegex = /^[a-zA-Z0-9._-]{3,30}$/;
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-const nameRegex = /^[\p{L}\p{M}]+(?:[ '\-\.][\p{L}\p{M}]+)*$/u;
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  NAME_REGEX,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_REGEX,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+  USERNAME_REGEX,
+} from "./validationConstants.js";
 
 const passwordSchema = z
   .string()
-  .min(8)
-  .regex(
-    passwordRegex,
-    "Password must be at least 8 characters and include uppercase, lowercase, number, and special character",
+  .min(
+    PASSWORD_MIN_LENGTH,
+    `Password must be at least ${PASSWORD_MIN_LENGTH} characters`,
   )
-  .refine((pwd) => !isCommonPassword(pwd), "Password is too common");
+  .regex(
+    PASSWORD_REGEX,
+    "Password must include uppercase, lowercase, number, and special character",
+  )
+  .refine(
+    (pwd) => !isCommonPassword(pwd),
+    "Password is too common. Please choose another.",
+  );
 
-export const registerSchema = z.object({
-  email: z.string().email(),
-  username: z
-    .string()
-    .min(3)
-    .max(30)
-    .regex(
-      usernameRegex,
-      "Username can only contain letters, numbers, dots, underscores, or hyphens",
-    ),
-  first_name: z
-    .string()
-    .min(1)
-    .max(50)
-    .regex(
-      nameRegex,
-      "First name may contain letters, spaces, apostrophes, hyphens, or periods",
-    ),
-  last_name: z
-    .string()
-    .min(1)
-    .max(50)
-    .regex(
-      nameRegex,
-      "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
-    ),
-  password: passwordSchema,
-});
+export const registerSchema = z
+  .object({
+    email: z.string().email("Please enter a valid email address"),
+    username: z
+      .string()
+      .min(
+        USERNAME_MIN_LENGTH,
+        `Username must be at least ${USERNAME_MIN_LENGTH} characters`,
+      )
+      .max(
+        USERNAME_MAX_LENGTH,
+        `Username must be at most ${USERNAME_MAX_LENGTH} characters`,
+      )
+      .regex(
+        USERNAME_REGEX,
+        "Username can only contain letters, numbers, dots, underscores, or hyphens",
+      ),
+    first_name: z
+      .string()
+      .min(NAME_MIN_LENGTH, "First name is required")
+      .max(
+        NAME_MAX_LENGTH,
+        `First name must be at most ${NAME_MAX_LENGTH} characters`,
+      )
+      .regex(
+        NAME_REGEX,
+        "First name may contain letters, spaces, apostrophes, hyphens, or periods",
+      ),
+    last_name: z
+      .string()
+      .min(NAME_MIN_LENGTH, "Last name is required")
+      .max(
+        NAME_MAX_LENGTH,
+        `Last name must be at most ${NAME_MAX_LENGTH} characters`,
+      )
+      .regex(
+        NAME_REGEX,
+        "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
+      ),
+    password: passwordSchema,
+  })
+  .strict();
 
-export const loginSchema = z.object({
-  username: z.string().min(1),
-  password: z.string().min(1),
-});
+export const loginSchema = z
+  .object({
+    username: z.string().min(1, "Username is required"),
+    password: z.string().min(1, "Password is required"),
+  })
+  .strict();
 
-export const forgotSchema = z.object({
-  email: z.string().email(),
-});
+export const forgotSchema = z
+  .object({
+    email: z.string().email("Please enter a valid email address"),
+  })
+  .strict();
 
-export const resendVerificationSchema = z.object({
-  email: z.string().email(),
-});
+export const resendVerificationSchema = z
+  .object({
+    email: z.string().email("Please enter a valid email address"),
+  })
+  .strict();
 
-export const resetSchema = z.object({
-  token: z.string().min(1),
-  password: passwordSchema,
-});
+export const resetSchema = z
+  .object({
+    token: z.string().min(1, "Token is required"),
+    password: passwordSchema,
+  })
+  .strict();

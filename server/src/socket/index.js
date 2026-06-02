@@ -5,11 +5,46 @@ import env from "../config/env.js";
 import logger from "../utils/logger.js";
 import { setIo, emitNotification } from "./notifications.js";
 import { sendMessage } from "../services/chat.service.js";
+import redis from "../db/redis.js";
+import { CacheKeys } from "../utils/cacheKeys.js";
 
-const onlineUsers = new Map();
 const cookieParserMiddleware = cookieParser();
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ONLINE_TTL_SECONDS = 60 * 60 * 24;
+
+const markOnline = async (userId, socketId) => {
+  const key = CacheKeys.online(userId);
+  try {
+    await redis.sadd(key, socketId);
+    await redis.expire(key, ONLINE_TTL_SECONDS);
+  } catch (err) {
+    logger.error({ err, userId }, "Failed to mark user online");
+  }
+};
+
+const markOffline = async (userId, socketId) => {
+  const key = CacheKeys.online(userId);
+  try {
+    await redis.srem(key, socketId);
+    const remaining = await redis.scard(key);
+    if (remaining === 0) {
+      await redis.del(key);
+    }
+  } catch (err) {
+    logger.error({ err, userId }, "Failed to mark user offline");
+  }
+};
+
+export const isUserOnline = async (userId) => {
+  try {
+    const count = await redis.scard(CacheKeys.online(userId));
+    return count > 0;
+  } catch (err) {
+    logger.error({ err, userId }, "Failed to check online status");
+    return false;
+  }
+};
 
 const authenticateSocket = (socket, next) => {
   const token = socket.request?.cookies?.token || null;
@@ -22,7 +57,11 @@ const authenticateSocket = (socket, next) => {
     if (parts.length !== 3) {
       return next(new Error("Authentication failed"));
     }
-    const decoded = jwt.verify(token, env.JWT_SECRET);
+    const decoded = jwt.verify(token, env.JWT_SECRET, {
+      algorithms: ["HS256"],
+      issuer: "matcha",
+      audience: "matcha-client",
+    });
     socket.userId = decoded.id;
     return next();
   } catch (err) {
@@ -47,9 +86,7 @@ export const initSocket = (httpServer) => {
     const userId = socket.userId;
     if (userId) {
       socket.join(`user:${userId}`);
-      const sockets = onlineUsers.get(userId) || new Set();
-      sockets.add(socket.id);
-      onlineUsers.set(userId, sockets);
+      void markOnline(userId, socket.id);
     }
 
     socket.on("chat:send", async ({ to, content }) => {
@@ -95,18 +132,9 @@ export const initSocket = (httpServer) => {
 
     socket.on("disconnect", () => {
       if (!userId) return;
-
-      const sockets = onlineUsers.get(userId);
-      if (!sockets) return;
-
-      sockets.delete(socket.id);
-      if (sockets.size === 0) {
-        onlineUsers.delete(userId);
-      }
+      void markOffline(userId, socket.id);
     });
   });
 
   return io;
 };
-
-export const getOnlineUsers = () => new Map(onlineUsers);

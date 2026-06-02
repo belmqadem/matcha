@@ -1,3 +1,4 @@
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 import { query } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
 import logger from "../utils/logger.js";
@@ -38,16 +39,16 @@ const hasBlock = async (userAId, userBId) => {
 
 const normalizeContent = (content) => {
   if (typeof content !== "string") {
-    throw new AppError("Invalid message", 400);
+    throw new AppError("Invalid message", HTTP_STATUS.BAD_REQUEST);
   }
 
   const trimmed = content.trim();
   if (!trimmed) {
-    throw new AppError("Message cannot be empty", 400);
+    throw new AppError("Message cannot be empty", HTTP_STATUS.BAD_REQUEST);
   }
 
   if (trimmed.length > 1000) {
-    throw new AppError("Message is too long", 400);
+    throw new AppError("Message is too long", HTTP_STATUS.BAD_REQUEST);
   }
 
   return trimmed;
@@ -59,12 +60,12 @@ export const sendMessage = async (senderId, receiverId, content) => {
 
   const connected = await isConnected(senderId, receiverId);
   if (!connected) {
-    throw new AppError("You are not connected with this user", 403);
+    throw new AppError("You are not connected with this user", HTTP_STATUS.FORBIDDEN);
   }
 
   const blocked = await hasBlock(senderId, receiverId);
   if (blocked) {
-    throw new AppError("You are not connected with this user", 403);
+    throw new AppError("You are not connected with this user", HTTP_STATUS.FORBIDDEN);
   }
 
   const { rows } = await query(
@@ -133,7 +134,7 @@ export const getUnreadCount = async (userId) => {
 export const getMessages = async (userId, otherUserId, page, limit) => {
   const connected = await isConnected(userId, otherUserId);
   if (!connected) {
-    throw new AppError("Not connected", 403);
+    throw new AppError("Not connected", HTTP_STATUS.FORBIDDEN);
   }
 
   const offset = (page - 1) * limit;

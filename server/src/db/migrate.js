@@ -2,6 +2,51 @@ import logger from "../utils/logger.js";
 import { query } from "./pool.js";
 
 const schema = `
+DO $$
+BEGIN
+  CREATE TYPE gender AS ENUM ('male', 'female', 'non-binary', 'other');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE sexual_preference AS ENUM ('heterosexual', 'homosexual', 'bisexual');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE token_type AS ENUM ('verification', 'reset');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE oauth_provider AS ENUM ('google', '42');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  CREATE TYPE notif_type AS ENUM (
+    'like',
+    'visit',
+    'message',
+    'match',
+    'unlike',
+    'date_proposed',
+    'date_accepted',
+    'date_declined',
+    'date_cancelled'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
 CREATE TABLE IF NOT EXISTS users (
   id                UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   username          VARCHAR(30)   UNIQUE NOT NULL,
@@ -10,8 +55,8 @@ CREATE TABLE IF NOT EXISTS users (
   first_name        VARCHAR(50)   NOT NULL,
   last_name         VARCHAR(50)   NOT NULL,
 
-  gender            VARCHAR(20),
-  sexual_preference VARCHAR(20)   NOT NULL DEFAULT 'bisexual',
+  gender            gender,
+  sexual_preference sexual_preference   NOT NULL DEFAULT 'bisexual',
   biography         TEXT,
   birth_date        DATE,
 
@@ -25,7 +70,7 @@ CREATE TABLE IF NOT EXISTS users (
   is_online         BOOLEAN       NOT NULL DEFAULT FALSE,
   last_seen         TIMESTAMP     WITH TIME ZONE,
 
-  oauth_provider    VARCHAR(30),
+  oauth_provider    oauth_provider,
   oauth_id          VARCHAR(100),
 
   created_at        TIMESTAMP     WITH TIME ZONE DEFAULT NOW(),
@@ -36,7 +81,7 @@ CREATE TABLE IF NOT EXISTS email_tokens (
   id         SERIAL       PRIMARY KEY,
   user_id    UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   token      VARCHAR(255) UNIQUE NOT NULL,
-  type       VARCHAR(30)  NOT NULL, -- 'verification' or 'reset'
+  type       token_type   NOT NULL,
   expires_at TIMESTAMP    WITH TIME ZONE NOT NULL,
   created_at TIMESTAMP    WITH TIME ZONE DEFAULT NOW()
 );
@@ -105,7 +150,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS notifications (
   id         SERIAL      PRIMARY KEY,
   user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type       VARCHAR(30) NOT NULL,
+  type       notif_type  NOT NULL,
   from_id    UUID        REFERENCES users(id) ON DELETE SET NULL,
   is_read    BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP   WITH TIME ZONE DEFAULT NOW()

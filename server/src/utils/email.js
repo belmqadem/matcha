@@ -36,87 +36,71 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
     <style>
       body {
         margin: 0;
-        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #1A1A2E;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+        color: #1f2937;
       }
       .container {
         width: 100%;
-        max-width: 640px;
-        margin: 0 auto;
-        padding: 18px;
+        max-width: 560px;
+        padding-top: 24px;
+				padding-left: 12px;
+				padding-right: 12px;
       }
       .card {
         background: #ffffff;
-        border-radius: 24px;
-        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-      }
-      .header {
-        background: #e94057;
-        padding: 24px;
-        text-align: center;
-        color: #ffffff;
-      }
-      .header h1 {
-        margin: 0;
-        font-size: 26px;
-        letter-spacing: -0.04em;
-      }
-      .body {
+        border: 1px solid #e5e7eb;
         padding: 24px;
       }
-      .body p {
-        margin: 0 0 10px;
-        color: #3f3f46;
+      .logo {
+        margin: 0 0 24px;
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .logo .brand-mark {
+        color: #e94057;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 22px;
+      }
+      p {
+        margin: 0 0 14px;
+        color: #4b5563;
+        line-height: 1.5;
       }
       .button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+        display: inline-block;
         background: #e94057;
         color: #ffffff;
         text-decoration: none;
-        padding: 14px 28px;
+        padding: 12px 20px;
         border-radius: 999px;
         font-weight: 600;
       }
       .footer {
-        padding: 0 24px 32px;
-        color: #6b7280;
+        margin-top: 18px;
         font-size: 12px;
+        color: #6b7280;
       }
       .footer a {
         color: #e94057;
         text-decoration: none;
-      }
-      .code {
-        display: block;
-        margin: 18px 0;
-        padding: 16px;
-        background: #f5f5f7;
-        border-radius: 12px;
-        font-family: monospace;
-        color: #111827;
-        word-break: break-all;
       }
     </style>
   </head>
   <body>
     <div class="container">
       <div class="card">
-        <div class="header">
-          <h1>Matcha</h1>
-        </div>
-        <div class="body">
-          <h2>${heading}</h2>
-          <p>${message}</p>
-          <p style="margin: 32px 0;">
-            <a href="${actionUrl}" class="button">${actionText}</a>
-          </p>
-          <p>Thanks for being part of Matcha — we&apos;re excited to help you find a real connection.</p>
-        </div>
+        <h1 class="logo"><span class="brand-mark">m</span>atcha<span class="brand-mark">.</span></h1>
+        <h2>${heading}</h2>
+        <p>${message}</p>
+        <p>
+          <a href="${actionUrl}" class="button">${actionText}</a>
+        </p>
+        <p>If you did not request this, you can safely ignore this email.</p>
         <div class="footer">
-          <p>Love,</p>
+          <p>Thanks,</p>
           <p>The Matcha Team</p>
           <p><a href="${CLIENT_URL}">matcha.1337.dev</a></p>
         </div>

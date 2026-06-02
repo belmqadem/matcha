@@ -10,13 +10,18 @@ const env = cleanEnv(process.env, {
   CORS_ORIGIN: str(),
   CLIENT_URL: str(),
 
+  REDIS_URL: str({ default: "redis://localhost:6379" }),
+
   POSTGRES_HOST: str(),
   POSTGRES_PORT: port(),
   POSTGRES_DB: str(),
   POSTGRES_USER: str(),
   POSTGRES_PASSWORD: str(),
 
-  JWT_SECRET: str(),
+  JWT_SECRET: str({
+    validator: (val) => val.length >= 32,
+    message: "JWT_SECRET must be at least 32 characters",
+  }),
   JWT_EXPIRES_IN: str({ default: "7d" }),
 
   SMTP_HOST: str(),

@@ -29,11 +29,15 @@
   - Docker ensures consistent environments across dev and production
   - Docker Compose simplifies multi-service setup
 
+## Redis
+
+Use Redis for caching, JWT blocklist, and online status · Reduce DB load for hot reads, enable immediate cache invalidation, revoke JWTs on logout, and share online state across instances · Alternatives: in-memory cache per instance, DB-only queries, or shorter JWT lifetimes
+
 ## Like algorithm
 
-- Users should be able to register, log in, complete their profile, search for and view other
-  users’ profiles, and express interest in them with a “like”. They should also be able to
-  chat with those who have reciprocated their interest.
+Users should be able to register, log in, complete their profile, search for and view other
+users’ profiles, and express interest in them with a “like”. They should also be able to
+chat with those who have reciprocated their interest.
 
 1️⃣ User A visits User B's profile and clicks "like" — this means "I'm interested in this person." Nothing happens yet. User B doesn't get a chat window, just a notification that someone liked them.
 
@@ -45,7 +49,7 @@
 
 Suggested profiles must:
 
-- Respect sexual orientation (hetero / homosexual / bisexual — default bisexual)
+- Respect sexual orientation (heterosexual / homosexual / bisexual)
 - Exclude blocked users (both directions)
 - Exclude already-connected users
 - Be ranked by: geographic proximity (primary), shared tags, fame rating

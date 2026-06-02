@@ -1,5 +1,17 @@
 import { query } from "../db/pool.js";
+import AppError from "../utils/AppError.js";
+import { HTTP_STATUS } from "../constants/httpStatus.js";
 import logger from "../utils/logger.js";
+
+const OAUTH_USER_COLUMNS =
+  "id, username, email, first_name, last_name, profile_picture_id, latitude, longitude, location_city, is_verified";
+
+const markUserOnline = async (userId) => {
+  await query(
+    "UPDATE users SET is_online = true, last_seen = NOW() WHERE id = $1",
+    [userId],
+  );
+};
 
 export const findOrCreateOAuthUser = async ({
   provider,
@@ -9,32 +21,37 @@ export const findOrCreateOAuthUser = async ({
   lastName,
 }) => {
   const byOAuth = await query(
-    `SELECT * FROM users
+    `SELECT ${OAUTH_USER_COLUMNS} FROM users
      WHERE oauth_provider = $1 AND oauth_id = $2`,
     [provider, oauthId],
   );
 
   if (byOAuth.rows.length > 0) {
     logger.debug({ provider, oauthId }, "Existing OAuth user found");
+    await markUserOnline(byOAuth.rows[0].id);
     return { user: byOAuth.rows[0], created: false };
   }
 
-  const byEmail = await query("SELECT * FROM users WHERE email = $1", [email]);
+  const byEmail = await query(
+    "SELECT id, oauth_provider FROM users WHERE email = $1",
+    [email],
+  );
 
   if (byEmail.rows.length > 0) {
     const existing = byEmail.rows[0];
 
     if (existing.oauth_provider && existing.oauth_provider !== provider) {
-      throw new Error(
+      throw new AppError(
         `This email is already registered with ${existing.oauth_provider}. Please login with ${existing.oauth_provider}.`,
+        HTTP_STATUS.CONFLICT,
       );
     }
 
     const updated = await query(
       `UPDATE users
-       SET oauth_provider = $1, oauth_id = $2, is_verified = true, updated_at = NOW()
+       SET oauth_provider = $1, oauth_id = $2, is_verified = true, is_online = true, last_seen = NOW(), updated_at = NOW()
        WHERE id = $3
-       RETURNING *`,
+       RETURNING ${OAUTH_USER_COLUMNS}`,
       [provider, oauthId, existing.id],
     );
 
@@ -64,9 +81,9 @@ export const findOrCreateOAuthUser = async ({
   const created = await query(
     `INSERT INTO users
       (username, email, first_name, last_name,
-       oauth_provider, oauth_id, is_verified)
-     VALUES ($1, $2, $3, $4, $5, $6, true)
-     RETURNING *`,
+       oauth_provider, oauth_id, is_verified, is_online, last_seen)
+     VALUES ($1, $2, $3, $4, $5, $6, true, true, NOW())
+     RETURNING ${OAUTH_USER_COLUMNS}`,
     [username, email, firstName, lastName, provider, oauthId],
   );
 
