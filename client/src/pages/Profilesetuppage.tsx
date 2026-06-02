@@ -2,8 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { MapPin, User, Heart, FileText, Tag, Camera, ChevronRight, ChevronLeft, X, Check } from 'lucide-react';
+import { MapPin, User, Heart, FileText, Tag, Camera, ChevronRight, ChevronLeft, X, Check, Calendar } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -11,6 +10,7 @@ type Gender = 'male' | 'female' | 'non-binary' | 'other';
 type SexualPreference = 'heterosexual' | 'homosexual' | 'bisexual';
 
 interface ProfileForm {
+  birthdate: string;           // "YYYY-MM-DD"
   gender: Gender | '';
   sexual_preference: SexualPreference | '';
   biography: string;
@@ -61,7 +61,60 @@ const profileApi = {
       return data;
     });
   },
+
+  /**
+   * Saves whatever the user filled in so far (partial profile).
+   * Errors are intentionally swallowed — we just want the backend
+   * to store enough data so the route guard lets the user through.
+   */
+  savePartial: async (form: ProfileForm) => {
+    const body: Record<string, unknown> = {};
+    if (form.birthdate)            body.birth_date         = form.birthdate;
+    if (form.gender)               body.gender             = form.gender;
+    if (form.sexual_preference)    body.sexual_preference  = form.sexual_preference;
+    if (form.biography.trim())     body.biography          = form.biography;
+    if (form.location_city)        body.location_city      = form.location_city;
+    if (form.latitude  !== null)   body.latitude           = form.latitude;
+    if (form.longitude !== null)   body.longitude          = form.longitude;
+
+    if (Object.keys(body).length > 0) {
+      await fetch('/api/profile/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+    }
+
+    if (form.tags.length > 0) {
+      await fetch('/api/profile/me/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ tags: form.tags }),
+      });
+    }
+
+    for (const file of form.photos) {
+      const fd = new FormData();
+      fd.append('photo', file);
+      await fetch('/api/profile/me/photos', { method: 'POST', credentials: 'include', body: fd });
+    }
+  },
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function calcAge(birthdate: string): number | null {
+  if (!birthdate) return null;
+  const birth = new Date(birthdate);
+  if (isNaN(birth.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -125,6 +178,59 @@ const SUGGESTED_TAGS = [
   '#music', '#art', '#gaming', '#hiking', '#foodie',
 ];
 
+// ── Step 0: Birthdate ─────────────────────────────────────────────────────────
+function Step0Birthdate({
+  form,
+  setForm,
+}: {
+  form: ProfileForm;
+  setForm: React.Dispatch<React.SetStateAction<ProfileForm>>;
+}) {
+  const age = calcAge(form.birthdate);
+
+  // Max date = 18 years ago; min = 100 years ago
+  const today = new Date();
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+    .toISOString()
+    .split('T')[0];
+  const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
+    .toISOString()
+    .split('T')[0];
+
+  return (
+    <div>
+      <p className="text-xs text-(--color-text)/60 mb-4">
+        You must be at least 18 years old. Your age will be shown on your profile.
+      </p>
+
+      <label className="block text-xs font-medium text-(--color-text)/60 mb-1.5">
+        Date of birth
+      </label>
+      <input
+        type="date"
+        value={form.birthdate}
+        onChange={(e) => setForm((p) => ({ ...p, birthdate: e.target.value }))}
+        min={minDate}
+        max={maxDate}
+        className="w-full rounded-xl border border-(--color-text)/15 bg-white/40 px-4 py-2.5 text-sm text-(--color-text) focus:outline-none focus:border-(--color-primary) transition-colors"
+      />
+
+      {form.birthdate && age !== null && (
+        <p className="mt-2 text-sm text-(--color-primary) font-medium">
+          You are <span className="font-bold">{age}</span> years old
+        </p>
+      )}
+
+      {form.birthdate && age !== null && age < 18 && (
+        <p className="mt-1 text-xs text-red-500">
+          You must be at least 18 to use this app.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── Step 1: Gender ────────────────────────────────────────────────────────────
 function Step1Gender({
   form,
   setForm,
@@ -147,6 +253,7 @@ function Step1Gender({
   );
 }
 
+// ── Step 2: Preference ────────────────────────────────────────────────────────
 function Step2Preference({
   form,
   setForm,
@@ -169,6 +276,7 @@ function Step2Preference({
   );
 }
 
+// ── Step 3: Bio ───────────────────────────────────────────────────────────────
 function Step3Bio({
   form,
   setForm,
@@ -196,6 +304,7 @@ function Step3Bio({
   );
 }
 
+// ── Step 4: Tags ──────────────────────────────────────────────────────────────
 function Step4Tags({
   form,
   setForm,
@@ -229,7 +338,6 @@ function Step4Tags({
         Add interests so others can find you. Press Enter or comma to add.
       </p>
 
-      {/* Tag input */}
       <div className="flex gap-2 mb-3">
         <input
           value={input}
@@ -247,7 +355,6 @@ function Step4Tags({
         </button>
       </div>
 
-      {/* Selected tags */}
       {form.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-3">
           {form.tags.map((tag) => (
@@ -264,7 +371,6 @@ function Step4Tags({
         </div>
       )}
 
-      {/* Suggestions */}
       <p className="text-xs text-(--color-text)/50 mb-2">Suggestions:</p>
       <div className="flex flex-wrap gap-1.5">
         {SUGGESTED_TAGS.filter((t) => !form.tags.includes(t)).map((tag) => (
@@ -282,6 +388,7 @@ function Step4Tags({
   );
 }
 
+// ── Step 5: Location ──────────────────────────────────────────────────────────
 function Step5Location({
   form,
   setForm,
@@ -321,7 +428,6 @@ function Step5Location({
         Your location helps us show you relevant matches nearby.
       </p>
 
-      {/* GPS button */}
       <button
         type="button"
         onClick={useGPS}
@@ -358,6 +464,7 @@ function Step5Location({
   );
 }
 
+// ── Step 6: Photos ────────────────────────────────────────────────────────────
 function Step6Photos({
   form,
   setForm,
@@ -373,7 +480,6 @@ function Step6Photos({
       const combined = [...p.photos, ...files].slice(0, 5);
       return { ...p, photos: combined };
     });
-    // reset input so same file can be re-selected
     e.target.value = '';
   };
 
@@ -438,16 +544,29 @@ function Step6Photos({
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Step config ──────────────────────────────────────────────────────────────
 
-const STEPS = [
-  { title: 'What\'s your gender?', icon: User },
-  { title: 'Who are you into?', icon: Heart },
-  { title: 'Write your bio', icon: FileText },
-  { title: 'Your interests', icon: Tag },
-  { title: 'Your location', icon: MapPin },
-  { title: 'Add your photos', icon: Camera },
+interface StepConfig {
+  title: string;
+  icon: React.ElementType;
+  /**
+   * Whether the user is allowed to skip this specific step.
+   * Birthdate is the only required step (cannot be skipped).
+   */
+  skippable: boolean;
+}
+
+const STEPS: StepConfig[] = [
+  { title: 'When were you born?',  icon: Calendar, skippable: false },
+  { title: "What's your gender?",  icon: User,     skippable: true  },
+  { title: 'Who are you into?',    icon: Heart,    skippable: true  },
+  { title: 'Write your bio',       icon: FileText, skippable: true  },
+  { title: 'Your interests',       icon: Tag,      skippable: true  },
+  { title: 'Your location',        icon: MapPin,   skippable: true  },
+  { title: 'Add your photos',      icon: Camera,   skippable: true  },
 ];
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 const ProfileSetupPage = () => {
   const navigate = useNavigate();
@@ -455,6 +574,7 @@ const ProfileSetupPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState<ProfileForm>({
+    birthdate: '',
     gender: '',
     sexual_preference: '',
     biography: '',
@@ -465,33 +585,45 @@ const ProfileSetupPage = () => {
     photos: [],
   });
 
-  const isStepValid = () => {
+  const isLast = step === STEPS.length - 1;
+
+  // Per-step hard validation (only birthdate is strictly required)
+  const isStepValid = (): { valid: boolean; message: string } => {
     switch (step) {
-      case 0: return form.gender !== '';
-      case 1: return form.sexual_preference !== '';
-      case 2: return form.biography.trim().length >= 10;
-      case 3: return form.tags.length >= 1;
-      case 4: return form.location_city.trim() !== '' || form.latitude !== null;
-      case 5: return form.photos.length >= 1;
-      default: return true;
+      case 0: {
+        if (!form.birthdate) return { valid: false, message: 'Please enter your date of birth.' };
+        const age = calcAge(form.birthdate);
+        if (age === null || age < 18)
+          return { valid: false, message: 'You must be at least 18 years old.' };
+        return { valid: true, message: '' };
+      }
+      default:
+        return { valid: true, message: '' };
     }
   };
 
   const handleNext = () => {
     setError('');
-    if (!isStepValid()) {
-      const messages = [
-        'Please select your gender.',
-        'Please select your sexual preference.',
-        'Bio must be at least 10 characters.',
-        'Add at least one interest tag.',
-        'Please provide your location.',
-        'Please add at least one photo.',
-      ];
-      setError(messages[step]);
-      return;
-    }
+    const { valid, message } = isStepValid();
+    if (!valid) { setError(message); return; }
     setStep((s) => s + 1);
+  };
+
+  // Skip just this step (advances without saving any value)
+  const handleSkipStep = () => {
+    setError('');
+    setStep((s) => s + 1);
+  };
+
+  // Skip the entire setup — save whatever was filled in so far so the
+  // route guard (which checks profile completeness) lets the user through.
+  const handleSkipAll = async () => {
+    try {
+      await profileApi.savePartial(form);
+    } catch {
+      // Ignore — partial saves may fail validation; we navigate anyway.
+    }
+    navigate('/browse');
   };
 
   const handleBack = () => {
@@ -501,27 +633,26 @@ const ProfileSetupPage = () => {
 
   const handleSubmit = async () => {
     setError('');
-    if (!isStepValid()) {
-      setError('Please add at least one photo.');
-      return;
-    }
+    const { valid, message } = isStepValid();
+    if (!valid) { setError(message); return; }
+
     setLoading(true);
     try {
-      // 1. Update profile fields
       const profileBody: Record<string, unknown> = {
-        gender: form.gender,
-        sexual_preference: form.sexual_preference,
-        biography: form.biography,
+        birthdate: form.birthdate || undefined,
+        gender: form.gender || undefined,
+        sexual_preference: form.sexual_preference || undefined,
+        biography: form.biography || undefined,
         location_city: form.location_city || undefined,
         latitude: form.latitude ?? undefined,
         longitude: form.longitude ?? undefined,
       };
       await profileApi.updateProfile(profileBody);
 
-      // 2. Update tags
-      await profileApi.updateTags(form.tags);
+      if (form.tags.length > 0) {
+        await profileApi.updateTags(form.tags);
+      }
 
-      // 3. Upload photos sequentially
       for (const file of form.photos) {
         await profileApi.uploadPhoto(file);
       }
@@ -534,19 +665,20 @@ const ProfileSetupPage = () => {
     }
   };
 
-  const isLast = step === STEPS.length - 1;
-
   const renderStep = () => {
     switch (step) {
-      case 0: return <Step1Gender form={form} setForm={setForm} />;
-      case 1: return <Step2Preference form={form} setForm={setForm} />;
-      case 2: return <Step3Bio form={form} setForm={setForm} />;
-      case 3: return <Step4Tags form={form} setForm={setForm} />;
-      case 4: return <Step5Location form={form} setForm={setForm} />;
-      case 5: return <Step6Photos form={form} setForm={setForm} />;
+      case 0: return <Step0Birthdate form={form} setForm={setForm} />;
+      case 1: return <Step1Gender    form={form} setForm={setForm} />;
+      case 2: return <Step2Preference form={form} setForm={setForm} />;
+      case 3: return <Step3Bio       form={form} setForm={setForm} />;
+      case 4: return <Step4Tags      form={form} setForm={setForm} />;
+      case 5: return <Step5Location  form={form} setForm={setForm} />;
+      case 6: return <Step6Photos    form={form} setForm={setForm} />;
       default: return null;
     }
   };
+
+  const currentStep = STEPS[step];
 
   return (
     <AuthLayout header="Let's set up your profile">
@@ -556,11 +688,11 @@ const ProfileSetupPage = () => {
       <div className="flex items-center gap-2 mb-4">
         <div className="w-7 h-7 rounded-full bg-(--color-primary)/15 flex items-center justify-center flex-shrink-0">
           {(() => {
-            const Icon = STEPS[step].icon;
+            const Icon = currentStep.icon;
             return <Icon size={14} className="text-(--color-primary)" />;
           })()}
         </div>
-        <h2 className="text-sm font-semibold text-(--color-text)">{STEPS[step].title}</h2>
+        <h2 className="text-sm font-semibold text-(--color-text)">{currentStep.title}</h2>
       </div>
 
       {/* Step content */}
@@ -581,32 +713,58 @@ const ProfileSetupPage = () => {
             className="flex items-center gap-1 px-4 py-2.5 rounded-full border border-(--color-text)/15 text-sm text-(--color-text)/70 hover:border-(--color-primary)/40 transition-colors"
           >
             <ChevronLeft size={14} />
-            {/* Back */}
           </button>
         )}
-        <Button
-          type="button"
-          disabled={loading}
-          onClick={isLast ? handleSubmit : handleNext}
-          withArrow={false}
-        >
-          {loading
-            ? 'Saving…'
-            : isLast
-            ? 'Complete setup'
-            : (
-              <span className="flex items-center gap-1 justify-center">
-                Next <ChevronRight size={14} />
-              </span>
-            )}
-        </Button>
+
+        <div className="flex items-center gap-2 ml-auto">
+          {/* Skip this step — only shown on skippable, non-last steps */}
+          {currentStep.skippable && !isLast && (
+            <button
+              type="button"
+              onClick={handleSkipStep}
+              className="text-xs text-(--color-text)/40 hover:text-(--color-text)/60 px-2 transition-colors"
+            >
+              Skip step
+            </button>
+          )}
+
+          <Button
+            type="button"
+            disabled={loading}
+            onClick={isLast ? handleSubmit : handleNext}
+            withArrow={false}
+          >
+            {loading
+              ? 'Saving…'
+              : isLast
+              ? 'Complete setup'
+              : (
+                <span className="flex items-center gap-1 justify-center">
+                  Next <ChevronRight size={14} />
+                </span>
+              )}
+          </Button>
+        </div>
       </div>
 
-      {/* Skip option */}
+      {/* Last step: also show skip-this-step as "skip photos" */}
+      {isLast && currentStep.skippable && (
+        <p className="text-center mt-2">
+          <button
+            type="button"
+            onClick={handleSkipAll}
+            className="text-xs text-(--color-text)/40 hover:text-(--color-text)/60 transition-colors"
+          >
+            Skip photos & finish later
+          </button>
+        </p>
+      )}
+
+      {/* Global skip */}
       <p className="text-center mt-3">
         <button
           type="button"
-          onClick={() => navigate('/browse')}
+          onClick={handleSkipAll}
           className="text-xs text-(--color-text)/40 hover:text-(--color-text)/60 transition-colors"
         >
           Skip for now

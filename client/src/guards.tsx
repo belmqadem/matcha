@@ -31,7 +31,7 @@ export const RequireProfile = () => {
   useEffect(() => {
     authApi.me()
       .then(({ user }: { user: FullUser }) => {
-        setStatus(user.gender ? 'ok' : 'incomplete');
+        setStatus(user.birth_date ? 'ok' : 'incomplete');
       })
       .catch(() => setStatus('unauth'));
   }, []);

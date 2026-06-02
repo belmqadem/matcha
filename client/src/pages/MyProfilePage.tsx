@@ -516,11 +516,18 @@ function PhotosPanel({ user, onUpdate }: { user: UserProfile; onUpdate: (u: User
     } catch (e) { setError(e instanceof Error ? e.message : 'Delete failed.'); }
   };
 
+  // const handleSetMain = async (id: number) => {
+  //   try { const u = await api.setMainPhoto(id); onUpdate(u); }
+  //   catch (e) { setError(e instanceof Error ? e.message : 'Failed.'); }
+  // };
   const handleSetMain = async (id: number) => {
-    try { const u = await api.setMainPhoto(id); onUpdate(u); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Failed.'); }
+    try {
+      await api.setMainPhoto(id);
+      onUpdate({ ...user, profile_picture_id: id });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed.');
+    }
   };
-
   return (
     <div style={{ background: '#fff', borderRadius: '20px', padding: '20px 22px', border: '1px solid #f0f0f0' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
