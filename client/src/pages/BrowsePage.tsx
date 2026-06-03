@@ -1,46 +1,95 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Photo {
+  id: number;
+  url: string;
+}
+
+interface User {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  birth_date?: string;
+  photos?: Photo[];
+  profile_picture_id?: number;
+  is_online: boolean;
+  last_seen?: string;
+  distance_km?: number;
+  location_city?: string;
+  fame_rating: number;
+  tags?: string[];
+  liked_by_me: boolean;
+  liked_me: boolean;
+  is_connected: boolean;
+}
+
+interface BrowseResponse {
+  users: User[];
+  total: number;
+}
+
+interface LikeResponse {
+  connected: boolean;
+}
+
+interface Filters {
+  age_min: string;
+  age_max: string;
+  fame_min: string;
+  fame_max: string;
+  max_km: string;
+  tags: string;
+}
+
 // ─── API ──────────────────────────────────────────────────────────────────────
 
-async function handleResponse(res) {
+class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   const body = text ? JSON.parse(text) : {};
-  if (!res.ok) throw new Error(body.error ?? body.message ?? `Request failed (${res.status})`);
-  return body;
+  if (!res.ok) throw new ApiError(res.status, body.error ?? body.message ?? `Request failed (${res.status})`);
+  return body as T;
 }
 
 const browseApi = {
-  getUsers: (params) => {
+  getUsers: (params: Record<string, string | number>): Promise<BrowseResponse> => {
     const q = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== "" && v !== null && v !== undefined) q.set(k, String(v));
     });
-    return fetch(`/api/browse?${q}`, { credentials: "include" }).then(handleResponse);
+    return fetch(`/api/browse?${q}`, { credentials: "include" }).then(handleResponse<BrowseResponse>);
   },
-  like: (id) =>
-    fetch(`/api/likes/${id}`, { method: "POST", credentials: "include" }).then(handleResponse),
-  unlike: (id) =>
-    fetch(`/api/likes/${id}`, { method: "DELETE", credentials: "include" }).then(handleResponse),
+  like: (id: number): Promise<LikeResponse> =>
+    fetch(`/api/likes/${id}`, { method: "POST", credentials: "include" }).then(handleResponse<LikeResponse>),
+  unlike: (id: number): Promise<void> =>
+    fetch(`/api/likes/${id}`, { method: "DELETE", credentials: "include" }).then(handleResponse<void>),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function timeAgo(iso) {
+function timeAgo(iso?: string): string {
   if (!iso) return "Offline";
-  const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-function calcAge(birth_date) {
+function calcAge(birth_date?: string): number | null {
   if (!birth_date) return null;
   return Math.floor((Date.now() - new Date(birth_date).getTime()) / (365.25 * 24 * 3600 * 1000));
 }
 
-function getPhoto(user) {
+function getPhoto(user: User): string | null {
   if (!user.photos?.length) return null;
   const main = user.photos.find((p) => p.id === user.profile_picture_id);
   return (main ?? user.photos[0])?.url ?? null;
@@ -48,36 +97,37 @@ function getPhoto(user) {
 
 // ─── Atoms ────────────────────────────────────────────────────────────────────
 
-function FameBadge({ rating }) {
-  const color = rating >= 80 ? "#e94057" : rating >= 55 ? "#f59e0b" : "#9ca3af";
+function FameBadge({ rating }: { rating: number }) {
+  const colorClass =
+    rating >= 80 ? "text-rose-500 bg-rose-50 border-rose-200" :
+    rating >= 55 ? "text-amber-500 bg-amber-50 border-amber-200" :
+                   "text-gray-400 bg-gray-50 border-gray-200";
+
   return (
-    <span style={{
-      fontSize: 11, fontWeight: 700, color,
-      background: `${color}18`, border: `1px solid ${color}35`,
-      borderRadius: 999, padding: "2px 8px", whiteSpace: "nowrap",
-    }}>★ {rating}</span>
+    <span className={`text-[11px] font-bold border rounded-full px-2 py-0.5 whitespace-nowrap ${colorClass}`}>
+      ★ {rating}
+    </span>
   );
 }
 
-function Spinner({ size = 16, color = "#e94057" }) {
+function Spinner({ size = 16, white = false }: { size?: number; white?: boolean }) {
   return (
-    <span style={{
-      display: "inline-block", width: size, height: size,
-      border: `2px solid ${color}30`, borderTop: `2px solid ${color}`,
-      borderRadius: "50%", animation: "spin 0.7s linear infinite", flexShrink: 0,
-    }} />
+    <span
+      className={`inline-block rounded-full border-2 animate-spin flex-shrink-0 ${white ? "border-white/30 border-t-white" : "border-rose-200 border-t-rose-500"}`}
+      style={{ width: size, height: size }}
+    />
   );
 }
 
 function SkeletonCard() {
   return (
-    <div style={{ background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-      <div style={{ width: "100%", paddingBottom: "133%", position: "relative", background: "#f3f4f6" }}>
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)", backgroundSize: "200% 100%", animation: "shimmer 1.4s infinite" }} />
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="relative w-full pb-[133%] bg-gray-100">
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-[shimmer_1.4s_infinite]" />
       </div>
-      <div style={{ padding: "12px 14px" }}>
-        <div style={{ height: 14, background: "#f3f4f6", borderRadius: 6, width: "55%", marginBottom: 8 }} />
-        <div style={{ height: 10, background: "#f3f4f6", borderRadius: 6, width: "35%" }} />
+      <div className="p-3">
+        <div className="h-3.5 bg-gray-100 rounded-md w-[55%] mb-2" />
+        <div className="h-2.5 bg-gray-100 rounded-md w-[35%]" />
       </div>
     </div>
   );
@@ -85,95 +135,157 @@ function SkeletonCard() {
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
-function Avatar({ user }) {
+function Avatar({ user }: { user: User }) {
   const [err, setErr] = useState(false);
   const photo = getPhoto(user);
+
   if (photo && !err) {
-    return <img src={photo} alt={user.first_name} onError={() => setErr(true)} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />;
+    return (
+      <img
+        src={photo}
+        alt={user.first_name}
+        onError={() => setErr(true)}
+        className="w-full h-full object-cover block"
+      />
+    );
   }
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, fontWeight: 700, color: "#d1d5db", background: "#f3f4f6", letterSpacing: "-1px" }}>
-      {(user.first_name?.[0] ?? "?")}{(user.last_name?.[0] ?? "")}
+    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-gray-300 bg-gray-100 tracking-[-1px]">
+      {user.first_name?.[0] ?? "?"}{user.last_name?.[0] ?? ""}
     </div>
   );
 }
 
 // ─── UserCard ─────────────────────────────────────────────────────────────────
 
-function UserCard({ user, onLike, onUnlike }) {
+function UserCard({ user, onLike, onUnlike }: { user: User; onLike: (id: number) => Promise<void>; onUnlike: (id: number) => Promise<void> }) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const age = calcAge(user.birth_date);
 
-  const handleLikeClick = async (e) => {
+  const handleLikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (busy) return;
     setBusy(true);
     try { await onLike(user.id); } finally { setBusy(false); }
   };
 
-  const handleUnlikeClick = async (e) => {
+  const handleUnlikeClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (busy) return;
     setBusy(true);
     try { await onUnlike(user.id); } finally { setBusy(false); }
   };
 
+  /**
+   * Button logic:
+   * - is_connected (mutual like) → "💬 Chat"  (filled rose)
+   * - liked_by_me only           → "♥ Liked"  (filled rose, click to unlike)
+   * - liked_me only              → "♥ Like back" (outlined rose, click to like)
+   * - neither                    → "♡ Like"   (outlined rose, click to like)
+   */
+  const renderActionButton = () => {
+    if (user.is_connected) {
+      return (
+        <button
+          onClick={(e) => { e.stopPropagation(); navigate(`/chat/${user.id}`); }}
+          className="flex-1 py-2 rounded-xl bg-rose-500 text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-opacity hover:opacity-90"
+        >
+          💬 Chat
+        </button>
+      );
+    }
+
+    if (user.liked_by_me) {
+      // Already liked, not connected → allow unlike
+      return (
+        <button
+          onClick={handleUnlikeClick}
+          disabled={busy}
+          className="flex-1 py-2 rounded-xl bg-rose-500 text-white text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-opacity disabled:opacity-70 hover:opacity-90"
+        >
+          {busy ? <Spinner white size={14} /> : "♥ Liked"}
+        </button>
+      );
+    }
+
+    if (user.liked_me) {
+      // They liked me, I haven't liked back yet
+      return (
+        <button
+          onClick={handleLikeClick}
+          disabled={busy}
+          className="flex-1 py-2 rounded-xl border-[1.5px] border-rose-500 bg-rose-50 text-rose-500 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-70 hover:bg-rose-500 hover:text-white"
+        >
+          {busy ? <Spinner size={14} /> : "♥ Like back"}
+        </button>
+      );
+    }
+
+    // Default: neither has liked
+    return (
+      <button
+        onClick={handleLikeClick}
+        disabled={busy}
+        className="flex-1 py-2 rounded-xl border-[1.5px] border-rose-500 bg-transparent text-rose-500 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-all disabled:opacity-70 hover:bg-rose-500 hover:text-white"
+      >
+        {busy ? <Spinner size={14} /> : "♡ Like"}
+      </button>
+    );
+  };
+
   return (
     <div
       onClick={() => navigate(`/profile/${user.id}`)}
-      style={{
-        background: "#fff", borderRadius: 16, overflow: "hidden",
-        border: "1px solid #e5e7eb", display: "flex", flexDirection: "column",
-        cursor: "pointer", transition: "transform 0.2s ease, box-shadow 0.2s ease",
-      }}
-      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 12px 32px rgba(233,64,87,0.10)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+      className="bg-white rounded-2xl overflow-hidden border border-gray-100 flex flex-col cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgba(233,64,87,0.10)]"
     >
       {/* Photo */}
-      <div style={{ position: "relative", aspectRatio: "3/4", overflow: "hidden", background: "#f3f4f6" }}>
+      <div className="relative aspect-[3/4] overflow-hidden bg-gray-100">
         <Avatar user={user} />
 
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(26,26,46,0.82) 0%, rgba(26,26,46,0.06) 55%, transparent 100%)", pointerEvents: "none" }} />
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(26,26,46,0.82)] via-[rgba(26,26,46,0.06)] to-transparent pointer-events-none" />
 
-        {/* Online */}
-        <div style={{ position: "absolute", top: 12, left: 12, display: "flex", alignItems: "center", gap: 5 }}>
-          <div style={{ width: 8, height: 8, borderRadius: "50%", background: user.is_online ? "#22c55e" : "#9ca3af", border: "2px solid white", flexShrink: 0 }} />
-          <span style={{ fontSize: 11, color: "white", fontWeight: 500, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+        {/* Online indicator */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+          <div className={`w-2 h-2 rounded-full border-2 border-white flex-shrink-0 ${user.is_online ? "bg-green-500" : "bg-gray-400"}`} />
+          <span className="text-[11px] text-white font-medium drop-shadow-sm">
             {user.is_online ? "Online" : timeAgo(user.last_seen)}
           </span>
         </div>
 
         {/* Badges */}
-        <div style={{ position: "absolute", top: 10, right: 10, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+        <div className="absolute top-2.5 right-2.5 flex flex-col gap-1 items-end">
           {user.is_connected && (
-            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.05em", background: "#e94057", color: "white", borderRadius: 999, padding: "3px 9px" }}>
+            <span className="text-[10px] font-bold tracking-wide bg-rose-500 text-white rounded-full px-2.5 py-0.5">
               MATCH
             </span>
           )}
           {!user.is_connected && user.liked_me && (
-            <span style={{ fontSize: 10, fontWeight: 700, background: "rgba(233,64,87,0.18)", color: "#e94057", border: "1px solid rgba(233,64,87,0.35)", borderRadius: 999, padding: "3px 9px" }}>
+            <span className="text-[10px] font-bold bg-rose-500/20 text-rose-500 border border-rose-500/35 rounded-full px-2.5 py-0.5">
               Likes you
             </span>
           )}
         </div>
 
         {/* Name / location */}
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: 14 }}>
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ minWidth: 0 }}>
-              <p style={{ margin: 0, color: "white", fontSize: 17, fontWeight: 700, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div className="absolute bottom-0 left-0 right-0 p-3.5">
+          <div className="flex items-end justify-between gap-2">
+            <div className="min-w-0">
+              <p className="m-0 text-white text-[17px] font-bold leading-tight truncate">
                 {user.first_name}{age !== null ? `, ${age}` : ""}
               </p>
               {(user.distance_km != null || user.location_city) && (
-                <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.72)", fontSize: 12, display: "flex", alignItems: "center", gap: 3 }}>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <p className="mt-1 text-white/70 text-xs flex items-center gap-1">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                     <circle cx="12" cy="9" r="2.5" />
                   </svg>
-                  {user.distance_km != null && <span>{user.distance_km < 1 ? "< 1 km" : `${Number(user.distance_km).toFixed(1)} km`}</span>}
+                  {user.distance_km != null && (
+                    <span>{user.distance_km < 1 ? "< 1 km" : `${Number(user.distance_km).toFixed(1)} km`}</span>
+                  )}
                   {user.distance_km != null && user.location_city && <span>·</span>}
-                  {user.location_city && <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.location_city}</span>}
+                  {user.location_city && <span className="truncate">{user.location_city}</span>}
                 </p>
               )}
             </div>
@@ -183,49 +295,17 @@ function UserCard({ user, onLike, onUnlike }) {
       </div>
 
       {/* Tags + actions */}
-      <div style={{ padding: "12px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, minHeight: 22 }}>
+      <div className="p-3 flex-1 flex flex-col justify-between gap-2.5">
+        <div className="flex flex-wrap gap-1.5 min-h-[22px]">
           {(user.tags ?? []).slice(0, 3).map((tag) => (
-            <span key={tag} style={{ fontSize: 11, color: "#6b7280", background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: 999, padding: "3px 8px" }}>
+            <span key={tag} className="text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
               {tag.startsWith("#") ? tag : `#${tag}`}
             </span>
           ))}
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          {user.liked_by_me ? (
-            <button
-              onClick={user.is_connected ? (e) => { e.stopPropagation(); navigate(`/chat/${user.id}`); } : handleUnlikeClick}
-              disabled={busy}
-              style={{
-                flex: 1, padding: "8px 0", borderRadius: 10,
-                border: "1.5px solid #e94057", background: "#e94057",
-                color: "white", fontSize: 13, fontWeight: 600,
-                fontFamily: "inherit", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                opacity: busy ? 0.7 : 1, transition: "opacity 0.15s",
-              }}
-            >
-              {busy ? <Spinner color="white" size={14} /> : user.is_connected ? "💬 Chat" : "♥ Liked"}
-            </button>
-          ) : (
-            <button
-              onClick={handleLikeClick}
-              disabled={busy}
-              style={{
-                flex: 1, padding: "8px 0", borderRadius: 10,
-                border: "1.5px solid #e94057", background: "transparent",
-                color: "#e94057", fontSize: 13, fontWeight: 600,
-                fontFamily: "inherit", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                opacity: busy ? 0.7 : 1, transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => { if (!busy) { e.currentTarget.style.background = "#e94057"; e.currentTarget.style.color = "white"; } }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#e94057"; }}
-            >
-              {busy ? <Spinner size={14} /> : "♡ Like"}
-            </button>
-          )}
+        <div className="flex gap-2">
+          {renderActionButton()}
         </div>
       </div>
     </div>
@@ -234,68 +314,66 @@ function UserCard({ user, onLike, onUnlike }) {
 
 // ─── FilterPanel ──────────────────────────────────────────────────────────────
 
-const EMPTY_FILTERS = { age_min: "", age_max: "", fame_min: "", fame_max: "", max_km: "", tags: "" };
+const EMPTY_FILTERS: Filters = { age_min: "", age_max: "", fame_min: "", fame_max: "", max_km: "", tags: "" };
 
-function FilterPanel({ filters, onApply, onClose }) {
-  const [local, setLocal] = useState(filters);
-  const set = (key) => (e) => setLocal((p) => ({ ...p, [key]: e.target.value }));
+function FilterPanel({ filters, onApply, onClose }: { filters: Filters; onApply: (f: Filters) => void; onClose: () => void }) {
+  const [local, setLocal] = useState<Filters>(filters);
+  const set = (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setLocal((p) => ({ ...p, [key]: e.target.value }));
 
-  const inputStyle = {
-    padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8,
-    fontSize: 13, fontFamily: "inherit", color: "#1a1a2e",
-    background: "#f7f7f7", outline: "none", boxSizing: "border-box",
-    transition: "border-color 0.15s",
-  };
-  const focus = (e) => (e.target.style.borderColor = "#e94057");
-  const blur  = (e) => (e.target.style.borderColor = "#e5e7eb");
-  const label = (text) => (
-    <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9ca3af", marginBottom: 7, letterSpacing: "0.07em", textTransform: "uppercase" }}>
-      {text}
-    </label>
+  const inputCls = "w-full px-2.5 py-2 border border-gray-200 rounded-lg text-[13px] text-gray-900 bg-gray-50 outline-none focus:border-rose-400 transition-colors font-[inherit]";
+  const Label = ({ text }: { text: string }) => (
+    <label className="block text-[11px] font-bold text-gray-400 mb-1.5 tracking-wider uppercase">{text}</label>
   );
 
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 20, marginBottom: 24, boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#1a1a2e" }}>Filters</h3>
-        <button onClick={onClose} style={{ border: "none", background: "none", cursor: "pointer", color: "#9ca3af", fontSize: 20, lineHeight: 1, fontFamily: "inherit", padding: 0 }}>✕</button>
+    <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-[15px] font-bold text-gray-900">Filters</h3>
+        <button onClick={onClose} className="text-gray-400 text-xl leading-none bg-transparent border-none cursor-pointer p-0 font-[inherit]">✕</button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14 }}>
+      <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
         <div>
-          {label("Age range")}
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input type="number" placeholder="18" min={18} max={120} value={local.age_min} onChange={set("age_min")} onFocus={focus} onBlur={blur} style={{ ...inputStyle, width: 64 }} />
-            <span style={{ color: "#d1d5db" }}>—</span>
-            <input type="number" placeholder="80" min={18} max={120} value={local.age_max} onChange={set("age_max")} onFocus={focus} onBlur={blur} style={{ ...inputStyle, width: 64 }} />
+          <Label text="Age range" />
+          <div className="flex gap-1.5 items-center">
+            <input type="number" placeholder="18" min={18} max={120} value={local.age_min} onChange={set("age_min")} className={`${inputCls} w-16`} />
+            <span className="text-gray-300">—</span>
+            <input type="number" placeholder="80" min={18} max={120} value={local.age_max} onChange={set("age_max")} className={`${inputCls} w-16`} />
           </div>
         </div>
 
         <div>
-          {label("Fame rating")}
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <input type="number" placeholder="0" min={0} max={100} value={local.fame_min} onChange={set("fame_min")} onFocus={focus} onBlur={blur} style={{ ...inputStyle, width: 64 }} />
-            <span style={{ color: "#d1d5db" }}>—</span>
-            <input type="number" placeholder="100" min={0} max={100} value={local.fame_max} onChange={set("fame_max")} onFocus={focus} onBlur={blur} style={{ ...inputStyle, width: 64 }} />
+          <Label text="Fame rating" />
+          <div className="flex gap-1.5 items-center">
+            <input type="number" placeholder="0" min={0} max={100} value={local.fame_min} onChange={set("fame_min")} className={`${inputCls} w-16`} />
+            <span className="text-gray-300">—</span>
+            <input type="number" placeholder="100" min={0} max={100} value={local.fame_max} onChange={set("fame_max")} className={`${inputCls} w-16`} />
           </div>
         </div>
 
         <div>
-          {label("Max distance (km)")}
-          <input type="number" placeholder="50" min={1} value={local.max_km} onChange={set("max_km")} onFocus={focus} onBlur={blur} style={{ ...inputStyle, width: "100%" }} />
+          <Label text="Max distance (km)" />
+          <input type="number" placeholder="50" min={1} value={local.max_km} onChange={set("max_km")} className={inputCls} />
         </div>
 
         <div>
-          {label("Interest tags")}
-          <input type="text" placeholder="#vegan, #geek…" value={local.tags} onChange={set("tags")} onFocus={focus} onBlur={blur} style={{ ...inputStyle, width: "100%" }} />
+          <Label text="Interest tags" />
+          <input type="text" placeholder="#vegan, #geek…" value={local.tags} onChange={set("tags")} className={inputCls} />
         </div>
       </div>
 
-      <div style={{ marginTop: 18, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button onClick={() => setLocal(EMPTY_FILTERS)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #e5e7eb", background: "none", color: "#6b7280", fontSize: 13, fontWeight: 500, fontFamily: "inherit", cursor: "pointer" }}>
+      <div className="mt-4 flex gap-2 justify-end">
+        <button
+          onClick={() => setLocal(EMPTY_FILTERS)}
+          className="px-4 py-2 rounded-lg border border-gray-200 text-gray-500 text-[13px] font-medium bg-transparent cursor-pointer font-[inherit] hover:bg-gray-50 transition-colors"
+        >
           Reset
         </button>
-        <button onClick={() => { onApply(local); onClose(); }} style={{ padding: "8px 22px", borderRadius: 8, border: "none", background: "#e94057", color: "white", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}>
+        <button
+          onClick={() => { onApply(local); onClose(); }}
+          className="px-5 py-2 rounded-lg bg-rose-500 text-white text-[13px] font-semibold border-none cursor-pointer font-[inherit] hover:bg-rose-600 transition-colors"
+        >
           Apply
         </button>
       </div>
@@ -312,22 +390,25 @@ const SORT_OPTIONS = [
   { value: "tags",     label: "Common Tags" },
 ];
 
+type SortValue = "distance" | "age" | "fame" | "tags";
+type TabValue  = "all" | "liked" | "matches";
+
 export default function BrowsePage() {
-  const [users, setUsers]             = useState([]);
+  const [users, setUsers]             = useState<User[]>([]);
   const [total, setTotal]             = useState(0);
   const [page, setPage]               = useState(1);
   const [loading, setLoading]         = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError]             = useState(null);
-  const [sort, setSort]               = useState("distance");
-  const [order, setOrder]             = useState("asc");
-  const [filters, setFilters]         = useState(EMPTY_FILTERS);
+  const [error, setError]             = useState<string | null>(null);
+  const [sort, setSort]               = useState<SortValue>("distance");
+  const [order, setOrder]             = useState<"asc" | "desc">("asc");
+  const [filters, setFilters]         = useState<Filters>(EMPTY_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
-  const [activeTab, setActiveTab]     = useState("all");
-  const abortRef = useRef(null);
+  const [activeTab, setActiveTab]     = useState<TabValue>("all");
+  const abortRef = useRef<AbortController | null>(null);
 
-  const buildParams = useCallback((pageNum) => {
-    const p = { sort, order, page: pageNum, limit: 20 };
+  const buildParams = useCallback((pageNum: number): Record<string, string | number> => {
+    const p: Record<string, string | number> = { sort, order, page: pageNum, limit: 20 };
     if (filters.age_min)  p.age_min  = filters.age_min;
     if (filters.age_max)  p.age_max  = filters.age_max;
     if (filters.fame_min) p.fame_min = filters.fame_min;
@@ -337,7 +418,6 @@ export default function BrowsePage() {
     return p;
   }, [sort, order, filters]);
 
-  // Refetch on sort / order / filter change
   useEffect(() => {
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
@@ -352,7 +432,7 @@ export default function BrowsePage() {
         setUsers(data.users ?? []);
         setTotal(data.total ?? 0);
       })
-      .catch((err) => { if (!ctrl.signal.aborted) setError(err.message); })
+      .catch((err: Error) => { if (!ctrl.signal.aborted) setError(err.message); })
       .finally(() => { if (!ctrl.signal.aborted) setLoading(false); });
 
     return () => ctrl.abort();
@@ -366,31 +446,53 @@ export default function BrowsePage() {
       setUsers((prev) => [...prev, ...(data.users ?? [])]);
       setPage(next);
     } catch (err) {
-      setError(err.message);
+      setError((err as Error).message);
     } finally {
       setLoadingMore(false);
     }
   };
 
-  const handleLike = async (id) => {
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, liked_by_me: true, is_connected: u.liked_me } : u));
+  const handleLike = async (id: number) => {
+    // Optimistic update
+    setUsers((prev) => prev.map((u) =>
+      u.id === id ? { ...u, liked_by_me: true, is_connected: u.liked_me } : u
+    ));
     try {
       const res = await browseApi.like(id);
-      setUsers((prev) => prev.map((u) => u.id === id ? { ...u, is_connected: res.connected } : u));
+      setUsers((prev) => prev.map((u) =>
+        u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u
+      ));
     } catch (err) {
-      setUsers((prev) => prev.map((u) => u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u));
-      setError(err.message);
+      // 409 = already liked on server — keep optimistic state, just sync is_connected
+      if (err instanceof ApiError && err.status === 409) {
+        setUsers((prev) => prev.map((u) =>
+          u.id === id ? { ...u, liked_by_me: true, is_connected: u.liked_me } : u
+        ));
+        return;
+      }
+      // Any other error → rollback
+      setUsers((prev) => prev.map((u) =>
+        u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u
+      ));
+      setError((err as Error).message);
     }
   };
 
-  const handleUnlike = async (id) => {
+  const handleUnlike = async (id: number) => {
     const original = users.find((u) => u.id === id);
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u));
+    setUsers((prev) => prev.map((u) =>
+      u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u
+    ));
     try {
       await browseApi.unlike(id);
     } catch (err) {
-      setUsers((prev) => prev.map((u) => u.id === id ? { ...u, liked_by_me: original?.liked_by_me ?? false, is_connected: original?.is_connected ?? false } : u));
-      setError(err.message);
+      // Rollback
+      setUsers((prev) => prev.map((u) =>
+        u.id === id
+          ? { ...u, liked_by_me: original?.liked_by_me ?? false, is_connected: original?.is_connected ?? false }
+          : u
+      ));
+      setError((err as Error).message);
     }
   };
 
@@ -404,70 +506,77 @@ export default function BrowsePage() {
   const hasMore = users.length < total;
 
   return (
-    <div style={{ background: "#f7f7f7", fontFamily: "'Fraunces', serif", minHeight: "100%" }}>
+    <div className="bg-gray-50 font-['Fraunces',serif] min-h-full">
       <style>{`
-        @keyframes spin    { to { transform: rotate(360deg); } }
-        @keyframes fadeUp  { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        @keyframes fadeUp  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
       `}</style>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "28px 24px" }}>
+      <div className="max-w-[1200px] mx-auto px-6 py-7">
 
-        {/* ── Page title ── */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ margin: "0 0 4px", fontSize: 28, fontWeight: 700, color: "#1a1a2e", letterSpacing: "-0.5px" }}>
-            Discover people
-          </h1>
-          <p style={{ margin: 0, fontSize: 14, color: "#9ca3af" }}>
+        {/* Page title */}
+        <div className="mb-6">
+          <h1 className="text-[28px] font-bold text-gray-900 tracking-tight mb-1">Discover people</h1>
+          <p className="text-sm text-gray-400">
             {loading ? "Loading…" : `${total} profiles match your preferences`}
           </p>
         </div>
 
-        {/* ── Error banner ── */}
+        {/* Error banner */}
         {error && (
-          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <span style={{ fontSize: 13, color: "#dc2626" }}>⚠ {error}</span>
-            <button onClick={() => setError(null)} style={{ border: "none", background: "none", color: "#dc2626", cursor: "pointer", fontSize: 16, lineHeight: 1, fontFamily: "inherit", padding: 0 }}>✕</button>
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
+            <span className="text-[13px] text-red-600">⚠ {error}</span>
+            <button onClick={() => setError(null)} className="text-red-600 bg-transparent border-none cursor-pointer text-base leading-none p-0 font-[inherit]">✕</button>
           </div>
         )}
 
-        {/* ── Tabs + Controls ── */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
+        {/* Tabs + Controls */}
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-2.5">
           {/* Tabs */}
-          <div style={{ display: "flex", gap: 3, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: 3 }}>
-            {[["all", "All"], ["liked", "Liked"], ["matches", "Matches"]].map(([val, label]) => (
-              <button key={val} onClick={() => setActiveTab(val)} style={{
-                padding: "6px 16px", borderRadius: 7, border: "none",
-                background: activeTab === val ? "#e94057" : "none",
-                color: activeTab === val ? "white" : "#6b7280",
-                fontSize: 13, fontWeight: activeTab === val ? 600 : 400,
-                fontFamily: "inherit", cursor: "pointer", transition: "all 0.15s",
-              }}>{label}</button>
+          <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1">
+            {([ ["all", "All"], ["liked", "Liked"], ["matches", "Matches"] ] as [TabValue, string][]).map(([val, label]) => (
+              <button
+                key={val}
+                onClick={() => setActiveTab(val)}
+                className={`px-4 py-1.5 rounded-lg border-none text-[13px] font-[inherit] cursor-pointer transition-all ${
+                  activeTab === val
+                    ? "bg-rose-500 text-white font-semibold"
+                    : "bg-transparent text-gray-500 font-normal hover:text-gray-700"
+                }`}
+              >
+                {label}
+              </button>
             ))}
           </div>
 
           {/* Sort + Filter */}
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <select value={sort} onChange={(e) => setSort(e.target.value)} style={{ padding: "7px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", fontSize: 13, color: "#1a1a2e", fontFamily: "inherit", cursor: "pointer", outline: "none" }}>
+          <div className="flex gap-2 items-center">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortValue)}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-[13px] text-gray-900 font-[inherit] cursor-pointer outline-none hover:border-gray-300 transition-colors"
+            >
               {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
 
-            <button onClick={() => setOrder((o) => o === "asc" ? "desc" : "asc")} style={{ padding: "7px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", fontSize: 13, color: "#1a1a2e", fontFamily: "inherit", cursor: "pointer" }}>
+            <button
+              onClick={() => setOrder((o) => o === "asc" ? "desc" : "asc")}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-[13px] text-gray-900 font-[inherit] cursor-pointer hover:border-gray-300 transition-colors"
+            >
               {order === "asc" ? "↑ Asc" : "↓ Desc"}
             </button>
 
-            <button onClick={() => setShowFilters((f) => !f)} style={{
-              padding: "7px 14px",
-              border: `1.5px solid ${showFilters || activeFilterCount > 0 ? "#e94057" : "#e5e7eb"}`,
-              borderRadius: 8,
-              background: showFilters ? "#fdf2f4" : "#fff",
-              color: showFilters || activeFilterCount > 0 ? "#e94057" : "#1a1a2e",
-              fontSize: 13, fontWeight: 500, fontFamily: "inherit", cursor: "pointer",
-              display: "flex", alignItems: "center", gap: 6,
-            }}>
+            <button
+              onClick={() => setShowFilters((f) => !f)}
+              className={`px-3.5 py-1.5 rounded-lg border-[1.5px] text-[13px] font-medium font-[inherit] cursor-pointer flex items-center gap-1.5 transition-all ${
+                showFilters || activeFilterCount > 0
+                  ? "border-rose-500 bg-rose-50 text-rose-500"
+                  : "border-gray-200 bg-white text-gray-900 hover:border-gray-300"
+              }`}
+            >
               ⚙ Filters
               {activeFilterCount > 0 && (
-                <span style={{ background: "#e94057", color: "white", borderRadius: 999, fontSize: 10, fontWeight: 700, minWidth: 16, height: 16, display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
+                <span className="bg-rose-500 text-white rounded-full text-[10px] font-bold min-w-[16px] h-4 inline-flex items-center justify-center px-1">
                   {activeFilterCount}
                 </span>
               )}
@@ -475,19 +584,19 @@ export default function BrowsePage() {
           </div>
         </div>
 
-        {/* ── Filter panel ── */}
+        {/* Filter panel */}
         {showFilters && (
           <FilterPanel filters={filters} onApply={setFilters} onClose={() => setShowFilters(false)} />
         )}
 
-        {/* ── Grid / States ── */}
+        {/* Grid / States */}
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 20 }}>
+          <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
             {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : displayed.length > 0 ? (
           <>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 20 }}>
+            <div className="grid gap-5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))" }}>
               {displayed.map((user) => (
                 <div key={user.id} style={{ animation: "fadeUp 0.25s ease both" }}>
                   <UserCard user={user} onLike={handleLike} onUnlike={handleUnlike} />
@@ -497,20 +606,11 @@ export default function BrowsePage() {
 
             {/* Load more */}
             {hasMore && activeTab === "all" && (
-              <div style={{ textAlign: "center", marginTop: 40 }}>
+              <div className="text-center mt-10">
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  style={{
-                    padding: "11px 36px", borderRadius: 10,
-                    border: "1.5px solid #e94057", background: "none",
-                    color: "#e94057", fontSize: 14, fontWeight: 600,
-                    fontFamily: "inherit", cursor: loadingMore ? "default" : "pointer",
-                    display: "inline-flex", alignItems: "center", gap: 8,
-                    opacity: loadingMore ? 0.7 : 1, transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => { if (!loadingMore) { e.currentTarget.style.background = "#e94057"; e.currentTarget.style.color = "white"; } }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "none"; e.currentTarget.style.color = "#e94057"; }}
+                  className="px-9 py-2.5 rounded-xl border-[1.5px] border-rose-500 bg-transparent text-rose-500 text-sm font-semibold font-[inherit] cursor-pointer inline-flex items-center gap-2 transition-all disabled:opacity-70 hover:bg-rose-500 hover:text-white"
                 >
                   {loadingMore
                     ? <><Spinner size={14} /> Loading…</>
@@ -521,16 +621,19 @@ export default function BrowsePage() {
           </>
         ) : (
           /* Empty state */
-          <div style={{ textAlign: "center", padding: "72px 20px" }}>
-            <div style={{ fontSize: 36, marginBottom: 16, opacity: 0.2 }}>✦</div>
-            <p style={{ fontSize: 18, fontWeight: 700, color: "#1a1a2e", margin: "0 0 8px" }}>
+          <div className="text-center py-[72px] px-5">
+            <div className="text-4xl mb-4 opacity-20">✦</div>
+            <p className="text-lg font-bold text-gray-900 mb-2">
               {activeTab === "matches" ? "No matches yet" : activeTab === "liked" ? "You haven't liked anyone yet" : "No profiles found"}
             </p>
-            <p style={{ fontSize: 14, color: "#9ca3af", margin: "0 0 20px" }}>
+            <p className="text-sm text-gray-400 mb-5">
               {activeFilterCount > 0 ? "Try loosening your filters." : "Check back soon — new people join every day."}
             </p>
             {activeFilterCount > 0 && (
-              <button onClick={() => setFilters(EMPTY_FILTERS)} style={{ padding: "10px 24px", borderRadius: 10, border: "1.5px solid #e94057", background: "none", color: "#e94057", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}>
+              <button
+                onClick={() => setFilters(EMPTY_FILTERS)}
+                className="px-6 py-2.5 rounded-xl border-[1.5px] border-rose-500 bg-transparent text-rose-500 text-[13px] font-semibold font-[inherit] cursor-pointer hover:bg-rose-500 hover:text-white transition-all"
+              >
                 Clear filters
               </button>
             )}
