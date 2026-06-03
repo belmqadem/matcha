@@ -56,4 +56,10 @@ router.get(
   asyncHandler(profileController.getLikedBy),
 );
 
+router.get(
+  "/me/blocked",
+  authenticate,
+  asyncHandler(profileController.getBlocked),
+);
+
 export default router;
