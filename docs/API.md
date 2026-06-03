@@ -169,6 +169,11 @@ GET /api/profile/me/liked-by
 
 **Response 200:** `{ likers }`
 
+GET /api/profile/me/blocked
+
+**Response 200:** `{ blocked }`
+**Notes:** Each blocked entry includes `blocked_at`.
+
 ---
 
 ## Likes

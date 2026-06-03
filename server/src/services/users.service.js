@@ -17,6 +17,7 @@ const buildUserResponse = async (userId) => {
             gender, sexual_preference, biography, fame_rating, birth_date,
             latitude, longitude, location_city,
             is_verified, is_online, last_seen, profile_picture_id,
+            oauth_provider, oauth_id,
             created_at, updated_at
      FROM users WHERE id = $1`,
     [userId],
@@ -45,6 +46,9 @@ const buildUserResponse = async (userId) => {
 
   return {
     ...userRes.rows[0],
+    is_oauth_user: Boolean(
+      userRes.rows[0].oauth_provider && userRes.rows[0].oauth_id,
+    ),
     tags: tagsRes.rows.map((row) => row.name),
     photos: photosRes.rows,
   };
