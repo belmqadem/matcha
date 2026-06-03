@@ -35,6 +35,11 @@ export const getLikedBy = async (req, res) => {
   return res.status(200).json({ likers });
 };
 
+export const getBlocked = async (req, res) => {
+  const blocked = await profileService.getBlocked(req.user.id);
+  return res.status(200).json({ blocked });
+};
+
 export const getPublicProfile = async (req, res) => {
   const profile = await profileService.getPublicProfile(
     req.user.id,
@@ -80,6 +85,7 @@ export default {
   setMainPhoto,
   getVisitors,
   getLikedBy,
+  getBlocked,
   getPublicProfile,
   likeUser,
   unlikeUser,

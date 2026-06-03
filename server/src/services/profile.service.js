@@ -476,9 +476,11 @@ export const getVisitors = async (userId) => {
   const { rows } = await query(
     `SELECT v.visited_at,
             u.id, u.username, u.first_name, u.last_name,
-            u.gender, u.biography, u.fame_rating, u.profile_picture_id
+            u.gender, u.biography, u.fame_rating, u.profile_picture_id,
+            p.url AS profile_picture_url
      FROM visits v
      JOIN users u ON u.id = v.visitor_id
+     LEFT JOIN photos p ON p.id = u.profile_picture_id
      WHERE v.visited_id = $1
      ORDER BY v.visited_at DESC`,
     [userId],
@@ -491,11 +493,30 @@ export const getLikedBy = async (userId) => {
   const { rows } = await query(
     `SELECT l.created_at,
             u.id, u.username, u.first_name, u.last_name,
-            u.gender, u.biography, u.fame_rating, u.profile_picture_id
+            u.gender, u.biography, u.fame_rating, u.profile_picture_id,
+            p.url AS profile_picture_url
      FROM likes l
      JOIN users u ON u.id = l.liker_id
+     LEFT JOIN photos p ON p.id = u.profile_picture_id
      WHERE l.liked_id = $1
      ORDER BY l.created_at DESC`,
+    [userId],
+  );
+
+  return rows;
+};
+
+export const getBlocked = async (userId) => {
+  const { rows } = await query(
+    `SELECT b.created_at AS blocked_at,
+            u.id, u.username, u.first_name, u.last_name,
+            u.gender, u.biography, u.fame_rating, u.profile_picture_id,
+            p.url AS profile_picture_url
+     FROM blocks b
+     JOIN users u ON u.id = b.blocked_id
+     LEFT JOIN photos p ON p.id = u.profile_picture_id
+     WHERE b.blocker_id = $1
+     ORDER BY b.created_at DESC`,
     [userId],
   );
 
@@ -777,6 +798,7 @@ export default {
   setMainPhoto,
   getVisitors,
   getLikedBy,
+  getBlocked,
   getPublicProfile,
   likeUser,
   unlikeUser,
