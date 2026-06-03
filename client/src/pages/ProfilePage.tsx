@@ -46,63 +46,62 @@ interface PublicProfile {
   liked_by_me: boolean;
   liked_me: boolean;
   is_connected: boolean;
-  is_blocked: boolean;
+  is_blocked_by_me: boolean; // ✅ fixed: was `is_blocked`
   is_fake_reported: boolean;
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 const api = {
-  getProfile: (id: string) =>
+getProfile: (id: string) =>
     fetch(`/api/users/${id}`, { credentials: 'include' }).then(async (r) => {
       const d = await r.json();
       if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
 
-      return d.profile.user as PublicProfile;
+      // Safely hunt down the user object no matter how the backend formats it
+      const userData = d.user || d.profile?.user || d.profile || (d.id ? d : null);
+
+      if (!userData) {
+        throw new Error("Could not find user data in the API response.");
+      }
+
+      return userData as PublicProfile;
     }),
 
   like: (id: number) =>
-    fetch(`/api/profile/${id}/like`, { method: 'POST', credentials: 'include' }).then(async (r) => {
+    fetch(`/api/likes/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/like
       const d = await r.json();
       if (!r.ok) throw new Error(d.error);
       return d;
     }),
 
   unlike: (id: number) =>
-    fetch(`/api/profile/${id}/like`, { method: 'DELETE', credentials: 'include' }).then(
-      async (r) => {
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error);
-        return d;
-      },
-    ),
+    fetch(`/api/likes/${id}`, { method: 'DELETE', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/like
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
 
   block: (id: number) =>
-    fetch(`/api/profile/${id}/block`, { method: 'POST', credentials: 'include' }).then(
-      async (r) => {
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error);
-        return d;
-      },
-    ),
+    fetch(`/api/blocks/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/block
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
 
   unblock: (id: number) =>
-    fetch(`/api/profile/${id}/block`, { method: 'DELETE', credentials: 'include' }).then(
-      async (r) => {
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error);
-        return d;
-      },
-    ),
+    fetch(`/api/blocks/${id}`, { method: 'DELETE', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/block
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
 
   report: (id: number) =>
-    fetch(`/api/profile/${id}/report`, { method: 'POST', credentials: 'include' }).then(
-      async (r) => {
-        const d = await r.json();
-        if (!r.ok) throw new Error(d.error);
-        return d;
-      },
-    ),
+    fetch(`/api/reports/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/report
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -243,7 +242,6 @@ function ConfirmModal({
 
 const ProfilePage = () => {
   const { id } = useParams<{ id: string }>();
-
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
@@ -264,8 +262,6 @@ const ProfilePage = () => {
       .getProfile(id)
       .then((p) => {
         setProfile(p);
-
-        // Set active photo to main photo index
         if (p.profile_picture_id) {
           const idx = p.photos.findIndex((ph) => ph.id === p.profile_picture_id);
           if (idx >= 0) setActivePhoto(idx);
@@ -330,8 +326,9 @@ const ProfilePage = () => {
         await api.unlike(profile.id);
         setProfile((p) => (p ? { ...p, liked_by_me: false, is_connected: false } : p));
       } else {
-        await api.like(profile.id);
-        setProfile((p) => (p ? { ...p, liked_by_me: true, is_connected: p.liked_me } : p));
+        const res = await api.like(profile.id);
+        // ✅ use `connected` from response as source of truth
+        setProfile((p) => (p ? { ...p, liked_by_me: true, is_connected: res.connected ?? p.liked_me } : p));
       }
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'Action failed.');
@@ -345,12 +342,13 @@ const ProfilePage = () => {
     setBlockLoading(true);
     setActionError('');
     try {
-      if (profile.is_blocked) {
+      if (profile.is_blocked_by_me) { // ✅ fixed field name
         await api.unblock(profile.id);
-        setProfile((p) => (p ? { ...p, is_blocked: false } : p));
+        setProfile((p) => (p ? { ...p, is_blocked_by_me: false } : p));
       } else {
         await api.block(profile.id);
-        setProfile((p) => (p ? { ...p, is_blocked: true } : p));
+        // ✅ block also removes likes per API contract
+        setProfile((p) => (p ? { ...p, is_blocked_by_me: true, liked_by_me: false, liked_me: false, is_connected: false } : p));
       }
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'Action failed.');
@@ -796,7 +794,7 @@ const ProfilePage = () => {
             {/* Like / Unlike */}
             <button
               onClick={handleLike}
-              disabled={likeLoading || profile.is_blocked}
+              disabled={likeLoading || profile.is_blocked_by_me} // ✅ fixed field name
               style={{
                 width: '100%',
                 display: 'flex',
@@ -806,7 +804,7 @@ const ProfilePage = () => {
                 padding: '13px',
                 borderRadius: '14px',
                 border: 'none',
-                cursor: profile.is_blocked ? 'not-allowed' : 'pointer',
+                cursor: profile.is_blocked_by_me ? 'not-allowed' : 'pointer', // ✅ fixed field name
                 fontWeight: 700,
                 fontSize: '14px',
                 letterSpacing: '0.03em',
@@ -815,8 +813,8 @@ const ProfilePage = () => {
                   ? '#fff0f2'
                   : 'linear-gradient(90deg, #C4364A, #e05570)',
                 color: profile.liked_by_me ? '#e94057' : '#fff',
-                border: profile.liked_by_me ? '2px solid #ffd6db' : 'none',
-                opacity: profile.is_blocked ? 0.4 : 1,
+                outline: profile.liked_by_me ? '2px solid #ffd6db' : 'none',
+                opacity: profile.is_blocked_by_me ? 0.4 : 1, // ✅ fixed field name
               }}
             >
               {likeLoading ? (
@@ -856,7 +854,7 @@ const ProfilePage = () => {
 
             {/* Block */}
             <button
-              onClick={() => setConfirm(profile.is_blocked ? 'unblock' : 'block')}
+              onClick={() => setConfirm(profile.is_blocked_by_me ? 'unblock' : 'block')} // ✅ fixed field name
               disabled={blockLoading}
               style={{
                 width: '100%',
@@ -868,15 +866,15 @@ const ProfilePage = () => {
                 borderRadius: '12px',
                 fontWeight: 600,
                 fontSize: '13px',
-                background: profile.is_blocked ? '#fff7ed' : '#fafafa',
-                color: profile.is_blocked ? '#ea580c' : '#999',
-                border: `1.5px solid ${profile.is_blocked ? '#fed7aa' : '#f0f0f0'}`,
+                background: profile.is_blocked_by_me ? '#fff7ed' : '#fafafa', // ✅ fixed field name
+                color: profile.is_blocked_by_me ? '#ea580c' : '#999', // ✅ fixed field name
+                border: `1.5px solid ${profile.is_blocked_by_me ? '#fed7aa' : '#f0f0f0'}`, // ✅ fixed field name
                 cursor: 'pointer',
                 transition: 'all 0.15s',
               }}
             >
               <Ban size={14} />
-              {profile.is_blocked ? 'Unblock user' : 'Block user'}
+              {profile.is_blocked_by_me ? 'Unblock user' : 'Block user'} {/* ✅ fixed field name */}
             </button>
 
             {/* Report */}

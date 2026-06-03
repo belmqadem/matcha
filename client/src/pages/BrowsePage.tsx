@@ -35,15 +35,6 @@ interface LikeResponse {
   connected: boolean;
 }
 
-interface Filters {
-  age_min: string;
-  age_max: string;
-  fame_min: string;
-  fame_max: string;
-  max_km: string;
-  tags: string;
-}
-
 // ─── API ──────────────────────────────────────────────────────────────────────
 
 class ApiError extends Error {
@@ -177,13 +168,6 @@ function UserCard({ user, onLike, onUnlike }: { user: User; onLike: (id: number)
     try { await onUnlike(user.id); } finally { setBusy(false); }
   };
 
-  /**
-   * Button logic:
-   * - is_connected (mutual like) → "💬 Chat"  (filled rose)
-   * - liked_by_me only           → "♥ Liked"  (filled rose, click to unlike)
-   * - liked_me only              → "♥ Like back" (outlined rose, click to like)
-   * - neither                    → "♡ Like"   (outlined rose, click to like)
-   */
   const renderActionButton = () => {
     if (user.is_connected) {
       return (
@@ -197,7 +181,6 @@ function UserCard({ user, onLike, onUnlike }: { user: User; onLike: (id: number)
     }
 
     if (user.liked_by_me) {
-      // Already liked, not connected → allow unlike
       return (
         <button
           onClick={handleUnlikeClick}
@@ -210,7 +193,6 @@ function UserCard({ user, onLike, onUnlike }: { user: User; onLike: (id: number)
     }
 
     if (user.liked_me) {
-      // They liked me, I haven't liked back yet
       return (
         <button
           onClick={handleLikeClick}
@@ -222,7 +204,6 @@ function UserCard({ user, onLike, onUnlike }: { user: User; onLike: (id: number)
       );
     }
 
-    // Default: neither has liked
     return (
       <button
         onClick={handleLikeClick}
@@ -312,86 +293,9 @@ function UserCard({ user, onLike, onUnlike }: { user: User; onLike: (id: number)
   );
 }
 
-// ─── FilterPanel ──────────────────────────────────────────────────────────────
-
-const EMPTY_FILTERS: Filters = { age_min: "", age_max: "", fame_min: "", fame_max: "", max_km: "", tags: "" };
-
-function FilterPanel({ filters, onApply, onClose }: { filters: Filters; onApply: (f: Filters) => void; onClose: () => void }) {
-  const [local, setLocal] = useState<Filters>(filters);
-  const set = (key: keyof Filters) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setLocal((p) => ({ ...p, [key]: e.target.value }));
-
-  const inputCls = "w-full px-2.5 py-2 border border-gray-200 rounded-lg text-[13px] text-gray-900 bg-gray-50 outline-none focus:border-rose-400 transition-colors font-[inherit]";
-  const Label = ({ text }: { text: string }) => (
-    <label className="block text-[11px] font-bold text-gray-400 mb-1.5 tracking-wider uppercase">{text}</label>
-  );
-
-  return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6 shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[15px] font-bold text-gray-900">Filters</h3>
-        <button onClick={onClose} className="text-gray-400 text-xl leading-none bg-transparent border-none cursor-pointer p-0 font-[inherit]">✕</button>
-      </div>
-
-      <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
-        <div>
-          <Label text="Age range" />
-          <div className="flex gap-1.5 items-center">
-            <input type="number" placeholder="18" min={18} max={120} value={local.age_min} onChange={set("age_min")} className={`${inputCls} w-16`} />
-            <span className="text-gray-300">—</span>
-            <input type="number" placeholder="80" min={18} max={120} value={local.age_max} onChange={set("age_max")} className={`${inputCls} w-16`} />
-          </div>
-        </div>
-
-        <div>
-          <Label text="Fame rating" />
-          <div className="flex gap-1.5 items-center">
-            <input type="number" placeholder="0" min={0} max={100} value={local.fame_min} onChange={set("fame_min")} className={`${inputCls} w-16`} />
-            <span className="text-gray-300">—</span>
-            <input type="number" placeholder="100" min={0} max={100} value={local.fame_max} onChange={set("fame_max")} className={`${inputCls} w-16`} />
-          </div>
-        </div>
-
-        <div>
-          <Label text="Max distance (km)" />
-          <input type="number" placeholder="50" min={1} value={local.max_km} onChange={set("max_km")} className={inputCls} />
-        </div>
-
-        <div>
-          <Label text="Interest tags" />
-          <input type="text" placeholder="#vegan, #geek…" value={local.tags} onChange={set("tags")} className={inputCls} />
-        </div>
-      </div>
-
-      <div className="mt-4 flex gap-2 justify-end">
-        <button
-          onClick={() => setLocal(EMPTY_FILTERS)}
-          className="px-4 py-2 rounded-lg border border-gray-200 text-gray-500 text-[13px] font-medium bg-transparent cursor-pointer font-[inherit] hover:bg-gray-50 transition-colors"
-        >
-          Reset
-        </button>
-        <button
-          onClick={() => { onApply(local); onClose(); }}
-          className="px-5 py-2 rounded-lg bg-rose-500 text-white text-[13px] font-semibold border-none cursor-pointer font-[inherit] hover:bg-rose-600 transition-colors"
-        >
-          Apply
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ─── BrowsePage ───────────────────────────────────────────────────────────────
 
-const SORT_OPTIONS = [
-  { value: "distance", label: "Distance" },
-  { value: "age",      label: "Age"      },
-  { value: "fame",     label: "Fame"     },
-  { value: "tags",     label: "Common Tags" },
-];
-
-type SortValue = "distance" | "age" | "fame" | "tags";
-type TabValue  = "all" | "liked" | "matches";
+type TabValue = "all" | "liked" | "matches";
 
 export default function BrowsePage() {
   const [users, setUsers]             = useState<User[]>([]);
@@ -400,23 +304,12 @@ export default function BrowsePage() {
   const [loading, setLoading]         = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError]             = useState<string | null>(null);
-  const [sort, setSort]               = useState<SortValue>("distance");
-  const [order, setOrder]             = useState<"asc" | "desc">("asc");
-  const [filters, setFilters]         = useState<Filters>(EMPTY_FILTERS);
-  const [showFilters, setShowFilters] = useState(false);
   const [activeTab, setActiveTab]     = useState<TabValue>("all");
   const abortRef = useRef<AbortController | null>(null);
 
   const buildParams = useCallback((pageNum: number): Record<string, string | number> => {
-    const p: Record<string, string | number> = { sort, order, page: pageNum, limit: 20 };
-    if (filters.age_min)  p.age_min  = filters.age_min;
-    if (filters.age_max)  p.age_max  = filters.age_max;
-    if (filters.fame_min) p.fame_min = filters.fame_min;
-    if (filters.fame_max) p.fame_max = filters.fame_max;
-    if (filters.max_km)   p.max_km   = filters.max_km;
-    if (filters.tags)     p.tags     = filters.tags.replace(/#/g, "").replace(/\s+/g, "");
-    return p;
-  }, [sort, order, filters]);
+    return { page: pageNum, limit: 20 };
+  }, []);
 
   useEffect(() => {
     if (abortRef.current) abortRef.current.abort();
@@ -453,7 +346,6 @@ export default function BrowsePage() {
   };
 
   const handleLike = async (id: number) => {
-    // Optimistic update
     setUsers((prev) => prev.map((u) =>
       u.id === id ? { ...u, liked_by_me: true, is_connected: u.liked_me } : u
     ));
@@ -463,14 +355,12 @@ export default function BrowsePage() {
         u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u
       ));
     } catch (err) {
-      // 409 = already liked on server — keep optimistic state, just sync is_connected
       if (err instanceof ApiError && err.status === 409) {
         setUsers((prev) => prev.map((u) =>
           u.id === id ? { ...u, liked_by_me: true, is_connected: u.liked_me } : u
         ));
         return;
       }
-      // Any other error → rollback
       setUsers((prev) => prev.map((u) =>
         u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u
       ));
@@ -486,7 +376,6 @@ export default function BrowsePage() {
     try {
       await browseApi.unlike(id);
     } catch (err) {
-      // Rollback
       setUsers((prev) => prev.map((u) =>
         u.id === id
           ? { ...u, liked_by_me: original?.liked_by_me ?? false, is_connected: original?.is_connected ?? false }
@@ -502,7 +391,6 @@ export default function BrowsePage() {
     return true;
   });
 
-  const activeFilterCount = Object.values(filters).filter(Boolean).length;
   const hasMore = users.length < total;
 
   return (
@@ -530,10 +418,9 @@ export default function BrowsePage() {
           </div>
         )}
 
-        {/* Tabs + Controls */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-2.5">
-          {/* Tabs */}
-          <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1">
+        {/* Tabs */}
+        <div className="mb-5">
+          <div className="flex gap-1 bg-white border border-gray-100 rounded-xl p-1 w-fit">
             {([ ["all", "All"], ["liked", "Liked"], ["matches", "Matches"] ] as [TabValue, string][]).map(([val, label]) => (
               <button
                 key={val}
@@ -548,46 +435,7 @@ export default function BrowsePage() {
               </button>
             ))}
           </div>
-
-          {/* Sort + Filter */}
-          <div className="flex gap-2 items-center">
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortValue)}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-[13px] text-gray-900 font-[inherit] cursor-pointer outline-none hover:border-gray-300 transition-colors"
-            >
-              {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-
-            <button
-              onClick={() => setOrder((o) => o === "asc" ? "desc" : "asc")}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-[13px] text-gray-900 font-[inherit] cursor-pointer hover:border-gray-300 transition-colors"
-            >
-              {order === "asc" ? "↑ Asc" : "↓ Desc"}
-            </button>
-
-            <button
-              onClick={() => setShowFilters((f) => !f)}
-              className={`px-3.5 py-1.5 rounded-lg border-[1.5px] text-[13px] font-medium font-[inherit] cursor-pointer flex items-center gap-1.5 transition-all ${
-                showFilters || activeFilterCount > 0
-                  ? "border-rose-500 bg-rose-50 text-rose-500"
-                  : "border-gray-200 bg-white text-gray-900 hover:border-gray-300"
-              }`}
-            >
-              ⚙ Filters
-              {activeFilterCount > 0 && (
-                <span className="bg-rose-500 text-white rounded-full text-[10px] font-bold min-w-[16px] h-4 inline-flex items-center justify-center px-1">
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </div>
         </div>
-
-        {/* Filter panel */}
-        {showFilters && (
-          <FilterPanel filters={filters} onApply={setFilters} onClose={() => setShowFilters(false)} />
-        )}
 
         {/* Grid / States */}
         {loading ? (
@@ -627,16 +475,8 @@ export default function BrowsePage() {
               {activeTab === "matches" ? "No matches yet" : activeTab === "liked" ? "You haven't liked anyone yet" : "No profiles found"}
             </p>
             <p className="text-sm text-gray-400 mb-5">
-              {activeFilterCount > 0 ? "Try loosening your filters." : "Check back soon — new people join every day."}
+              Check back soon — new people join every day.
             </p>
-            {activeFilterCount > 0 && (
-              <button
-                onClick={() => setFilters(EMPTY_FILTERS)}
-                className="px-6 py-2.5 rounded-xl border-[1.5px] border-rose-500 bg-transparent text-rose-500 text-[13px] font-semibold font-[inherit] cursor-pointer hover:bg-rose-500 hover:text-white transition-all"
-              >
-                Clear filters
-              </button>
-            )}
           </div>
         )}
       </div>
