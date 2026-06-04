@@ -237,6 +237,7 @@ GET /api/chat/conversations
       "first_name",
       "last_name",
       "profile_picture_id",
+      "profile_picture_url",
       "is_online",
       "last_message",
       "last_message_at",
@@ -287,7 +288,8 @@ GET /api/notifications
       "from_username": "string",
       "from_first_name": "string",
       "from_last_name": "string",
-      "from_profile_picture_id": null
+      "from_profile_picture_id": null,
+      "from_profile_picture_url": null
     }
   ],
   "unread_count": 3
