@@ -35,9 +35,11 @@ export const getNotifications = async (userId) => {
       u.username  AS from_username,
       u.first_name AS from_first_name,
       u.last_name  AS from_last_name,
-      u.profile_picture_id AS from_profile_picture_id
+      u.profile_picture_id AS from_profile_picture_id,
+      p.url AS from_profile_picture_url
      FROM notifications n
      LEFT JOIN users u ON u.id = n.from_id
+         LEFT JOIN photos p ON p.id = u.profile_picture_id
      WHERE n.user_id = $1
      ORDER BY n.created_at DESC
      LIMIT 50`,

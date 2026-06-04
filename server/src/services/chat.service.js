@@ -60,12 +60,18 @@ export const sendMessage = async (senderId, receiverId, content) => {
 
   const connected = await isConnected(senderId, receiverId);
   if (!connected) {
-    throw new AppError("You are not connected with this user", HTTP_STATUS.FORBIDDEN);
+    throw new AppError(
+      "You are not connected with this user",
+      HTTP_STATUS.FORBIDDEN,
+    );
   }
 
   const blocked = await hasBlock(senderId, receiverId);
   if (blocked) {
-    throw new AppError("You are not connected with this user", HTTP_STATUS.FORBIDDEN);
+    throw new AppError(
+      "You are not connected with this user",
+      HTTP_STATUS.FORBIDDEN,
+    );
   }
 
   const { rows } = await query(
@@ -88,12 +94,14 @@ export const getConversations = async (userId) => {
       u.first_name,
       u.last_name,
       u.profile_picture_id,
+      p.url AS profile_picture_url,
       u.is_online,
       m.content       AS last_message,
       m.sent_at       AS last_message_at,
       m.sender_id     AS last_message_sender_id,
       COUNT(unread.id)::int AS unread_count
     FROM users u
+    LEFT JOIN photos p ON p.id = u.profile_picture_id
     JOIN LATERAL (
       SELECT id, content, sent_at, sender_id
       FROM messages
@@ -112,7 +120,7 @@ export const getConversations = async (userId) => {
          OR (sender_id = u.id AND receiver_id = $1)
     )
     GROUP BY u.id, u.username, u.first_name, u.last_name,
-             u.profile_picture_id, u.is_online,
+             u.profile_picture_id, p.url, u.is_online,
              m.content, m.sent_at, m.sender_id
     ORDER BY m.sent_at DESC`,
     [userId],
