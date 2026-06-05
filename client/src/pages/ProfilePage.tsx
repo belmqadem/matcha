@@ -31,7 +31,8 @@ interface PublicProfile {
   username: string;
   first_name: string;
   last_name: string;
-  age: number | null;
+  birth_date?: string; // What the backend actually sends
+  age: number | null;  // What we calculate
   gender: string | null;
   sexual_preference: string | null;
   biography: string | null;
@@ -42,67 +43,12 @@ interface PublicProfile {
   profile_picture_id: number | null;
   is_online: boolean;
   last_seen: string | null;
-  // Relationship state
   liked_by_me: boolean;
   liked_me: boolean;
   is_connected: boolean;
-  is_blocked_by_me: boolean; // ✅ fixed: was `is_blocked`
+  is_blocked_by_me: boolean;
   is_fake_reported: boolean;
 }
-
-// ─── API ──────────────────────────────────────────────────────────────────────
-
-const api = {
-getProfile: (id: string) =>
-    fetch(`/api/users/${id}`, { credentials: 'include' }).then(async (r) => {
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
-
-      // Safely hunt down the user object no matter how the backend formats it
-      const userData = d.user || d.profile?.user || d.profile || (d.id ? d : null);
-
-      if (!userData) {
-        throw new Error("Could not find user data in the API response.");
-      }
-
-      return userData as PublicProfile;
-    }),
-
-  like: (id: number) =>
-    fetch(`/api/likes/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/like
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
-      return d;
-    }),
-
-  unlike: (id: number) =>
-    fetch(`/api/likes/${id}`, { method: 'DELETE', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/like
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
-      return d;
-    }),
-
-  block: (id: number) =>
-    fetch(`/api/blocks/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/block
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
-      return d;
-    }),
-
-  unblock: (id: number) =>
-    fetch(`/api/blocks/${id}`, { method: 'DELETE', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/block
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
-      return d;
-    }),
-
-  report: (id: number) =>
-    fetch(`/api/reports/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => { // ✅ fixed: was /api/profile/:id/report
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.error);
-      return d;
-    }),
-};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -115,16 +61,115 @@ function timeAgo(iso: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+function calcAge(birth_date?: string): number | null {
+  if (!birth_date) return null;
+  return Math.floor((Date.now() - new Date(birth_date).getTime()) / (365.25 * 24 * 3600 * 1000));
+}
+
 const GENDERS: Record<string, string> = {
   male: 'Man',
   female: 'Woman',
   non_binary: 'Non-binary',
   other: 'Other',
 };
+
 const PREFERENCES: Record<string, string> = {
   heterosexual: 'Heterosexual',
   homosexual: 'Homosexual',
   bisexual: 'Bisexual',
+};
+
+// ─── Cute UI Components ───────────────────────────────────────────────────────
+
+function FloatingHearts() {
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {Array.from({ length: 15 }).map((_, i) => {
+        const size = Math.random() * 25 + 10;
+        const left = Math.random() * 100;
+        const duration = Math.random() * 12 + 15;
+        const delay = -(Math.random() * 25);
+
+        return (
+          <div
+            key={i}
+            className="absolute text-[var(--color-primary)] drop-shadow-sm"
+            style={{
+              top: 0,
+              left: `${left}%`,
+              fontSize: `${size}px`,
+              opacity: 0,
+              animation: `float-cute ${duration}s ease-in-out infinite`,
+              animationDelay: `${delay}s`,
+            }}
+          >
+            ♥
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+
+const api = {
+  getProfile: (id: string) =>
+    fetch(`/api/users/${id}`, { credentials: 'include' }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error ?? `Error (${r.status})`);
+
+      const userData = d.user || d.profile?.user || d.profile || (d.id ? d : null);
+      if (!userData) throw new Error("Could not find user data in the API response.");
+
+      // 🛠️ FRONTEND FIX: Calculate age from birth_date immediately
+      if (userData.birth_date && !userData.age) {
+        userData.age = calcAge(userData.birth_date);
+      }
+
+      return userData as PublicProfile;
+    }),
+
+  like: (id: number) =>
+    fetch(`/api/likes/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
+
+  unlike: (id: number) =>
+    fetch(`/api/likes/${id}`, { method: 'DELETE', credentials: 'include' }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
+
+  block: (id: number) =>
+    fetch(`/api/blocks/${id}`, { method: 'POST', credentials: 'include' }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
+
+  unblock: (id: number) =>
+    fetch(`/api/blocks/${id}`, { method: 'DELETE', credentials: 'include' }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
+
+  report: (id: number) =>
+    // 🛠️ FRONTEND FIX: Added headers and empty body to satisfy strict backend parsers
+    fetch(`/api/reports/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: "fake account" }),
+      credentials: 'include'
+    }).then(async (r) => {
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      return d;
+    }),
 };
 
 // ─── Confirm Modal ────────────────────────────────────────────────────────────
@@ -145,91 +190,22 @@ function ConfirmModal({
   onClose: () => void;
 }) {
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 200,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0,0,0,0.25)',
-        backdropFilter: 'blur(2px)',
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div
-        style={{
-          background: '#fff',
-          borderRadius: '20px',
-          padding: '28px',
-          width: '100%',
-          maxWidth: '380px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-          margin: '0 16px',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginBottom: '12px',
-          }}
-        >
-          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>{title}</h3>
-          <button
-            onClick={onClose}
-            style={{
-              width: '28px',
-              height: '28px',
-              borderRadius: '50%',
-              border: '1.5px solid #eee',
-              background: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#888',
-            }}
-          >
-            <X size={13} />
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="bg-white rounded-3xl p-7 w-full max-w-[380px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] animate-[fadeUp_0.2s_ease-out]">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-bold text-[var(--color-text)]">{title}</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full border-2 border-[var(--color-border)] flex items-center justify-center text-[var(--color-text-muted)] hover:bg-[var(--color-background)] transition-colors">
+            <X size={14} />
           </button>
         </div>
-        <p style={{ fontSize: '13px', color: '#777', lineHeight: 1.6, marginBottom: '20px' }}>
+        <p className="text-[14px] text-[var(--color-text-muted)] leading-relaxed mb-6">
           {message}
         </p>
-        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: '1.5px solid #eee',
-              background: '#fff',
-              color: '#888',
-              cursor: 'pointer',
-            }}
-          >
+        <div className="flex gap-3 justify-end">
+          <button onClick={onClose} className="px-5 py-2.5 text-[13px] font-bold rounded-xl border-2 border-[var(--color-border)] bg-white text-[var(--color-text-muted)] hover:bg-[var(--color-background)] transition-colors">
             Cancel
           </button>
-          <button
-            onClick={onConfirm}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              fontWeight: 600,
-              borderRadius: '10px',
-              border: 'none',
-              background: danger ? '#e94057' : '#222',
-              color: '#fff',
-              cursor: 'pointer',
-            }}
-          >
+          <button onClick={onConfirm} className={`px-5 py-2.5 text-[13px] font-bold rounded-xl border-none text-white transition-opacity hover:opacity-90 ${danger ? 'bg-[var(--color-error)]' : 'bg-[var(--color-text)]'}`}>
             {confirmLabel}
           </button>
         </div>
@@ -273,42 +249,16 @@ const ProfilePage = () => {
 
   if (loading)
     return (
-      <div
-        style={{
-          minHeight: '60vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Loader2 size={28} style={{ color: '#e94057' }} />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
+        <Loader2 size={32} className="text-[var(--color-primary)] animate-spin" />
       </div>
     );
 
   if (error || !profile)
     return (
-      <div
-        style={{
-          minHeight: '60vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-        }}
-      >
-        <p style={{ fontSize: '14px', color: '#aaa' }}>{error || 'Profile not found.'}</p>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#e94057',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[var(--color-background)]">
+        <p className="text-[15px] font-medium text-[var(--color-text-muted)]">{error || 'Profile not found.'}</p>
+        <button onClick={() => navigate(-1)} className="text-[14px] font-bold text-[var(--color-primary)] bg-white px-6 py-2 rounded-full shadow-sm hover:shadow-md transition-all">
           ← Go back
         </button>
       </div>
@@ -327,7 +277,6 @@ const ProfilePage = () => {
         setProfile((p) => (p ? { ...p, liked_by_me: false, is_connected: false } : p));
       } else {
         const res = await api.like(profile.id);
-        // ✅ use `connected` from response as source of truth
         setProfile((p) => (p ? { ...p, liked_by_me: true, is_connected: res.connected ?? p.liked_me } : p));
       }
     } catch (e) {
@@ -342,12 +291,11 @@ const ProfilePage = () => {
     setBlockLoading(true);
     setActionError('');
     try {
-      if (profile.is_blocked_by_me) { // ✅ fixed field name
+      if (profile.is_blocked_by_me) {
         await api.unblock(profile.id);
         setProfile((p) => (p ? { ...p, is_blocked_by_me: false } : p));
       } else {
         await api.block(profile.id);
-        // ✅ block also removes likes per API contract
         setProfile((p) => (p ? { ...p, is_blocked_by_me: true, liked_by_me: false, liked_me: false, is_connected: false } : p));
       }
     } catch (e) {
@@ -368,18 +316,31 @@ const ProfilePage = () => {
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f7f4f4',
-        fontFamily: "'DM Sans', 'Helvetica Neue', sans-serif",
-      }}
-    >
+    <div className="relative min-h-screen bg-[var(--color-background)] font-[var(--font-primary)] pb-20">
+      <style>{`
+        @keyframes float-cute {
+          0%   { transform: translateY(110vh) translateX(-15px) rotate(-15deg) scale(0.8); opacity: 0; }
+          10%  { opacity: 0.15; }
+          25%  { transform: translateY(75vh) translateX(20px) rotate(10deg) scale(1.1); }
+          50%  { transform: translateY(40vh) translateX(-20px) rotate(-10deg) scale(0.9); }
+          75%  { transform: translateY(10vh) translateX(15px) rotate(15deg) scale(1.2); }
+          90%  { opacity: 0.15; }
+          100% { transform: translateY(-20vh) translateX(-10px) rotate(-15deg) scale(0.8); opacity: 0; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+
+      {/* Decorative Floating Hearts */}
+      <FloatingHearts />
+
       {/* ── Confirm modals ── */}
       {confirm === 'block' && (
         <ConfirmModal
           title="Block this user?"
-          message={`${profile.first_name} will no longer appear in your search results or send you notifications. You also won't be able to chat.`}
+          message={`${profile.first_name} will no longer appear in your search results. You also won't be able to chat.`}
           confirmLabel="Block"
           danger
           onConfirm={handleBlock}
@@ -406,147 +367,68 @@ const ProfilePage = () => {
         />
       )}
 
-      <div
-        style={{
-          maxWidth: '1140px',
-          margin: '0 auto',
-          padding: '28px 24px',
-          display: 'grid',
-          gridTemplateColumns: '1fr 320px',
-          gap: '24px',
-          alignItems: 'start',
-        }}
-      >
+      <div className="relative z-10 max-w-[1100px] mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-[1fr_340px] gap-8 items-start">
+
         {/* ══ LEFT COLUMN ══ */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="flex flex-col gap-6">
+
           {/* ── Hero card ── */}
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '24px',
-              border: '1px solid #f0f0f0',
-              overflow: 'hidden',
-            }}
-          >
-            <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', minHeight: '300px' }}>
+          <div className="bg-white rounded-[32px] border border-[var(--color-border)] shadow-sm overflow-hidden animate-[fadeUp_0.4s_ease-out]">
+            <div className="flex flex-col sm:flex-row min-h-[340px]">
               {/* Main photo */}
-              <div style={{ position: 'relative', background: '#f5f5f5' }}>
+              <div className="relative w-full sm:w-[320px] bg-[var(--color-background)] flex-shrink-0">
                 {sorted.length > 0 ? (
                   <img
                     src={sorted[activePhoto]?.url ?? sorted[0].url}
                     alt={profile.first_name}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    className="w-full h-full object-cover block"
                   />
                 ) : (
-                  <div
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      minHeight: '300px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#ddd',
-                      fontSize: '48px',
-                      fontWeight: 800,
-                    }}
-                  >
+                  <div className="w-full h-full min-h-[300px] flex items-center justify-center text-[var(--color-text-muted)] text-6xl font-black bg-[var(--color-background)] opacity-50">
                     {profile.first_name[0]}
                   </div>
                 )}
 
+                {/* Deep gradient overlay for badges */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+
                 {/* Online badge */}
-                {profile.is_online ? (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      left: '12px',
-                      background: '#4ade80',
-                      color: '#fff',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      padding: '3px 10px',
-                      borderRadius: '999px',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    ● ONLINE
-                  </span>
-                ) : profile.last_seen ? (
-                  <span
-                    style={{
-                      position: 'absolute',
-                      bottom: '12px',
-                      left: '12px',
-                      background: 'rgba(0,0,0,0.5)',
-                      color: '#fff',
-                      fontSize: '10px',
-                      fontWeight: 600,
-                      padding: '3px 10px',
-                      borderRadius: '999px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <Clock size={9} /> {timeAgo(profile.last_seen)}
-                  </span>
-                ) : null}
+                <div className="absolute bottom-4 left-4">
+                  {profile.is_online ? (
+                    <span className="flex items-center gap-1.5 bg-green-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full tracking-widest shadow-lg">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> ONLINE
+                    </span>
+                  ) : profile.last_seen ? (
+                    <span className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-white/20">
+                      <Clock size={12} /> {timeAgo(profile.last_seen)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
               {/* Info */}
-              <div
-                style={{
-                  padding: '24px 28px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                }}
-              >
+              <div className="p-8 flex flex-col justify-between flex-1">
                 <div>
                   {/* Name row */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      justifyContent: 'space-between',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <h1
-                        style={{
-                          fontSize: '22px',
-                          fontWeight: 800,
-                          color: '#1a1a1a',
-                          lineHeight: 1.2,
-                        }}
-                      >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-[28px] font-black text-[var(--color-text)] leading-tight tracking-tight">
                         {profile.first_name} {profile.last_name}
-                        {profile.age ? `, ${profile.age}` : ''}
+                        {profile.age ? <span className="font-medium opacity-80">, {profile.age}</span> : ''}
                       </h1>
-                      <CheckCircle2 size={18} style={{ color: '#e94057', flexShrink: 0 }} />
+                      <CheckCircle2 size={24} className="text-[var(--color-primary)] flex-shrink-0" />
                     </div>
                   </div>
 
-                  {/* Username */}
-                  <p style={{ fontSize: '12px', color: '#bbb', marginBottom: '10px' }}>
+                  <p className="text-[14px] font-medium text-[var(--color-text-muted)] mb-4">
                     @{profile.username}
                   </p>
 
                   {/* Location */}
                   {profile.location_city && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        marginBottom: '14px',
-                      }}
-                    >
-                      <MapPin size={12} style={{ color: '#e94057' }} />
-                      <span style={{ fontSize: '13px', color: '#aaa' }}>
+                    <div className="flex items-center gap-1.5 mb-5">
+                      <MapPin size={16} className="text-[var(--color-primary)]" />
+                      <span className="text-[15px] font-medium text-[var(--color-text-muted)]">
                         {profile.location_city}
                       </span>
                     </div>
@@ -554,39 +436,17 @@ const ProfilePage = () => {
 
                   {/* Connection status banner */}
                   {profile.is_connected && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: 'rgba(233,64,87,0.07)',
-                        border: '1px solid rgba(233,64,87,0.15)',
-                        borderRadius: '10px',
-                        padding: '8px 14px',
-                        marginBottom: '14px',
-                      }}
-                    >
-                      <Zap size={13} style={{ color: '#e94057' }} />
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#e94057' }}>
-                        You're connected — you can chat!
+                    <div className="flex items-center gap-2 bg-[var(--color-primary)]/10 border-2 border-[var(--color-primary)]/20 rounded-2xl px-4 py-3 mb-5">
+                      {/* <Zap size={18} className="text-[var(--color-primary)] animate-pulse" /> */}
+                      <span className="text-[13px] font-bold text-[var(--color-primary)]">
+                        You're connected — start chatting now!
                       </span>
                     </div>
                   )}
                   {!profile.is_connected && profile.liked_me && !profile.liked_by_me && (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: 'rgba(251,191,36,0.08)',
-                        border: '1px solid rgba(251,191,36,0.2)',
-                        borderRadius: '10px',
-                        padding: '8px 14px',
-                        marginBottom: '14px',
-                      }}
-                    >
-                      <Heart size={13} style={{ color: '#f59e0b' }} />
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#b45309' }}>
+                    <div className="flex items-center gap-2 bg-amber-50 border-2 border-amber-200 rounded-2xl px-4 py-3 mb-5">
+                      <Heart size={18} className="text-amber-500" />
+                      <span className="text-[13px] font-bold text-amber-700">
                         {profile.first_name} already liked you — like back to connect!
                       </span>
                     </div>
@@ -594,36 +454,21 @@ const ProfilePage = () => {
 
                   {/* Bio */}
                   {profile.biography && (
-                    <p
-                      style={{
-                        fontSize: '13.5px',
-                        color: '#555',
-                        lineHeight: 1.6,
-                        marginBottom: '18px',
-                      }}
-                    >
-                      {profile.biography}
+                    <p className="text-[15px] text-[var(--color-text)] leading-relaxed mb-6 font-medium opacity-80">
+                      "{profile.biography}"
                     </p>
                   )}
                 </div>
 
                 {/* Tags */}
                 {(profile.tags ?? []).length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+                  <div className="flex flex-wrap gap-2 mt-4">
                     {profile.tags.map((tag) => (
                       <span
                         key={tag}
-                        style={{
-                          padding: '4px 13px',
-                          borderRadius: '999px',
-                          background: '#fff0f2',
-                          color: '#e94057',
-                          fontSize: '12px',
-                          fontWeight: 500,
-                          border: '1px solid #ffd6db',
-                        }}
+                        className="px-4 py-1.5 rounded-full bg-[var(--color-primary)]/5 text-[var(--color-primary)] text-[13px] font-bold border-2 border-[var(--color-primary)]/10"
                       >
-                        {tag}
+                        {tag.startsWith("#") ? tag : `#${tag}`}
                       </span>
                     ))}
                   </div>
@@ -634,43 +479,18 @@ const ProfilePage = () => {
 
           {/* ── Photo strip ── */}
           {sorted.length > 1 && (
-            <div
-              style={{
-                background: '#fff',
-                borderRadius: '20px',
-                padding: '20px 22px',
-                border: '1px solid #f0f0f0',
-              }}
-            >
-              <h3
-                style={{ fontSize: '15px', fontWeight: 700, color: '#222', marginBottom: '16px' }}
-              >
-                Photos
-              </h3>
-              <div
-                style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}
-              >
+            <div className="bg-white rounded-[32px] p-7 border border-[var(--color-border)] shadow-sm animate-[fadeUp_0.5s_ease-out]">
+              <h3 className="text-[18px] font-black text-[var(--color-text)] mb-5">More Photos</h3>
+              <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
                 {sorted.map((photo, i) => (
                   <div
                     key={photo.id}
                     onClick={() => setActivePhoto(i)}
-                    style={{
-                      position: 'relative',
-                      flexShrink: 0,
-                      width: '140px',
-                      height: '180px',
-                      borderRadius: '14px',
-                      overflow: 'hidden',
-                      cursor: 'pointer',
-                      border: `2px solid ${activePhoto === i ? '#e94057' : '#f0f0f0'}`,
-                      transition: 'border-color 0.15s',
-                    }}
+                    className={`relative flex-shrink-0 w-[140px] h-[180px] rounded-2xl overflow-hidden cursor-pointer snap-start transition-all duration-300 ${
+                      activePhoto === i ? 'ring-4 ring-[var(--color-primary)] ring-offset-2' : 'hover:opacity-80'
+                    }`}
                   >
-                    <img
-                      src={photo.url}
-                      alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <img src={photo.url} alt="Gallery" className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>
@@ -678,290 +498,126 @@ const ProfilePage = () => {
           )}
 
           {/* ── About ── */}
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '20px',
-              padding: '20px 22px',
-              border: '1px solid #f0f0f0',
-            }}
-          >
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222', marginBottom: '16px' }}>
-              About
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
+          <div className="bg-white rounded-[32px] p-7 border border-[var(--color-border)] shadow-sm animate-[fadeUp_0.6s_ease-out]">
+            <h3 className="text-[18px] font-black text-[var(--color-text)] mb-5">About {profile.first_name}</h3>
+            <div className="grid grid-cols-2 gap-y-6 gap-x-8">
               {[
                 { label: 'City', value: profile.location_city },
                 { label: 'Age', value: profile.age ? `${profile.age} years old` : null },
                 { label: 'Gender', value: profile.gender ? GENDERS[profile.gender] : null },
                 {
                   label: 'Orientation',
-                  value: profile.sexual_preference
-                    ? PREFERENCES[profile.sexual_preference]
-                    : 'Bisexual (default)',
+                  value: profile.sexual_preference ? PREFERENCES[profile.sexual_preference] : 'Bisexual',
                 },
               ].map(({ label, value }) => (
-                <div key={label} style={{ padding: '8px 0', borderBottom: '1px solid #f5f5f5' }}>
-                  <p style={{ fontSize: '11px', color: '#bbb', marginBottom: '2px' }}>{label}</p>
-                  <p style={{ fontSize: '13px', fontWeight: 500, color: value ? '#333' : '#ddd' }}>
-                    {value ?? '—'}
+                <div key={label} className="border-b-2 border-[var(--color-background)] pb-3">
+                  <p className="text-[12px] font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-1">{label}</p>
+                  <p className={`text-[15px] font-bold ${value ? 'text-[var(--color-text)]' : 'text-[var(--color-border)]'}`}>
+                    {value ?? 'Not specified'}
                   </p>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* ── Fame rating ── */}
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '20px',
-              padding: '20px 22px',
-              border: '1px solid #f0f0f0',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '12px',
-              }}
-            >
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#222' }}>Fame Rating</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                <Star size={13} style={{ color: '#e94057' }} />
-                <span style={{ fontSize: '14px', fontWeight: 700, color: '#e94057' }}>{fame}</span>
-              </div>
-            </div>
-            <div
-              style={{
-                height: '6px',
-                borderRadius: '999px',
-                background: '#f5f5f5',
-                overflow: 'hidden',
-              }}
-            >
-              <div
-                style={{
-                  height: '100%',
-                  borderRadius: '999px',
-                  background: '#e94057',
-                  width: `${fame}%`,
-                  transition: 'width 0.7s ease',
-                }}
-              />
-            </div>
-          </div>
         </div>
 
         {/* ══ RIGHT SIDEBAR ══ */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            position: 'sticky',
-            top: '88px',
-          }}
-        >
+        <div className="flex flex-col gap-6 sticky top-8 animate-[fadeUp_0.7s_ease-out]">
+
           {/* ── Action buttons ── */}
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '20px',
-              padding: '20px',
-              border: '1px solid #f0f0f0',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-            }}
-          >
+          <div className="bg-white rounded-[32px] p-6 border border-[var(--color-border)] shadow-sm flex flex-col gap-3">
+
             {actionError && (
-              <p
-                style={{
-                  fontSize: '11px',
-                  color: '#e94057',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <AlertTriangle size={10} /> {actionError}
-              </p>
+              <div className="bg-[var(--color-error)]/10 text-[var(--color-error)] text-[12px] font-bold px-4 py-3 rounded-xl flex items-center gap-2 mb-2">
+                <AlertTriangle size={14} /> {actionError}
+              </div>
             )}
 
             {/* Like / Unlike */}
             <button
               onClick={handleLike}
-              disabled={likeLoading || profile.is_blocked_by_me} // ✅ fixed field name
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '13px',
-                borderRadius: '14px',
-                border: 'none',
-                cursor: profile.is_blocked_by_me ? 'not-allowed' : 'pointer', // ✅ fixed field name
-                fontWeight: 700,
-                fontSize: '14px',
-                letterSpacing: '0.03em',
-                transition: 'all 0.2s',
-                background: profile.liked_by_me
-                  ? '#fff0f2'
-                  : 'linear-gradient(90deg, #C4364A, #e05570)',
-                color: profile.liked_by_me ? '#e94057' : '#fff',
-                outline: profile.liked_by_me ? '2px solid #ffd6db' : 'none',
-                opacity: profile.is_blocked_by_me ? 0.4 : 1, // ✅ fixed field name
-              }}
+              disabled={likeLoading || profile.is_blocked_by_me}
+              className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[18px] font-black text-[15px] transition-all duration-300 active:scale-95 ${
+                profile.is_blocked_by_me ? 'opacity-40 cursor-not-allowed bg-[var(--color-background)] text-[var(--color-text-muted)]' :
+                profile.liked_by_me
+                  ? 'bg-white text-[var(--color-primary)] border-2 border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5'
+                  : 'bg-[var(--color-primary)] text-white hover:shadow-[0_8px_20px_rgba(233,64,87,0.3)] border-2 border-[var(--color-primary)]'
+              }`}
             >
-              {likeLoading ? (
-                <Loader2 size={16} />
-              ) : (
-                <Heart size={16} fill={profile.liked_by_me ? '#e94057' : 'none'} />
-              )}
-              {profile.liked_by_me ? 'Unlike' : profile.liked_me ? 'Like back' : 'Like'}
+              {likeLoading ? <Loader2 size={18} className="animate-spin" /> : <Heart size={18} fill={profile.liked_by_me ? "currentColor" : "none"} />}
+              {profile.liked_by_me ? 'Unlike Profile' : profile.liked_me ? 'Match Now' : 'Send Like'}
             </button>
 
-            {/* Chat — only if connected */}
+            {/* Chat */}
             <button
               onClick={() => navigate(`/chat/${profile.id}`)}
               disabled={!profile.is_connected}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '13px',
-                borderRadius: '14px',
-                fontWeight: 700,
-                fontSize: '14px',
-                background: profile.is_connected ? '#f0fdf4' : '#f9f9f9',
-                color: profile.is_connected ? '#16a34a' : '#ccc',
-                border: `2px solid ${profile.is_connected ? '#bbf7d0' : '#f0f0f0'}`,
-                cursor: profile.is_connected ? 'pointer' : 'not-allowed',
-                transition: 'all 0.2s',
-              }}
+              className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[18px] font-black text-[15px] transition-all duration-300 ${
+                profile.is_connected
+                ? 'bg-[var(--color-text)] text-white hover:bg-black active:scale-95 shadow-md cursor-pointer'
+                : 'bg-[var(--color-background)] text-[var(--color-text-muted)] border-2 border-[var(--color-border)] opacity-60 cursor-not-allowed'
+              }`}
             >
-              <MessageCircle size={16} />
-              {profile.is_connected ? 'Send message' : 'Match to chat'}
+              <MessageCircle size={18} />
+              {profile.is_connected ? 'Send Message' : 'Match to chat'}
             </button>
 
-            <div style={{ height: '1px', background: '#f5f5f5', margin: '4px 0' }} />
+            <div className="h-0.5 bg-[var(--color-background)] my-2" />
 
             {/* Block */}
             <button
-              onClick={() => setConfirm(profile.is_blocked_by_me ? 'unblock' : 'block')} // ✅ fixed field name
+              onClick={() => setConfirm(profile.is_blocked_by_me ? 'unblock' : 'block')}
               disabled={blockLoading}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '10px',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '13px',
-                background: profile.is_blocked_by_me ? '#fff7ed' : '#fafafa', // ✅ fixed field name
-                color: profile.is_blocked_by_me ? '#ea580c' : '#999', // ✅ fixed field name
-                border: `1.5px solid ${profile.is_blocked_by_me ? '#fed7aa' : '#f0f0f0'}`, // ✅ fixed field name
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[14px] transition-all ${
+                profile.is_blocked_by_me
+                ? 'bg-orange-50 text-orange-600 border-2 border-orange-200 hover:bg-orange-100'
+                : 'bg-transparent text-[var(--color-text-muted)] hover:bg-[var(--color-background)] hover:text-[var(--color-text)]'
+              }`}
             >
-              <Ban size={14} />
-              {profile.is_blocked_by_me ? 'Unblock user' : 'Block user'} {/* ✅ fixed field name */}
+              <Ban size={16} />
+              {profile.is_blocked_by_me ? 'Unblock User' : 'Block User'}
             </button>
 
             {/* Report */}
             <button
               onClick={() => !profile.is_fake_reported && setConfirm('report')}
               disabled={profile.is_fake_reported}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                padding: '10px',
-                borderRadius: '12px',
-                fontWeight: 600,
-                fontSize: '13px',
-                background: profile.is_fake_reported ? '#f9f9f9' : '#fafafa',
-                color: profile.is_fake_reported ? '#ccc' : '#999',
-                border: '1.5px solid #f0f0f0',
-                cursor: profile.is_fake_reported ? 'not-allowed' : 'pointer',
-              }}
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[14px] transition-all ${
+                profile.is_fake_reported
+                ? 'bg-[var(--color-background)] text-[var(--color-text-muted)] cursor-not-allowed border-2 border-[var(--color-border)]'
+                : 'bg-transparent text-[var(--color-text-muted)] hover:bg-red-50 hover:text-red-500'
+              }`}
             >
-              <Flag size={14} />
-              {profile.is_fake_reported ? 'Reported' : 'Report fake account'}
+              <Flag size={16} />
+              {profile.is_fake_reported ? 'Account Reported' : 'Report Fake Account'}
             </button>
           </div>
 
-          {/* ── Profile stats ── */}
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: '20px',
-              padding: '20px',
-              border: '1px solid #f0f0f0',
-            }}
-          >
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#222', marginBottom: '14px' }}>
-              Profile stats
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    fontSize: '12px',
-                    color: '#888',
-                  }}
-                >
-                  <Eye size={13} style={{ color: '#e94057' }} /> Profile views
-                </div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#333' }}>—</span>
+          {/* ── Fame & Stats ── */}
+          <div className="bg-white rounded-[32px] p-6 border border-[var(--color-border)] shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[15px] font-black text-[var(--color-text)]">Fame Rating</h3>
+              <div className="flex items-center gap-1.5 bg-[var(--color-primary)]/10 px-3 py-1 rounded-full">
+                <Star size={14} className="text-[var(--color-primary)] fill-current" />
+                <span className="text-[15px] font-black text-[var(--color-primary)]">{fame}</span>
               </div>
-              <div
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    fontSize: '12px',
-                    color: '#888',
-                  }}
-                >
-                  <Heart size={13} style={{ color: '#e94057' }} /> Likes received
+            </div>
+            <div className="h-2.5 rounded-full bg-[var(--color-background)] overflow-hidden mb-6">
+              <div className="h-full rounded-full bg-gradient-to-r from-[var(--color-primary)] to-pink-400 transition-all duration-1000 ease-out" style={{ width: `${fame}%` }} />
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between py-2 border-t-2 border-[var(--color-background)]">
+                <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--color-text-muted)]">
+                  <Eye size={16} className="text-[var(--color-primary)]" /> Profile views
                 </div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#333' }}>—</span>
+                <span className="text-[14px] font-black text-[var(--color-text)]">Hidden</span>
               </div>
-              <div
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    fontSize: '12px',
-                    color: '#888',
-                  }}
-                >
-                  <Shield size={13} style={{ color: '#e94057' }} /> Member since
+              <div className="flex items-center justify-between py-2 border-t-2 border-[var(--color-background)]">
+                <div className="flex items-center gap-2 text-[13px] font-bold text-[var(--color-text-muted)]">
+                  <Shield size={16} className="text-[var(--color-primary)]" /> Verified Member
                 </div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#333' }}>—</span>
+                <span className="text-[14px] font-black text-[var(--color-text)]">Yes</span>
               </div>
             </div>
           </div>
@@ -969,19 +625,9 @@ const ProfilePage = () => {
           {/* ── Back button ── */}
           <button
             onClick={() => navigate(-1)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              borderRadius: '14px',
-              border: '1.5px solid #f0f0f0',
-              background: '#fff',
-              color: '#aaa',
-              fontSize: '13px',
-              fontWeight: 600,
-              cursor: 'pointer',
-            }}
+            className="w-full py-4 rounded-[18px] border-2 border-[var(--color-border)] bg-white text-[var(--color-text-muted)] text-[14px] font-black cursor-pointer hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-all shadow-sm active:scale-95"
           >
-            ← Go back
+            ← Back to Browse
           </button>
         </div>
       </div>
