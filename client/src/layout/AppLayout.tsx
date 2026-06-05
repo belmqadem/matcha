@@ -35,11 +35,24 @@ type BadgeKey = 'messages' | 'notifications';
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 
-const fetchCounts = (): Promise<NotifCounts> =>
-  fetch('/api/chat/unread/count', { credentials: 'include' })
-    .then((r) => r.ok ? r.json() : { unread: 0 })
-    .then((d) => ({ unread_messages: d.unread ?? 0, unread_notifications: 0 }))
-    .catch(() => ({ unread_messages: 0, unread_notifications: 0 }));
+const fetchCounts = async (): Promise<NotifCounts> => {
+  const [msgRes, notifRes] = await Promise.allSettled([
+    fetch('/api/chat/unread/count', { credentials: 'include' }),
+    fetch('/api/notifications', { credentials: 'include' }),
+  ]);
+
+  const unread_messages =
+    msgRes.status === 'fulfilled' && msgRes.value.ok
+      ? await msgRes.value.json().then((d: any) => d.unread ?? 0).catch(() => 0)
+      : 0;
+
+  const unread_notifications =
+    notifRes.status === 'fulfilled' && notifRes.value.ok
+      ? await notifRes.value.json().then((d: any) => d.unread_count ?? 0).catch(() => 0)
+      : 0;
+
+  return { unread_messages, unread_notifications };
+};
 
 const fetchMe = (): Promise<Me | null> =>
   fetch('/api/users/me', { credentials: 'include' })
@@ -99,8 +112,7 @@ function TopNav({
 
   const avatar   = me?.photos?.find((p) => p.id === me.profile_picture_id)?.url ?? null;
   const initials = me ? `${me.first_name?.[0] ?? ''}${me.last_name?.[0] ?? ''}`.toUpperCase() : '?';
-  const notifCount  = getBadge('notifications');
-  const totalUnread = counts.unread_messages + counts.unread_notifications;
+  const notifCount = getBadge('notifications');
 
   const isActive = (to: string) =>
     location.pathname === to || location.pathname.startsWith(to + '/');
@@ -310,18 +322,7 @@ function TopNav({
                           : <span style={{ fontSize: '12px', fontWeight: 700, color: '#e94057' }}>{initials}</span>
                         }
                       </div>
-                      {totalUnread > 0 && (
-                        <span style={{
-                          position: 'absolute', top: '-2px', right: '-2px',
-                          minWidth: '13px', height: '13px', padding: '0 2px',
-                          borderRadius: '999px', background: '#e94057', color: '#fff',
-                          fontSize: '7px', fontWeight: 700,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          border: '1.5px solid #fff',
-                        }}>
-                          {totalUnread > 99 ? '99+' : totalUnread}
-                        </span>
-                      )}
+
                     </div>
                     <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#333' }}>
                       {me.first_name}
@@ -531,6 +532,7 @@ function TopNav({
 
 export default function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [counts, setCounts]         = useState<NotifCounts>({ unread_messages: 0, unread_notifications: 0 });
   const [me, setMe]                 = useState<Me | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -541,6 +543,13 @@ export default function AppLayout() {
     const id = setInterval(() => fetchCounts().then(setCounts), 8000);
     return () => clearInterval(id);
   }, []);
+
+  // Clear notification badge instantly when user opens the notifications page
+  useEffect(() => {
+    if (location.pathname === '/notifications') {
+      setCounts((prev) => ({ ...prev, unread_notifications: 0 }));
+    }
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
