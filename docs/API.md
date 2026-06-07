@@ -112,6 +112,7 @@ GET /api/users/:id
     "is_online",
     "last_seen",
     "profile_picture_id",
+    "profile_picture_url",
     "birth_date",
     "created_at",
     "distance_km",
@@ -458,6 +459,7 @@ GET /api/browse/map
       "first_name": "string",
       "last_name": "string",
       "profile_picture_id": 1,
+      "profile_picture_url": null,
       "fame_rating": "0.00",
       "is_online": false,
       "lat": 33.57,
@@ -470,13 +472,14 @@ GET /api/browse/map
   "total": 42,
   "radius_km": 50,
   "center": {
-    "lat": 33.573100,
-    "lng": -7.589800
+    "lat": 33.5731,
+    "lng": -7.5898
   }
 }
 ```
 
 **Notes:**
+
 - `lat`/`lng` on other users are rounded to 2 decimal places (~1.1 km precision) — never exact
 - `center` contains the current user's own exact coordinates for map centering
 - Returns `{ users: [], total: 0, radius_km }` if current user has no location set
@@ -486,6 +489,7 @@ GET /api/browse/map
 - Not cached — location data changes frequently
 
 **Errors:**
+
 - `400` `max_km` out of range (must be 1–500) or non-numeric
 - `401` unauthenticated
 
