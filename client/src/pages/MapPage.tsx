@@ -24,7 +24,6 @@ interface BrowseUser {
   liked_by_me: boolean;
   liked_me: boolean;
   is_connected: boolean;
-  // lat/lng may be missing on browse users — we approximate via distance
   latitude?: number;
   longitude?: number;
 }
@@ -58,10 +57,12 @@ function getAge(birth_date: string): number {
   return age;
 }
 
-/** Scatter users in a small radius around the current user's position so pins don't stack. */
+/**
+ * Scatter users in a small radius around the current user's position so pins
+ * don't stack. Positions are stable per user id — computed once and cached.
+ */
 function scatterAround(lat: number, lng: number, distKm: number): [number, number] {
   const angle = Math.random() * 2 * Math.PI;
-  // Rough km → degrees: 1° lat ≈ 111 km, 1° lng ≈ 111 * cos(lat) km
   const dLat = (distKm * Math.cos(angle)) / 111;
   const dLng = (distKm * Math.sin(angle)) / (111 * Math.cos((lat * Math.PI) / 180));
   return [lat + dLat, lng + dLng];
@@ -148,7 +149,7 @@ function createMeIcon(): L.DivIcon {
   });
 }
 
-// ─── UserPopup (rendered to HTML string for Leaflet) ─────────────────────────
+// ─── Popup HTML ───────────────────────────────────────────────────────────────
 
 function popupHtml(user: BrowseUser): string {
   const age = getAge(user.birth_date);
@@ -231,6 +232,10 @@ export default function MapPage() {
   const markersRef = useRef<L.Marker[]>([]);
   const meMarkerRef = useRef<L.Marker | null>(null);
 
+  // FIX 1: Cache scattered positions by user id so pins don't jump on
+  // filter toggles. Cleared when maxKm changes (new fetch = new user set).
+  const scatterCacheRef = useRef<Map<string, [number, number]>>(new Map());
+
   const [myLocation, setMyLocation] = useState<MyLocation | null>(null);
   const [users, setUsers] = useState<BrowseUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -245,10 +250,15 @@ export default function MapPage() {
   const [onlineCount, setOnlineCount] = useState(0);
   const [connectedCount, setConnectedCount] = useState(0);
 
-  // ── Register global navigate for popup buttons ────────────────────────────
+  // ── FIX 2: Use a mounted flag for the global navigate so popup buttons
+  // remain safe after fast unmount/remount cycles. ─────────────────────────
   useEffect(() => {
-    (window as any).__matchaViewProfile = (id: string) => navigate(`/profile/${id}`);
+    let mounted = true;
+    (window as any).__matchaViewProfile = (id: string) => {
+      if (mounted) navigate(`/profile/${id}`);
+    };
     return () => {
+      mounted = false;
       delete (window as any).__matchaViewProfile;
     };
   }, [navigate]);
@@ -258,7 +268,7 @@ export default function MapPage() {
     if (!mapContainerRef.current || mapRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
-      center: [48.8566, 2.3522], // fallback: Paris
+      center: [48.8566, 2.3522],
       zoom: 12,
       zoomControl: false,
     });
@@ -280,12 +290,13 @@ export default function MapPage() {
   }, []);
 
   // ── Fetch my location ─────────────────────────────────────────────────────
-  const fetchMyLocation = useCallback(async () => {
+  const fetchMyLocation = useCallback(async (): Promise<MyLocation | null> => {
     // 1. Try IP-based location
     try {
       const res = await fetch(`${API}/profile/me/location/ip`, { credentials: 'include' });
       if (res.ok) {
-        const data = await res.json();
+        // Contract: flat { latitude, longitude, location_city }
+        const data: MyLocation = await res.json();
         setMyLocation(data);
         return data;
       }
@@ -295,6 +306,7 @@ export default function MapPage() {
     try {
       const res = await fetch(`${API}/users/me`, { credentials: 'include' });
       if (res.ok) {
+        // Contract: { user: { latitude, longitude, location_city, ... } }
         const { user } = await res.json();
         if (user?.latitude && user?.longitude) {
           const loc: MyLocation = {
@@ -313,23 +325,30 @@ export default function MapPage() {
   }, []);
 
   // ── Fetch users from browse ───────────────────────────────────────────────
+  // FIX 3: Surface API 400 errors from /browse instead of swallowing them.
   const fetchUsers = useCallback(
-    async (loc: MyLocation) => {
+    async (loc: MyLocation): Promise<BrowseUser[]> => {
       try {
         const params = new URLSearchParams({
           sort: 'distance',
           order: 'asc',
           max_km: String(maxKm),
           limit: '50',
+          page: '1',
         });
         const res = await fetch(`${API}/browse?${params}`, { credentials: 'include' });
-        if (!res.ok) throw new Error('Failed to fetch users');
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          const detail = body?.details?.join(', ') ?? body?.error ?? 'Unknown error';
+          console.error(`[MapPage] /browse error ${res.status}:`, detail);
+          return [];
+        }
+
         const data: BrowseResponse = await res.json();
-        setUsers(data.users);
-        setOnlineCount(data.users.filter((u) => u.is_online).length);
-        setConnectedCount(data.users.filter((u) => u.is_connected).length);
         return data.users;
-      } catch (_) {
+      } catch (err) {
+        console.error('[MapPage] Failed to fetch users:', err);
         return [];
       }
     },
@@ -337,8 +356,16 @@ export default function MapPage() {
   );
 
   // ── Place markers on map ──────────────────────────────────────────────────
+  // FIX 4: placeMarkers no longer depends on showOnlineOnly / showConnectedOnly
+  // via useCallback — it reads them as plain args so its reference stays stable
+  // and never causes a double-render. Filters are passed in directly.
   const placeMarkers = useCallback(
-    (usersToPlace: BrowseUser[], loc: MyLocation) => {
+    (
+      usersToPlace: BrowseUser[],
+      loc: MyLocation,
+      onlineOnly: boolean,
+      connectedOnly: boolean
+    ) => {
       const map = mapRef.current;
       if (!map) return;
 
@@ -356,13 +383,22 @@ export default function MapPage() {
         .bindTooltip('You', { permanent: false, direction: 'top' });
 
       const filtered = usersToPlace.filter((u) => {
-        if (showOnlineOnly && !u.is_online) return false;
-        if (showConnectedOnly && !u.is_connected) return false;
+        if (onlineOnly && !u.is_online) return false;
+        if (connectedOnly && !u.is_connected) return false;
         return true;
       });
 
       filtered.forEach((user) => {
-        const [lat, lng] = scatterAround(loc.latitude, loc.longitude, user.distance_km);
+        // FIX 1 (continued): Reuse cached position so pins are stable across
+        // filter toggles. Only compute a new scatter when the user is new.
+        if (!scatterCacheRef.current.has(user.id)) {
+          scatterCacheRef.current.set(
+            user.id,
+            scatterAround(loc.latitude, loc.longitude, user.distance_km)
+          );
+        }
+        const [lat, lng] = scatterCacheRef.current.get(user.id)!;
+
         const marker = L.marker([lat, lng], { icon: createUserIcon(user) })
           .addTo(map)
           .bindPopup(popupHtml(user), {
@@ -383,10 +419,12 @@ export default function MapPage() {
         map.setView([loc.latitude, loc.longitude], 13);
       }
     },
-    [showOnlineOnly, showConnectedOnly]
+    [] // no deps — reads filters from arguments, reads map/markers from refs
   );
 
   // ── Initial load ──────────────────────────────────────────────────────────
+  // FIX 5: Include fetchUsers in deps so the closure is never stale if maxKm
+  // changes before the async location fetch completes.
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -395,17 +433,27 @@ export default function MapPage() {
       if (!loc || !alive) return;
       const fetchedUsers = await fetchUsers(loc);
       if (!alive) return;
-      placeMarkers(fetchedUsers, loc);
+      setUsers(fetchedUsers);
+      setOnlineCount(fetchedUsers.filter((u) => u.is_online).length);
+      setConnectedCount(fetchedUsers.filter((u) => u.is_connected).length);
+      placeMarkers(fetchedUsers, loc, showOnlineOnly, showConnectedOnly);
       setLoading(false);
     })();
     return () => {
       alive = false;
     };
-  }, [fetchMyLocation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchMyLocation, fetchUsers]);
+  // Note: showOnlineOnly / showConnectedOnly intentionally omitted — the
+  // initial load should not re-run when filters change; that's handled below.
 
-  // ── Re-fetch on filter change ─────────────────────────────────────────────
+  // ── Re-fetch when radius changes ──────────────────────────────────────────
   useEffect(() => {
     if (!myLocation) return;
+
+    // Clear the scatter cache whenever we fetch a fresh user set.
+    scatterCacheRef.current.clear();
+
     let alive = true;
     setLoading(true);
     (async () => {
@@ -414,19 +462,24 @@ export default function MapPage() {
       setUsers(fetchedUsers);
       setOnlineCount(fetchedUsers.filter((u) => u.is_online).length);
       setConnectedCount(fetchedUsers.filter((u) => u.is_connected).length);
-      placeMarkers(fetchedUsers, myLocation);
+      placeMarkers(fetchedUsers, myLocation, showOnlineOnly, showConnectedOnly);
       setLoading(false);
     })();
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [maxKm]);
+  // fetchUsers, myLocation, placeMarkers are stable refs or captured at call
+  // time; adding them would cause extra re-runs. maxKm is the only trigger.
 
-  // ── Re-place markers when filters change (no refetch needed) ─────────────
+  // ── Re-place markers when visible filters change (no refetch needed) ──────
+  // FIX 4 (continued): placeMarkers is now stable (no useCallback deps), so
+  // this effect fires exactly once per filter change — no double-render.
   useEffect(() => {
     if (!myLocation || users.length === 0) return;
-    placeMarkers(users, myLocation);
-  }, [showOnlineOnly, showConnectedOnly, placeMarkers]);
+    placeMarkers(users, myLocation, showOnlineOnly, showConnectedOnly);
+  }, [showOnlineOnly, showConnectedOnly, myLocation, users, placeMarkers]);
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (

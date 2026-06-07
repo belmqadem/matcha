@@ -5,7 +5,6 @@ import {
   MessageCircle,
   Bell,
   Heart,
-  Users,
   MapPin,
   User,
   LogOut,
@@ -13,7 +12,9 @@ import {
   Menu,
   X,
   Search,
+  CalendarDays, // 👈 Added Calendar icon
 } from 'lucide-react';
+import { io } from 'socket.io-client'; // 👈 Added socket.io for instant badges
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -63,12 +64,13 @@ const doLogout = () =>
 
 // ─── Nav links ────────────────────────────────────────────────────────────────
 
+// 🌟 THE FIX: Removed Likes/Visitors, Added Dates!
 const MAIN_NAV = [
   { to: '/browse',   label: 'Browse',   Icon: Compass,       badge: undefined },
   { to: '/chat',     label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
   { to: '/likes',    label: 'Likes',    Icon: Heart,         badge: undefined },
-  { to: '/visitors', label: 'Visitors', Icon: Users,         badge: undefined },
   { to: '/map',      label: 'Map',      Icon: MapPin,        badge: undefined },
+  { to: '/dates',    label: 'Dates',    Icon: CalendarDays,  badge: undefined },
 ];
 
 // ─── useIsMobile ──────────────────────────────────────────────────────────────
@@ -540,14 +542,36 @@ export default function AppLayout() {
   useEffect(() => {
     fetchMe().then(setMe);
     fetchCounts().then(setCounts);
+
+    // Fallback polling just to keep things deeply synced
     const id = setInterval(() => fetchCounts().then(setCounts), 8000);
-    return () => clearInterval(id);
+
+    // 🌟 THE FIX: Added real-time WebSockets to AppLayout so the Bell icon instantly updates!
+    const socket = io('/', { withCredentials: true, path: '/socket.io' });
+
+    socket.on('notification:new', () => {
+      setCounts((prev) => ({ ...prev, unread_notifications: prev.unread_notifications + 1 }));
+    });
+
+    // Instantly update messages badge too if someone chats you while browsing!
+    socket.on('chat:receive', () => {
+      setCounts((prev) => ({ ...prev, unread_messages: prev.unread_messages + 1 }));
+    });
+
+    return () => {
+      clearInterval(id);
+      socket.disconnect();
+    };
   }, []);
 
   // Clear notification badge instantly when user opens the notifications page
   useEffect(() => {
     if (location.pathname === '/notifications') {
       setCounts((prev) => ({ ...prev, unread_notifications: 0 }));
+    }
+    // Also clear messages badge if they go to chat
+    if (location.pathname.startsWith('/chat')) {
+      setCounts((prev) => ({ ...prev, unread_messages: 0 }));
     }
   }, [location.pathname]);
 

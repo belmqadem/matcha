@@ -7,7 +7,7 @@ import RegisterPage from './pages/auth/RegisterPage.jsx';
 import VerifyEmailPage from './pages/auth/VerifyEmailPage.jsx';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx';
 import ResetPasswordPage from './pages/auth/ResetPasswordPage.jsx';
-
+import DatesPage from './pages/DatesPage.jsx';
 // App pages (with header, inside AppLayout)
 import BrowsePage from './pages/BrowsePage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
@@ -56,6 +56,7 @@ const App = () => {
               <Route path="/likes" element={<LikesPage />} />
               <Route path="/visitors" element={<VisitorsPage />} />
               <Route path="/map" element={<MapPage />} />
+              <Route path="/dates" element={<DatesPage />} />
               <Route path="/profile/me" element={<MyProfilePage />} />
               <Route path="/profile/edit" element={<EditProfilePage />} />
               <Route path="/profile/:id" element={<ProfilePage />} />
