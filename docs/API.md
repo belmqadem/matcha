@@ -521,6 +521,27 @@ GET /api/browse
 **Example 400 payload:**
 `{ "error": "invalid query parameters", "details": ["sort: Invalid option", "limit: Too big"] }`
 
+### Browse vs Map — comparison
+
+|                   | `GET /api/browse`                                           | `GET /api/browse/map`                                                                                     |
+| ----------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Purpose**       | Discover compatible profiles to interact with               | See where nearby users are geographically                                                                 |
+| **Returns**       | Paginated list optimized for card UI                        | All users within a radius for pin placement                                                               |
+| **Coordinates**   | Never returned — only `distance_km`                         | Returns `lat`/`lng` rounded to ~1km precision                                                             |
+| **Pagination**    | Yes — `page` + `limit` (max 50)                             | No — returns all matching users at once                                                                   |
+| **Sorting**       | User-controlled: `distance`, `fame`, `tags`, `age`          | Always by `distance_km ASC`                                                                               |
+| **Filters**       | `fame_min/max`, `age_min/max`, `tags`, `max_km`             | `max_km` only (default 50km, max 500km)                                                                   |
+| **Data returned** | Full — bio, photos, tags, shared_tags, age_years, last_seen | Minimal — id, username, name, profile_picture_id, fame_rating, lat, lng, location_city, distance_km, tags |
+| **Caching**       | Yes — 120s Redis cache per user + params                    | No — always fetched fresh                                                                                 |
+| **Use case**      | "Who should I like?"                                        | "Who is near me on a map?"                                                                                |
+
+Both endpoints apply the same security filters:
+
+- Orientation compatibility (heterosexual / homosexual / bisexual)
+- Block filter — both directions
+- Verified users only
+- Current user excluded from results
+
 ---
 
 ## Search
