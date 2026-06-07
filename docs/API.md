@@ -354,7 +354,8 @@ GET /api/dates
       "other_username": "string",
       "other_first_name": "string",
       "other_last_name": "string",
-      "other_profile_picture_id": null
+      "other_profile_picture_id": null,
+      "other_profile_picture_url": null
     }
   ],
   "upcoming": 2,
