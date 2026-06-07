@@ -442,6 +442,55 @@ GET /api/profile/me/location/ip
 
 ## Browse
 
+GET /api/browse/map
+
+**Auth:** required
+**Query params:** `max_km` (integer, 1–500, default 50)
+
+**Response 200:**
+
+```json
+{
+  "users": [
+    {
+      "id": "uuid",
+      "username": "string",
+      "first_name": "string",
+      "last_name": "string",
+      "profile_picture_id": 1,
+      "fame_rating": "0.00",
+      "is_online": false,
+      "lat": 33.57,
+      "lng": -7.59,
+      "location_city": "Casablanca",
+      "distance_km": 12.34,
+      "tags": ["vegan", "geek"]
+    }
+  ],
+  "total": 42,
+  "radius_km": 50,
+  "center": {
+    "lat": 33.573100,
+    "lng": -7.589800
+  }
+}
+```
+
+**Notes:**
+- `lat`/`lng` on other users are rounded to 2 decimal places (~1.1 km precision) — never exact
+- `center` contains the current user's own exact coordinates for map centering
+- Returns `{ users: [], total: 0, radius_km }` if current user has no location set
+- Applies orientation filter and block filter (both directions) identical to browse
+- Only verified users with a known location appear in results
+- Results ordered by `distance_km` ascending
+- Not cached — location data changes frequently
+
+**Errors:**
+- `400` `max_km` out of range (must be 1–500) or non-numeric
+- `401` unauthenticated
+
+---
+
 GET /api/browse
 
 **Query params:**

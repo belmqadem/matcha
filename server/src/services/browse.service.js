@@ -25,6 +25,99 @@ const applyOnlineStatus = async (users) => {
   }));
 };
 
+export const getMapUsers = async (currentUserId, queryParams) => {
+  const userRes = await query(
+    "SELECT id, gender, sexual_preference, latitude, longitude FROM users WHERE id = $1",
+    [currentUserId],
+  );
+
+  if (!userRes.rows.length) {
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
+  }
+
+  const currentUser = userRes.rows[0];
+
+  if (currentUser.latitude === null || currentUser.longitude === null) {
+    return { users: [], total: 0, radius_km: queryParams.max_km };
+  }
+
+  const params = [];
+  const addParam = (value) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+
+  const currentUserIdParam = addParam(currentUserId);
+  const currentLatSQL = `${addParam(Number(currentUser.latitude))}::numeric`;
+  const currentLngSQL = `${addParam(Number(currentUser.longitude))}::numeric`;
+  const maxKmParam = addParam(queryParams.max_km);
+
+  const orientation = buildOrientationFilter(currentUser, addParam);
+
+  const whereClauses = [
+    `u.id != ${currentUserIdParam}::uuid`,
+    "u.is_verified = true",
+    "u.gender IS NOT NULL",
+    "u.latitude IS NOT NULL",
+    "u.longitude IS NOT NULL",
+    `NOT EXISTS (
+      SELECT 1 FROM blocks b
+      WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam}::uuid)
+         OR (b.blocker_id = ${currentUserIdParam}::uuid AND b.blocked_id = u.id)
+    )`,
+    `haversine_km(${currentLatSQL}, ${currentLngSQL}, u.latitude, u.longitude) <= ${maxKmParam}`,
+  ];
+
+  if (orientation?.clause) {
+    whereClauses.push(orientation.clause);
+  }
+
+  const baseWhere = `WHERE ${whereClauses.join(" AND ")}`;
+
+  const { rows } = await query(
+    `SELECT
+      u.id,
+      u.username,
+      u.first_name,
+      u.last_name,
+      u.profile_picture_id,
+      u.fame_rating,
+      u.is_online,
+      ROUND(u.latitude::numeric,  2) AS lat,
+      ROUND(u.longitude::numeric, 2) AS lng,
+      u.location_city,
+      haversine_km(${currentLatSQL}, ${currentLngSQL}, u.latitude, u.longitude) AS distance_km,
+      COALESCE(
+        (SELECT json_agg(t.name)
+         FROM user_tags ut
+         JOIN tags t ON ut.tag_id = t.id
+         WHERE ut.user_id = u.id),
+        '[]'
+      ) AS tags
+    FROM users u
+    ${baseWhere}
+    ORDER BY distance_km ASC`,
+    params,
+  );
+
+  const usersWithOnlineStatus = await Promise.all(
+    rows.map(async (user) => ({
+      ...user,
+      is_online: await isUserOnline(user.id),
+    })),
+  );
+
+  return {
+    users: usersWithOnlineStatus,
+    total: usersWithOnlineStatus.length,
+    radius_km: queryParams.max_km,
+    center: {
+      lat: Number(currentUser.latitude),
+      lng: Number(currentUser.longitude),
+    },
+  };
+};
+
 export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   const cacheKey = CacheKeys.browse(currentUserId, queryParams);
   const cached = await redisGet(cacheKey);
@@ -205,4 +298,4 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   return { ...result, users: usersWithOnline };
 };
 
-export default { getSuggestedProfiles };
+export default { getMapUsers, getSuggestedProfiles };
