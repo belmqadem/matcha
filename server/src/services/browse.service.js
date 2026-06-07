@@ -18,11 +18,7 @@ const applyOnlineStatus = async (users) => {
   const statuses = await Promise.all(
     users.map((user) => isUserOnline(user.id)),
   );
-
-  return users.map((user, index) => ({
-    ...user,
-    is_online: statuses[index],
-  }));
+  return users.map((user, index) => ({ ...user, is_online: statuses[index] }));
 };
 
 export const getMapUsers = async (currentUserId, queryParams) => {
@@ -82,7 +78,6 @@ export const getMapUsers = async (currentUserId, queryParams) => {
       u.last_name,
       u.profile_picture_id,
       u.fame_rating,
-      u.is_online,
       ROUND(u.latitude::numeric,  2) AS lat,
       ROUND(u.longitude::numeric, 2) AS lng,
       u.location_city,
@@ -100,12 +95,8 @@ export const getMapUsers = async (currentUserId, queryParams) => {
     params,
   );
 
-  const usersWithOnlineStatus = await Promise.all(
-    rows.map(async (user) => ({
-      ...user,
-      is_online: await isUserOnline(user.id),
-    })),
-  );
+  // fetch is_online from redis
+  const usersWithOnlineStatus = await applyOnlineStatus(rows);
 
   return {
     users: usersWithOnlineStatus,
@@ -122,6 +113,7 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   const cacheKey = CacheKeys.browse(currentUserId, queryParams);
   const cached = await redisGet(cacheKey);
   if (cached) {
+    // is_online is never cached always rehydrated from Redis on every request
     const usersWithOnline = await applyOnlineStatus(cached.users);
     return { ...cached, users: usersWithOnline };
   }
@@ -147,7 +139,10 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
 
   const currentUserIdParam = addParam(currentUserId);
 
-  // Use SQL literals for NULL to avoid untyped params in count query
+  // Push lat/lng early only when max_km filter is present
+  // (they appear in the WHERE clause and must be in params before count query)
+  // When max_km is absent, lat/lng are only needed in the distance SELECT
+  // and are pushed after the count query snapshot
   let currentLatSQL = "NULL::numeric";
   let currentLngSQL = "NULL::numeric";
 
@@ -156,15 +151,14 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     currentLngSQL = `${addParam(Number(currentUser.longitude))}::numeric`;
   }
 
-  // ── WHERE clauses ────────────────────────────────────────────────────────────
   const whereClauses = [
     `u.id != ${currentUserIdParam}`,
     "u.is_verified = true",
     "u.gender IS NOT NULL",
     `NOT EXISTS (
       SELECT 1 FROM blocks b
-  		WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam}::uuid)
-      OR (b.blocker_id = ${currentUserIdParam}::uuid AND b.blocked_id = u.id)
+      WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam}::uuid)
+         OR (b.blocker_id = ${currentUserIdParam}::uuid AND b.blocked_id = u.id)
     )`,
   ];
 
@@ -219,13 +213,15 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
   const offset = (page - 1) * limit;
   const baseWhere = `WHERE ${whereClauses.join(" AND ")}`;
 
-  // ── Count query — snapshot params before adding limit/offset ─────────────────
+  // ── Count query — snapshot params before adding lat/lng and limit/offset ─────
   const countParams = [...params];
   const countRes = await query(
     `SELECT COUNT(*)::int AS total FROM users u ${baseWhere}`,
     countParams,
   );
 
+  // Push lat/lng after count snapshot when max_km was not present
+  // (safe because count query does not reference distance)
   if (hasCurrentLocation && queryParams.max_km === undefined) {
     currentLatSQL = `${addParam(Number(currentUser.latitude))}::numeric`;
     currentLngSQL = `${addParam(Number(currentUser.longitude))}::numeric`;
@@ -256,7 +252,6 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
       u.biography,
       u.fame_rating,
       u.location_city,
-      u.is_online,
       u.last_seen,
       u.profile_picture_id,
       ${distanceSelect},
@@ -286,14 +281,17 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
     params,
   );
 
+  // Cache without is_online (online status must never be cached)
   const result = {
-    users: dataRes.rows.map((row) => ({ ...row, is_online: null })),
+    users: dataRes.rows,
     total: countRes.rows[0]?.total ?? 0,
     page,
     limit,
   };
 
   await redisSet(cacheKey, result, 120);
+
+  // Rehydrate online status from Redis after caching (never cache online status)
   const usersWithOnline = await applyOnlineStatus(result.users);
   return { ...result, users: usersWithOnline };
 };
