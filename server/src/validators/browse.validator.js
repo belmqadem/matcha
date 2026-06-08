@@ -11,6 +11,12 @@ import {
   SORT_OPTIONS,
 } from "./validationConstants.js";
 
+export const mapQuerySchema = z
+  .object({
+    max_km: z.coerce.number().min(1).max(500).default(50),
+  })
+  .strict();
+
 export const browseQuerySchema = z
   .object({
     sort: z.enum(SORT_OPTIONS).optional(),
