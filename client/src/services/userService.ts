@@ -1,39 +1,6 @@
-// // src/services/userService.ts
-// import type { BrowseUser, BrowseResponse, LikeResponse } from '@/types/user';
 
-// async function handleResponse<T>(res: Response): Promise<T> {
-//   const text = await res.text();
-//   const body = text ? JSON.parse(text) : {};
-//   if (!res.ok) throw new Error(body.error ?? body.message ?? `Request failed (${res.status})`);
-//   return body as T;
-// }
-
-// export const userService = {
-//   searchUsers: (params: Record<string, string | number>): Promise<BrowseResponse> => {
-//     const q = new URLSearchParams();
-//     Object.entries(params).forEach(([k, v]) => {
-//       if (v !== "" && v !== null && v !== undefined) q.set(k, String(v));
-//     });
-//     return fetch(`/api/search?${q}`, { credentials: "include" }).then(res => handleResponse<BrowseResponse>(res));
-//   },
-
-//   browseUsers: (params: Record<string, string | number>): Promise<BrowseResponse> => {
-//     const q = new URLSearchParams();
-//     Object.entries(params).forEach(([k, v]) => {
-//       if (v !== "" && v !== null && v !== undefined) q.set(k, String(v));
-//     });
-//     return fetch(`/api/browse?${q}`, { credentials: "include" }).then(res => handleResponse<BrowseResponse>(res));
-//   },
-
-//   like: (id: number): Promise<LikeResponse> =>
-//     fetch(`/api/likes/${id}`, { method: "POST", credentials: "include" }).then(res => handleResponse<LikeResponse>(res)),
-
-//   unlike: (id: number): Promise<void> =>
-//     fetch(`/api/likes/${id}`, { method: "DELETE", credentials: "include" }).then(res => handleResponse<void>(res)),
-// };
-// src/services/userService.ts
 import type { BrowseUser, BrowseResponse, LikeResponse, UserProfile, Photo, Visitor, Liker } from '@/types/user';
-
+import type { PublicProfile } from '@/types/user';
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   const body = text ? JSON.parse(text) : {};
@@ -159,4 +126,44 @@ export const userService = {
       credentials: 'include',
       body: JSON.stringify(body),
     }).then(res => handleResponse<void>(res)),
+
+getPublicProfile: (id: string): Promise<PublicProfile> =>
+  fetch(`/api/users/${id}`, { credentials: 'include' }).then(async res => {
+    const body = await handleResponse<Record<string, unknown>>(res);
+const userData = (
+  body.user ??
+  (body.profile as Record<string, unknown>)?.user ??
+  body.profile ??
+  (body.id ? body : null)
+) as PublicProfile | null;
+    if (!userData) throw new Error('Could not find user data in the API response.');
+    if (!userData.photos) userData.photos = [];
+    if (!userData.tags)   userData.tags   = [];
+    if (userData.birth_date && !userData.age) {
+      userData.age = Math.floor(
+        (Date.now() - new Date(userData.birth_date).getTime()) / (365.25 * 24 * 3600 * 1000),
+      );
+    }
+    return userData;
+  }),
+
+  block: (id: number): Promise<void> =>
+    fetch(`/api/blocks/${id}`, { method: 'POST', credentials: 'include' }).then(res =>
+      handleResponse<void>(res),
+    ),
+
+  unblock: (id: number): Promise<void> =>
+    fetch(`/api/blocks/${id}`, { method: 'DELETE', credentials: 'include' }).then(res =>
+      handleResponse<void>(res),
+    ),
+
+  report: (id: number): Promise<void> =>
+    fetch(`/api/reports/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'fake account' }),
+      credentials: 'include',
+    }).then(res => handleResponse<void>(res)),
+
 };
+

@@ -116,3 +116,27 @@ export interface LikeResponse {
   liked: boolean;
   connected: boolean;
 }
+
+export interface PublicProfile {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  birth_date?: string;
+  age: number | null;
+  gender: string | null;
+  sexual_preference: string | null;
+  biography: string | null;
+  location_city: string | null;
+  fame_rating: number;
+  tags: string[];
+  photos: Photo[];
+  profile_picture_id: number | null;
+  is_online: boolean;
+  last_seen: string | null;
+  liked_by_me: boolean;
+  liked_me: boolean;
+  is_connected: boolean;
+  is_blocked_by_me: boolean;
+  is_fake_reported: boolean;
+}
