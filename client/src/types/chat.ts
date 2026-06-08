@@ -37,3 +37,12 @@ export interface DateProposal {
   scheduled_at: string;
   location?: string;
 }
+
+export interface MessageGroup {
+  date: string;
+  messages: Message[];
+}
+
+export type ConfirmAction = 'block' | 'unblock' | 'unmatch' | null;
+
+export type SidebarTab = 'messages' | 'blocked';
