@@ -112,6 +112,7 @@ GET /api/users/:id
     "is_online",
     "last_seen",
     "profile_picture_id",
+    "profile_picture_url",
     "birth_date",
     "created_at",
     "distance_km",
@@ -354,7 +355,8 @@ GET /api/dates
       "other_username": "string",
       "other_first_name": "string",
       "other_last_name": "string",
-      "other_profile_picture_id": null
+      "other_profile_picture_id": null,
+      "other_profile_picture_url": null
     }
   ],
   "upcoming": 2,
@@ -442,6 +444,58 @@ GET /api/profile/me/location/ip
 
 ## Browse
 
+GET /api/browse/map
+
+**Auth:** required
+**Query params:** `max_km` (integer, 1–500, default 50)
+
+**Response 200:**
+
+```json
+{
+  "users": [
+    {
+      "id": "uuid",
+      "username": "string",
+      "first_name": "string",
+      "last_name": "string",
+      "profile_picture_id": 1,
+      "profile_picture_url": null,
+      "fame_rating": "0.00",
+      "is_online": false,
+      "lat": 33.57,
+      "lng": -7.59,
+      "location_city": "Casablanca",
+      "distance_km": 12.34,
+      "tags": ["vegan", "geek"]
+    }
+  ],
+  "total": 42,
+  "radius_km": 50,
+  "center": {
+    "lat": 33.5731,
+    "lng": -7.5898
+  }
+}
+```
+
+**Notes:**
+
+- `lat`/`lng` on other users are rounded to 2 decimal places (~1.1 km precision) — never exact
+- `center` contains the current user's own exact coordinates for map centering
+- Returns `{ users: [], total: 0, radius_km }` if current user has no location set
+- Applies orientation filter and block filter (both directions) identical to browse
+- Only verified users with a known location appear in results
+- Results ordered by `distance_km` ascending
+- Not cached — location data changes frequently
+
+**Errors:**
+
+- `400` `max_km` out of range (must be 1–500) or non-numeric
+- `401` unauthenticated
+
+---
+
 GET /api/browse
 
 **Query params:**
@@ -467,6 +521,27 @@ GET /api/browse
 
 **Example 400 payload:**
 `{ "error": "invalid query parameters", "details": ["sort: Invalid option", "limit: Too big"] }`
+
+### Browse vs Map — comparison
+
+|                   | `GET /api/browse`                                           | `GET /api/browse/map`                                                                                     |
+| ----------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Purpose**       | Discover compatible profiles to interact with               | See where nearby users are geographically                                                                 |
+| **Returns**       | Paginated list optimized for card UI                        | All users within a radius for pin placement                                                               |
+| **Coordinates**   | Never returned — only `distance_km`                         | Returns `lat`/`lng` rounded to ~1km precision                                                             |
+| **Pagination**    | Yes — `page` + `limit` (max 50)                             | No — returns all matching users at once                                                                   |
+| **Sorting**       | User-controlled: `distance`, `fame`, `tags`, `age`          | Always by `distance_km ASC`                                                                               |
+| **Filters**       | `fame_min/max`, `age_min/max`, `tags`, `max_km`             | `max_km` only (default 50km, max 500km)                                                                   |
+| **Data returned** | Full — bio, photos, tags, shared_tags, age_years, last_seen | Minimal — id, username, name, profile_picture_id, fame_rating, lat, lng, location_city, distance_km, tags |
+| **Caching**       | Yes — 120s Redis cache per user + params                    | No — always fetched fresh                                                                                 |
+| **Use case**      | "Who should I like?"                                        | "Who is near me on a map?"                                                                                |
+
+Both endpoints apply the same security filters:
+
+- Orientation compatibility (heterosexual / homosexual / bisexual)
+- Block filter — both directions
+- Verified users only
+- Current user excluded from results
 
 ---
 

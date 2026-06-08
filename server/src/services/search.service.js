@@ -165,6 +165,7 @@ export const searchProfiles = async (currentUserId, queryParams) => {
       u.is_online,
       u.last_seen,
       u.profile_picture_id,
+      pp.url AS profile_picture_url,
       ${distanceSelect},
       CASE
         WHEN u.birth_date IS NOT NULL THEN date_part('year', age(u.birth_date))
@@ -207,6 +208,7 @@ export const searchProfiles = async (currentUserId, queryParams) => {
         '[]'
       ) AS tags
     FROM users u
+    LEFT JOIN photos pp ON pp.id = u.profile_picture_id
     ${baseWhere}
     ORDER BY ${orderBy}
     LIMIT ${limitParam} OFFSET ${offsetParam}`,

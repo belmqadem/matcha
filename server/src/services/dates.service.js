@@ -16,12 +16,14 @@ const buildDateSelect = (userIdParamIndex) => `
     u.username     AS other_username,
     u.first_name   AS other_first_name,
     u.last_name    AS other_last_name,
-    u.profile_picture_id AS other_profile_picture_id
+    u.profile_picture_id AS other_profile_picture_id,
+    p.url          AS other_profile_picture_url
   FROM dates d
   JOIN users u ON u.id = CASE
     WHEN d.proposer_id = $${userIdParamIndex} THEN d.receiver_id
     ELSE d.proposer_id
   END
+  LEFT JOIN photos p ON p.id = u.profile_picture_id
 `;
 
 const countUpcoming = (dates) => {
@@ -47,6 +49,18 @@ export const proposeDate = async (proposerId, payload) => {
       "Cannot propose a date to yourself",
       HTTP_STATUS.BAD_REQUEST,
     );
+  }
+
+  const blockRes = await query(
+    `SELECT 1 FROM blocks
+     WHERE (blocker_id = $1 AND blocked_id = $2)
+        OR (blocker_id = $2 AND blocked_id = $1)
+     LIMIT 1`,
+    [proposerId, receiverId],
+  );
+
+  if (blockRes.rows.length > 0) {
+    throw new AppError("Date not found", HTTP_STATUS.NOT_FOUND);
   }
 
   const connected = await isConnected(proposerId, receiverId);
@@ -114,7 +128,21 @@ export const getDate = async (userId, dateId) => {
     throw new AppError("Date not found", HTTP_STATUS.NOT_FOUND);
   }
 
-  return { date: rows[0] };
+  const date = rows[0];
+
+  const blockRes = await query(
+    `SELECT 1 FROM blocks
+     WHERE (blocker_id = $1 AND blocked_id = $2)
+        OR (blocker_id = $2 AND blocked_id = $1)
+     LIMIT 1`,
+    [userId, date.other_user_id],
+  );
+
+  if (blockRes.rows.length > 0) {
+    throw new AppError("Date not found", HTTP_STATUS.NOT_FOUND);
+  }
+
+  return { date };
 };
 
 export const updateDate = async (userId, dateId, updates) => {
