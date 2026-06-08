@@ -1,10 +1,9 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type DateStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
-type MyRole = 'proposer' | 'receiver';
+type DateStatus = "pending" | "accepted" | "declined" | "cancelled";
+type MyRole = "proposer" | "receiver";
 
 interface DateEntry {
   id: number;
@@ -20,8 +19,8 @@ interface DateEntry {
   other_username: string;
   other_first_name: string;
   other_last_name: string;
-  other_profile_picture_id: string | null;
-  other_profile_picture_url?: string | null;
+  other_profile_picture_id: number | null;
+  other_profile_picture_url: string | null;
 }
 
 interface DatesResponse {
@@ -30,393 +29,208 @@ interface DatesResponse {
   total: number;
 }
 
-interface SearchUser {
+interface ConnectedUser {
   id: string;
   username: string;
   first_name: string;
   last_name: string;
-  profile_picture_url?: string | null;
-  is_connected: boolean;
-  location_city?: string | null;
+  profile_picture_id: number | null;
+  profile_picture_url: string | null;
 }
-
-// ─── Config ───────────────────────────────────────────────────────────────────
-
-const API = '/api';
-
-// Only using the provided CSS variables — no hardcoded colors anywhere
-const STATUS_META: Record<DateStatus, { label: string; icon: string; usePrimary: boolean }> = {
-  pending:   { label: 'Pending',   icon: '♡', usePrimary: true  },
-  accepted:  { label: 'Accepted',  icon: '♥', usePrimary: true  },
-  declined:  { label: 'Declined',  icon: '✕', usePrimary: false },
-  cancelled: { label: 'Cancelled', icon: '✕', usePrimary: false },
-};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatScheduled(iso: string) {
+function getInitials(first: string, last: string) {
+  return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
+}
+
+const AVATAR_COLORS = [
+  "#e94057","#f5a623","#4a90e2","#7ed321",
+  "#9013fe","#50e3c2","#d0021b","#bd10e0",
+];
+function avatarColor(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
+function formatDate(iso: string) {
   const d = new Date(iso);
-  const now = new Date();
-  const diffMs = d.getTime() - now.getTime();
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  let relative: string;
-  if (diffMs < 0) {
-    const abs = Math.abs(diffDays);
-    relative = abs === 0 ? 'earlier today' : abs === 1 ? 'yesterday' : `${abs}d ago`;
-  } else {
-    relative = diffDays === 0 ? 'today' : diffDays === 1 ? 'tomorrow' : `in ${diffDays}d`;
-  }
-
-  const date = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  return { date, time, relative };
+  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
-function groupDates(dates: DateEntry[]) {
-  const now = new Date();
-  const upcoming: DateEntry[] = [];
-  const past: DateEntry[] = [];
-  const inactive: DateEntry[] = [];
-
-  for (const d of dates) {
-    if (d.status === 'declined' || d.status === 'cancelled') inactive.push(d);
-    else if (new Date(d.scheduled_at) >= now) upcoming.push(d);
-    else past.push(d);
-  }
-
-  const result: { label: string; emoji: string; items: DateEntry[] }[] = [];
-  if (upcoming.length) result.push({ label: 'Upcoming', emoji: '✨', items: upcoming });
-  if (past.length)     result.push({ label: 'Past',     emoji: '🌙', items: past });
-  if (inactive.length) result.push({ label: 'Archived', emoji: '☁️',  items: inactive });
-  return result;
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-// ─── Mini Avatar ──────────────────────────────────────────────────────────────
+function isPast(iso: string) {
+  return new Date(iso) < new Date();
+}
 
-function MiniAvatar({ url, firstName, lastName, muted = false }: {
-  url?: string | null;
-  firstName: string;
-  lastName: string;
-  muted?: boolean;
-}) {
-  const border = muted ? '2px solid var(--color-border)' : '2px solid var(--color-primary)';
-  const bg = muted ? 'var(--color-text-muted)' : 'var(--color-primary)';
+const STATUS_META: Record<DateStatus, { label: string; bg: string; color: string }> = {
+  pending:   { label: "Pending",   bg: "#fef9c3", color: "#854d0e" },
+  accepted:  { label: "Accepted",  bg: "#dcfce7", color: "#166534" },
+  declined:  { label: "Declined",  bg: "#fee2e2", color: "#991b1b" },
+  cancelled: { label: "Cancelled", bg: "#f3f4f6", color: "#6b7280" },
+};
 
-  if (url) {
-    return (
-      <img
-        src={url} alt={firstName}
-        className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-        style={{ border }}
-      />
-    );
-  }
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+
+function Avatar({ user, size = 40 }: { user: Pick<DateEntry, "other_user_id" | "other_first_name" | "other_last_name" | "other_profile_picture_id" | "other_profile_picture_url">; size?: number }) {
+  const color = avatarColor(user.other_user_id);
+  const initials = getInitials(user.other_first_name, user.other_last_name);
   return (
-    <div
-      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-      style={{ background: bg, border, fontSize: 11 }}
-    >
-      {firstName[0]}{lastName[0]}
-    </div>
-  );
-}
-
-// ─── Card Avatar ──────────────────────────────────────────────────────────────
-
-function CardAvatar({ date }: { date: DateEntry }) {
-  const muted = date.status === 'declined' || date.status === 'cancelled';
-  const border = muted ? '2.5px solid var(--color-border)' : '2.5px solid var(--color-primary)';
-  const bg = muted ? 'var(--color-text-muted)' : 'var(--color-primary)';
-
-  if (date.other_profile_picture_url) {
-    return (
-      <img
-        src={date.other_profile_picture_url}
-        alt={date.other_first_name}
-        className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-        style={{ border, opacity: muted ? 0.5 : 1 }}
-      />
-    );
-  }
-  return (
-    <div
-      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-      style={{ background: bg, border, opacity: muted ? 0.5 : 1 }}
-    >
-      {date.other_first_name[0]}{date.other_last_name[0]}
-    </div>
-  );
-}
-
-// ─── Floating Hearts ──────────────────────────────────────────────────────────
-
-function FloatingHearts() {
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden>
-      {[
-        { top: '10%', left: '5%',  size: 12, delay: 0,   dur: 6   },
-        { top: '20%', left: '92%', size: 8,  delay: 1.2, dur: 7   },
-        { top: '50%', left: '3%',  size: 15, delay: 2.5, dur: 8   },
-        { top: '68%', left: '94%', size: 9,  delay: 0.8, dur: 6.5 },
-        { top: '35%', left: '89%', size: 7,  delay: 3.1, dur: 7.5 },
-        { top: '82%', left: '7%',  size: 11, delay: 1.7, dur: 9   },
-        { top: '75%', left: '50%', size: 6,  delay: 4,   dur: 8.5 },
-      ].map((h, i) => (
-        <span key={i} style={{
-          position: 'absolute', top: h.top, left: h.left,
-          fontSize: h.size, color: 'var(--color-primary)', opacity: 0.12,
-          animation: `heartFloat ${h.dur}s ease-in-out ${h.delay}s infinite`,
-        }}>♥</span>
-      ))}
+    <div style={{
+      width: size, height: size, borderRadius: "50%", background: color, flexShrink: 0,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: size * 0.35, fontWeight: 700, color: "#fff", overflow: "hidden",
+    }}>
+      {user.other_profile_picture_url && user.other_profile_picture_id && user.other_profile_picture_id > 0
+        ? <img src={user.other_profile_picture_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+        : initials
+      }
     </div>
   );
 }
 
 // ─── Propose Modal ────────────────────────────────────────────────────────────
 
-function ProposeModal({ onClose, onPropose }: {
+function ProposeModal({
+  onClose,
+  onSuccess,
+}: {
   onClose: () => void;
-  onPropose: (data: { receiver_id: string; scheduled_at: string; location?: string }) => Promise<void>;
+  onSuccess: () => void;
 }) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchUser[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<SearchUser | null>(null);
-  const [scheduledAt, setScheduledAt] = useState('');
-  const [location, setLocation] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [connections, setConnections] = useState<ConnectedUser[]>([]);
+  const [loadingConns, setLoadingConns] = useState(true);
+  const [receiverId, setReceiverId] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [location, setLocation] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const doSearch = useCallback(async (q: string) => {
-    if (!q.trim()) { setResults([]); return; }
-    setSearching(true);
-    try {
-      const res = await fetch(`${API}/search?limit=20`, { credentials: 'include' });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      const users: SearchUser[] = data.users ?? [];
-      const lower = q.toLowerCase();
-      setResults(users.filter((u) => u.username.toLowerCase().includes(lower)));
-    } catch {
-      setResults([]);
-    } finally {
-      setSearching(false);
-    }
+  // Fetch connected users from conversations (connected = mutual like = can chat)
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/chat/conversations");
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setConnections(data.conversations ?? []);
+      } catch {
+        setError("Could not load your connections.");
+      } finally {
+        setLoadingConns(false);
+      }
+    })();
   }, []);
 
-  const handleQueryChange = (val: string) => {
-    setQuery(val);
-    setSelected(null);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(val), 350);
-  };
-
   const handleSubmit = async () => {
-    if (!selected)              { setError('Pick someone first 💌'); return; }
-    if (!selected.is_connected) { setError('You can only propose to mutual connections.'); return; }
-    if (!scheduledAt)           { setError('Choose a date & time!'); return; }
-    setError('');
-    setLoading(true);
+    if (!receiverId || !scheduledAt) {
+      setError("Please select a person and date/time.");
+      return;
+    }
+    if (isPast(scheduledAt)) {
+      setError("Scheduled time must be in the future.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
     try {
-      await onPropose({
-        receiver_id: selected.id,
-        scheduled_at: new Date(scheduledAt).toISOString(),
-        location: location.trim() || undefined,
+      const res = await fetch("/api/dates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          receiver_id: receiverId,
+          scheduled_at: new Date(scheduledAt).toISOString(),
+          ...(location.trim() ? { location: location.trim() } : {}),
+        }),
       });
-      onClose();
-    } catch (e: any) {
-      setError(e.message || 'Failed to send proposal.');
+      if (res.status === 409) { setError("You already have a pending date with this person."); setSubmitting(false); return; }
+      if (res.status === 403) { setError("You can only propose to connected users."); setSubmitting(false); return; }
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error ?? "Failed to propose date"); }
+      onSuccess();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  const minDatetime = new Date(Date.now() + 60_000).toISOString().slice(0, 16);
+  // min datetime = now + 5 min, formatted for datetime-local input
+  const minDateTime = new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
-      style={{ background: 'color-mix(in srgb, var(--color-text) 50%, transparent)', backdropFilter: 'blur(6px)' }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-sm flex flex-col gap-5 relative"
-        style={{
-          background: 'var(--color-background)',
-          borderRadius: '28px 28px 0 0',
-          padding: '28px 24px 36px',
-          boxShadow: '0 -8px 40px color-mix(in srgb, var(--color-primary) 15%, transparent)',
-          maxHeight: '92vh',
-          overflowY: 'auto',
-          border: '1px solid var(--color-border)',
-          borderBottom: 'none',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Drag handle */}
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full"
-          style={{ background: 'var(--color-border)' }} />
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+      <div style={{ background: "#fff", borderRadius: "20px", padding: "28px", width: "100%", maxWidth: "420px", fontFamily: "var(--font-primary)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+          <h2 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "var(--color-text)" }}>Propose a date</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "22px", color: "var(--color-text-muted)", cursor: "pointer", lineHeight: 1 }}>×</button>
+        </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between pt-1">
-          <div>
-            <h2 className="text-xl font-black" style={{ color: 'var(--color-text)' }}>
-              Propose a date ♥
-            </h2>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              Only mutual connections can be invited
-            </p>
+        {error && (
+          <div style={{ marginBottom: "14px", padding: "8px 12px", borderRadius: "8px", background: "#fce8eb", color: "var(--color-error)", fontSize: "13px" }}>
+            {error}
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center transition-opacity hover:opacity-60"
-            style={{ background: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+        )}
+
+        {/* Person */}
+        <label style={{ display: "block", fontSize: "12px", color: "var(--color-text-muted)", marginBottom: "6px" }}>With</label>
+        {loadingConns ? (
+          <div style={{ height: "38px", background: "#f3f4f6", borderRadius: "8px", marginBottom: "14px" }} />
+        ) : connections.length === 0 ? (
+          <div style={{ padding: "10px 12px", borderRadius: "8px", background: "#f3f4f6", fontSize: "13px", color: "var(--color-text-muted)", marginBottom: "14px" }}>
+            No connections yet — match with someone first.
+          </div>
+        ) : (
+          <select
+            value={receiverId}
+            onChange={e => setReceiverId(e.target.value)}
+            style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid var(--color-border)", fontSize: "13px", color: "var(--color-text)", marginBottom: "14px", fontFamily: "var(--font-primary)", background: "#fff" }}
           >
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+            <option value="">Select a match…</option>
+            {connections.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.first_name} {c.last_name} (@{c.username})
+              </option>
+            ))}
+          </select>
+        )}
+
+        {/* Date & time */}
+        <label style={{ display: "block", fontSize: "12px", color: "var(--color-text-muted)", marginBottom: "6px" }}>Date & time</label>
+        <input
+          type="datetime-local"
+          min={minDateTime}
+          value={scheduledAt}
+          onChange={e => setScheduledAt(e.target.value)}
+          style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid var(--color-border)", fontSize: "13px", color: "var(--color-text)", marginBottom: "14px", fontFamily: "var(--font-primary)", boxSizing: "border-box" }}
+        />
+
+        {/* Location */}
+        <label style={{ display: "block", fontSize: "12px", color: "var(--color-text-muted)", marginBottom: "6px" }}>Location <span style={{ color: "#aaa" }}>(optional)</span></label>
+        <input
+          type="text"
+          placeholder="e.g. Café de Flore, Paris"
+          value={location}
+          onChange={e => setLocation(e.target.value)}
+          maxLength={200}
+          style={{ width: "100%", padding: "9px 12px", borderRadius: "8px", border: "1px solid var(--color-border)", fontSize: "13px", color: "var(--color-text)", marginBottom: "20px", fontFamily: "var(--font-primary)", boxSizing: "border-box" }}
+        />
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <button onClick={onClose} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid var(--color-border)", background: "transparent", fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-primary)", color: "var(--color-text)" }}>
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || connections.length === 0}
+            style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "none", background: "var(--color-primary)", color: "#fff", fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-primary)", opacity: submitting ? 0.7 : 1 }}
+          >
+            {submitting ? "Sending…" : "Send proposal"}
           </button>
         </div>
-
-        {/* Error */}
-        {error && (
-          <p className="text-xs px-3 py-2.5 rounded-2xl"
-            style={{ background: 'color-mix(in srgb, var(--color-error) 10%, transparent)', color: 'var(--color-error)' }}>
-            {error}
-          </p>
-        )}
-
-        {/* Search */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
-            Search by username
-          </label>
-
-          {selected ? (
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-2xl"
-              style={{ background: 'color-mix(in srgb, var(--color-primary) 8%, transparent)', border: '1.5px solid color-mix(in srgb, var(--color-primary) 25%, transparent)' }}>
-              <MiniAvatar url={selected.profile_picture_url} firstName={selected.first_name} lastName={selected.last_name} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-                  {selected.first_name} {selected.last_name}
-                </p>
-                <p className="text-xs" style={{ color: 'var(--color-primary)' }}>@{selected.username}</p>
-              </div>
-              <button
-                onClick={() => { setSelected(null); setQuery(''); setResults([]); }}
-                className="w-6 h-6 rounded-full flex items-center justify-center text-xs transition-opacity hover:opacity-60"
-                style={{ color: 'var(--color-text-muted)', background: 'var(--color-border)' }}
-              >✕</button>
-            </div>
-          ) : (
-            <>
-              <div className="relative">
-                <input
-                  className="w-full px-3 py-2.5 rounded-2xl"
-                  style={{
-                    border: '1.5px solid var(--color-border)',
-                    color: 'var(--color-text)',
-                    background: 'white',
-                  }}
-                  placeholder="@username"
-                  value={query}
-                  onChange={(e) => handleQueryChange(e.target.value)}
-                  autoFocus
-                />
-                {searching && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full border-2 animate-spin"
-                    style={{ borderColor: 'var(--color-border)', borderTopColor: 'var(--color-primary)' }} />
-                )}
-              </div>
-
-              {results.length > 0 && (
-                <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--color-border)', background: 'white' }}>
-                  {results.map((u, i) => (
-                    <button
-                      key={u.id}
-                      onClick={() => u.is_connected && (setSelected(u), setResults([]), setQuery(u.username))}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-opacity"
-                      style={{
-                        borderTop: i > 0 ? '1px solid var(--color-border)' : 'none',
-                        opacity: u.is_connected ? 1 : 0.4,
-                        cursor: u.is_connected ? 'pointer' : 'not-allowed',
-                      }}
-                    >
-                      <MiniAvatar url={u.profile_picture_url} firstName={u.first_name} lastName={u.last_name} muted={!u.is_connected} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold leading-tight" style={{ color: 'var(--color-text)' }}>
-                          {u.first_name} {u.last_name}
-                        </p>
-                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>@{u.username}</p>
-                      </div>
-                      {u.is_connected
-                        ? <span style={{ color: 'var(--color-primary)', fontSize: 14 }}>♥</span>
-                        : <span className="text-[10px] px-2 py-0.5 rounded-full"
-                            style={{ background: 'var(--color-background)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
-                            not connected
-                          </span>
-                      }
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {query.length > 1 && !searching && results.length === 0 && (
-                <p className="text-xs italic text-center py-2" style={{ color: 'var(--color-text-muted)' }}>
-                  No one found for "{query}" ♡
-                </p>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Date + location — only after selecting a user */}
-        {selected && (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
-                When?
-              </label>
-              <input
-                type="datetime-local"
-                min={minDatetime}
-                className="px-3 py-2.5 rounded-2xl"
-                style={{ border: '1.5px solid var(--color-border)', color: 'var(--color-text)', background: 'white' }}
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
-                Where?{' '}
-                <span style={{ fontWeight: 400 }}>(optional)</span>
-              </label>
-              <input
-                className="px-3 py-2.5 rounded-2xl"
-                style={{ border: '1.5px solid var(--color-border)', color: 'var(--color-text)', background: 'white' }}
-                placeholder="Coffee at Café Kitsune…"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !selected}
-          className="w-full py-3.5 rounded-2xl font-bold transition-all duration-200"
-          style={{
-            background: selected ? 'var(--color-primary)' : 'var(--color-border)',
-            color: selected ? 'white' : 'var(--color-text-muted)',
-            boxShadow: selected ? '0 4px 18px color-mix(in srgb, var(--color-primary) 30%, transparent)' : 'none',
-            opacity: loading ? 0.65 : 1,
-          }}
-        >
-          {loading ? 'Sending… ♡' : 'Send Proposal ♥'}
-        </button>
       </div>
     </div>
   );
@@ -424,372 +238,326 @@ function ProposeModal({ onClose, onPropose }: {
 
 // ─── Date Card ────────────────────────────────────────────────────────────────
 
-function DateCard({ date, onRespond, onCancel }: {
-  date: DateEntry;
-  onRespond: (id: number, status: 'accepted' | 'declined') => Promise<void>;
-  onCancel: (id: number) => Promise<void>;
-}) {
-  const navigate = useNavigate();
+function DateCard({ date, onUpdate }: { date: DateEntry; onUpdate: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const meta = STATUS_META[date.status];
-  const { date: fmtDate, time, relative } = formatScheduled(date.scheduled_at);
-  const [acting, setActing] = useState(false);
-  const muted = date.status === 'declined' || date.status === 'cancelled';
+  const past = isPast(date.scheduled_at);
 
-  const isUpcoming = !muted && new Date(date.scheduled_at) >= new Date();
-
-  const handleRespond = async (status: 'accepted' | 'declined') => {
-    setActing(true);
-    try { await onRespond(date.id, status); }
-    finally { setActing(false); }
+  const respond = async (status: "accepted" | "declined") => {
+    setLoading(true); setError(null);
+    try {
+      const res = await fetch(`/api/dates/${date.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error ?? "Failed"); }
+      onUpdate();
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Error"); }
+    finally { setLoading(false); }
   };
 
-  const handleCancel = async () => {
-    setActing(true);
-    try { await onCancel(date.id); }
-    finally { setActing(false); }
+  const cancel = async () => {
+    setLoading(true); setError(null);
+    try {
+      const res = await fetch(`/api/dates/${date.id}`, { method: "DELETE" });
+      if (!res.ok) { const b = await res.json().catch(() => ({})); throw new Error(b.error ?? "Failed"); }
+      onUpdate();
+    } catch (e: unknown) { setError(e instanceof Error ? e.message : "Error"); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div
-      className="rounded-3xl overflow-hidden transition-shadow duration-200 hover:shadow-md"
-      style={{
-        background: 'white',
-        border: '1px solid var(--color-border)',
-        opacity: muted ? 0.65 : 1,
-      }}
-    >
-      {/* Top stripe — primary for active, border color for inactive */}
-      <div style={{
-        height: 3,
-        background: muted
-          ? 'var(--color-border)'
-          : 'linear-gradient(90deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 40%, transparent))',
-      }} />
+    <div style={{
+      background: "#fff",
+      border: "1px solid var(--color-border)",
+      borderRadius: "14px",
+      padding: "16px",
+      fontFamily: "var(--font-primary)",
+      opacity: (date.status === "cancelled" || date.status === "declined") ? 0.6 : 1,
+      transition: "opacity 0.2s",
+    }}>
+      <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+        {/* Avatar */}
+        <a href={`/profile/${date.other_user_id}`}>
+          <Avatar user={date} size={46} />
+        </a>
 
-      <div className="p-4 flex flex-col gap-3">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="relative cursor-pointer flex-shrink-0" onClick={() => navigate(`/profile/${date.other_user_id}`)}>
-            <CardAvatar date={date} />
-            <div
-              className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-white shadow-sm"
-              style={{
-                background: muted ? 'var(--color-text-muted)' : 'var(--color-primary)',
-                fontSize: 9,
-                fontWeight: 700,
-              }}
-            >
-              {meta.icon}
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p
-              className="text-sm font-bold leading-tight cursor-pointer hover:underline"
-              style={{ color: 'var(--color-text)' }}
-              onClick={() => navigate(`/profile/${date.other_user_id}`)}
-            >
-              {date.other_first_name} {date.other_last_name}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              @{date.other_username}
-              {' · '}
-              <span style={{ color: muted ? 'var(--color-text-muted)' : 'var(--color-primary)', fontWeight: 600 }}>
-                {meta.label}
+        {/* Main info */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", flexWrap: "wrap" }}>
+            <div>
+              <span style={{ fontSize: "14px", fontWeight: 700, color: "var(--color-text)" }}>
+                {date.other_first_name} {date.other_last_name}
               </span>
-            </p>
-          </div>
-
-          <span
-            className="text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-            style={{
-              background: muted
-                ? 'var(--color-background)'
-                : 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
-              color: muted ? 'var(--color-text-muted)' : 'var(--color-primary)',
-              border: '1px solid var(--color-border)',
-            }}
-          >
-            {date.my_role === 'proposer' ? 'You asked' : 'They asked'}
-          </span>
-        </div>
-
-        {/* Date / time / location */}
-        <div
-          className="rounded-2xl px-4 py-3 flex flex-col gap-1.5"
-          style={{
-            background: muted
-              ? 'var(--color-background)'
-              : 'color-mix(in srgb, var(--color-primary) 5%, transparent)',
-            border: '1px solid var(--color-border)',
-          }}
-        >
-          <div className="flex items-center gap-2">
-            <span style={{ color: muted ? 'var(--color-text-muted)' : 'var(--color-primary)', fontSize: 13 }}>◷</span>
-            <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
-              {fmtDate} · {time}
-            </span>
-            <span
-              className="ml-auto text-[11px] font-semibold px-2 py-0.5 rounded-full"
-              style={{
-                background: muted
-                  ? 'var(--color-border)'
-                  : 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
-                color: muted ? 'var(--color-text-muted)' : 'var(--color-primary)',
-              }}
-            >
-              {relative}
+              <span style={{ fontSize: "12px", color: "var(--color-text-muted)", marginLeft: "6px" }}>
+                @{date.other_username}
+              </span>
+            </div>
+            <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "999px", background: meta.bg, color: meta.color, fontWeight: 600, flexShrink: 0 }}>
+              {meta.label}
             </span>
           </div>
+
+          {/* When */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--color-text-muted)", flexShrink: 0 }}>
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span style={{ fontSize: "13px", color: "var(--color-text)" }}>
+              {formatDate(date.scheduled_at)}
+            </span>
+            <span style={{ fontSize: "13px", color: "var(--color-text-muted)" }}>at {formatTime(date.scheduled_at)}</span>
+            {past && date.status === "accepted" && (
+              <span style={{ fontSize: "11px", padding: "1px 7px", borderRadius: "999px", background: "#f3f4f6", color: "#6b7280" }}>Past</span>
+            )}
+          </div>
+
+          {/* Where */}
           {date.location && (
-            <div className="flex items-center gap-2">
-              <span style={{ color: muted ? 'var(--color-text-muted)' : 'var(--color-primary)', fontSize: 13 }}>◎</span>
-              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{date.location}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "5px" }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "var(--color-text-muted)", flexShrink: 0 }}>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span style={{ fontSize: "13px", color: "var(--color-text)" }}>{date.location}</span>
             </div>
           )}
-        </div>
 
-        {/* Actions */}
-        {date.status === 'pending' && date.my_role === 'receiver' && (
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleRespond('accepted')}
-              disabled={acting}
-              className="flex-1 py-2.5 rounded-2xl font-bold transition-all duration-150 flex items-center justify-center gap-1.5"
-              style={{
-                background: 'var(--color-primary)',
-                color: 'white',
-                boxShadow: '0 3px 12px color-mix(in srgb, var(--color-primary) 30%, transparent)',
-                opacity: acting ? 0.6 : 1,
-              }}
-            >
-              ♥ Accept
-            </button>
-            <button
-              onClick={() => handleRespond('declined')}
-              disabled={acting}
-              className="flex-1 py-2.5 rounded-2xl font-bold transition-all duration-150"
-              style={{
-                background: 'var(--color-background)',
-                color: 'var(--color-text-muted)',
-                border: '1px solid var(--color-border)',
-                opacity: acting ? 0.6 : 1,
-              }}
-            >
-              Decline
-            </button>
+          {/* Role badge */}
+          <div style={{ marginTop: "6px" }}>
+            <span style={{ fontSize: "11px", color: "var(--color-text-muted)" }}>
+              {date.my_role === "proposer" ? "You proposed this" : "They proposed this"}
+            </span>
           </div>
-        )}
+        </div>
+      </div>
 
-        {date.status === 'pending' && date.my_role === 'proposer' && (
-          <button
-            onClick={handleCancel}
-            disabled={acting}
-            className="w-full py-2.5 rounded-2xl font-bold text-xs transition-all duration-150"
-            style={{
-              background: 'color-mix(in srgb, var(--color-error) 8%, transparent)',
-              color: 'var(--color-error)',
-              border: '1px solid color-mix(in srgb, var(--color-error) 20%, transparent)',
-              opacity: acting ? 0.6 : 1,
-            }}
-          >
-            Cancel proposal
-          </button>
-        )}
+      {/* Error */}
+      {error && (
+        <div style={{ marginTop: "10px", padding: "6px 10px", borderRadius: "6px", background: "#fce8eb", color: "var(--color-error)", fontSize: "12px" }}>
+          {error}
+        </div>
+      )}
 
-        {date.status === 'accepted' && date.my_role === 'proposer' && isUpcoming && (
+      {/* Actions */}
+      {date.status === "pending" && (
+        <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
+          {date.my_role === "receiver" && (
+            <>
+              <button
+                onClick={() => respond("accepted")}
+                disabled={loading}
+                style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "none", background: "#166534", color: "#fff", fontSize: "12px", cursor: "pointer", fontFamily: "var(--font-primary)", opacity: loading ? 0.7 : 1 }}
+              >
+                ✓ Accept
+              </button>
+              <button
+                onClick={() => respond("declined")}
+                disabled={loading}
+                style={{ flex: 1, padding: "8px", borderRadius: "8px", border: "1px solid #fca5a5", background: "transparent", color: "#991b1b", fontSize: "12px", cursor: "pointer", fontFamily: "var(--font-primary)", opacity: loading ? 0.7 : 1 }}
+              >
+                ✕ Decline
+              </button>
+            </>
+          )}
+          {date.my_role === "proposer" && (
+            <button
+              onClick={cancel}
+              disabled={loading}
+              style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-muted)", fontSize: "12px", cursor: "pointer", fontFamily: "var(--font-primary)", opacity: loading ? 0.7 : 1 }}
+            >
+              Cancel proposal
+            </button>
+          )}
+        </div>
+      )}
+
+      {date.status === "accepted" && !past && date.my_role === "proposer" && (
+        <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
           <button
-            onClick={handleCancel}
-            disabled={acting}
-            className="w-full py-2.5 rounded-2xl font-bold text-xs transition-all duration-150"
-            style={{
-              background: 'var(--color-background)',
-              color: 'var(--color-text-muted)',
-              border: '1px solid var(--color-border)',
-              opacity: acting ? 0.6 : 1,
-            }}
+            onClick={cancel}
+            disabled={loading}
+            style={{ padding: "8px 16px", borderRadius: "8px", border: "1px solid var(--color-border)", background: "transparent", color: "var(--color-text-muted)", fontSize: "12px", cursor: "pointer", fontFamily: "var(--font-primary)", opacity: loading ? 0.7 : 1 }}
           >
             Cancel date
           </button>
-        )}
-      </div>
+          <a
+            href={`/chat/${date.other_user_id}`}
+            style={{ padding: "8px 16px", borderRadius: "8px", background: "var(--color-primary)", color: "#fff", fontSize: "12px", textDecoration: "none", fontFamily: "var(--font-primary)" }}
+          >
+            💬 Chat
+          </a>
+        </div>
+      )}
+
+      {date.status === "accepted" && !past && date.my_role === "receiver" && (
+        <div style={{ marginTop: "12px" }}>
+          <a
+            href={`/chat/${date.other_user_id}`}
+            style={{ display: "inline-block", padding: "8px 16px", borderRadius: "8px", background: "var(--color-primary)", color: "#fff", fontSize: "12px", textDecoration: "none", fontFamily: "var(--font-primary)" }}
+          >
+            💬 Chat
+          </a>
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
-function EmptyState() {
-  return (
-    <div className="flex flex-col items-center justify-center py-24 gap-3">
-      <div style={{ fontSize: 44, color: 'var(--color-primary)', opacity: 0.2, lineHeight: 1 }}>♥</div>
-      <p className="text-sm italic text-center" style={{ color: 'var(--color-text-muted)' }}>
-        No dates yet — ask someone out! ♡
-      </p>
-    </div>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+type TabFilter = "upcoming" | "pending" | "past" | "all";
 
 export default function DatesPage() {
   const [dates, setDates] = useState<DateEntry[]>([]);
   const [upcoming, setUpcoming] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [tab, setTab] = useState<TabFilter>("upcoming");
 
   const fetchDates = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API}/dates`, { credentials: 'include' });
-      if (!res.ok) throw new Error();
+      const res = await fetch("/api/dates");
+      if (!res.ok) throw new Error("Failed to load dates");
       const data: DatesResponse = await res.json();
       setDates(data.dates);
       setUpcoming(data.upcoming);
-    } catch { } finally {
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { fetchDates(); }, [fetchDates]);
 
-  const handlePropose = useCallback(async (body: { receiver_id: string; scheduled_at: string; location?: string }) => {
-    const res = await fetch(`${API}/dates`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || 'Failed to propose.');
-    }
-    await fetchDates();
-  }, [fetchDates]);
+  // Tab filtering
+  const filtered = dates.filter(d => {
+    if (tab === "upcoming") return d.status === "accepted" && !isPast(d.scheduled_at);
+    if (tab === "pending")  return d.status === "pending";
+    if (tab === "past")     return isPast(d.scheduled_at) || d.status === "declined" || d.status === "cancelled";
+    return true;
+  });
 
-  const handleRespond = useCallback(async (id: number, status: 'accepted' | 'declined') => {
-    const res = await fetch(`${API}/dates/${id}`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    if (!res.ok) throw new Error();
-    setDates((prev) => prev.map((d) => d.id === id ? { ...d, status } : d));
-    // pending dates aren't in `upcoming`, so only increment if accepted + future
-    if (status === 'accepted') {
-      setDates((prev) => {
-        const d = prev.find((x) => x.id === id);
-        if (d && new Date(d.scheduled_at) >= new Date()) setUpcoming((c) => c + 1);
-        return prev;
-      });
-    }
-  }, []);
+  const pendingCount = dates.filter(d => d.status === "pending").length;
+  const inboundPending = dates.filter(d => d.status === "pending" && d.my_role === "receiver").length;
 
-  const handleCancel = useCallback(async (id: number) => {
-    const res = await fetch(`${API}/dates/${id}`, { method: 'DELETE', credentials: 'include' });
-    if (!res.ok) throw new Error();
-    setDates((prev) => prev.map((d) => d.id === id ? { ...d, status: 'cancelled' } : d));
-    setUpcoming((c) => Math.max(0, c - 1));
-  }, []);
-
-  const groups = groupDates(dates);
+  const TABS: { key: TabFilter; label: string; count?: number }[] = [
+    { key: "upcoming", label: "Upcoming", count: upcoming },
+    { key: "pending",  label: "Pending",  count: pendingCount },
+    { key: "past",     label: "Past" },
+    { key: "all",      label: "All",      count: dates.length },
+  ];
 
   return (
-    <div className="min-h-screen relative" style={{ background: 'var(--color-background)' }}>
-      <style>{`
-        @keyframes slideIn {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes heartFloat {
-          0%, 100% { transform: translateY(0) rotate(-8deg); }
-          50%       { transform: translateY(-16px) rotate(8deg); }
-        }
-        .date-card { animation: slideIn 0.3s ease both; }
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator { opacity: 0.4; }
-      `}</style>
+    <div style={{ minHeight: "100vh", background: "var(--color-background)", fontFamily: "var(--font-primary)" }}>
 
-      <FloatingHearts />
-
-      <div className="max-w-xl mx-auto px-4 py-8 relative">
-
-        {/* ── Header ── */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-4xl font-black leading-none" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
-                Dates
-              </h1>
-              <p className="mt-1.5 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                {upcoming > 0
-                  ? `${upcoming} upcoming ${upcoming === 1 ? 'date' : 'dates'} ♥`
-                  : 'Nothing planned yet ♡'}
-              </p>
-            </div>
-
-            <button
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold transition-all duration-200 hover:opacity-90 active:scale-95"
-              style={{
-                background: 'var(--color-primary)',
-                color: 'white',
-                boxShadow: '0 4px 18px color-mix(in srgb, var(--color-primary) 30%, transparent)',
-              }}
-            >
-              <span>♥</span> Propose
-            </button>
-          </div>
-
-          {/* Decorative divider */}
-          <div className="mt-6 flex items-center gap-3">
-            <div className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
-            <span style={{ color: 'var(--color-primary)', opacity: 0.35, fontSize: 11, letterSpacing: '0.2em' }}>♥ ♡ ♥</span>
-            <div className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
-          </div>
+      {/* Header */}
+      <header style={{ background: "#fff", borderBottom: "1px solid var(--color-border)", padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "22px" }}>📅</span>
+          <h1 style={{ margin: 0, fontSize: "20px", fontWeight: 700, color: "var(--color-text)" }}>Dates</h1>
+          {upcoming > 0 && (
+            <span style={{ padding: "2px 10px", borderRadius: "999px", background: "#fce8eb", color: "var(--color-primary)", fontSize: "12px", fontWeight: 600 }}>
+              {upcoming} upcoming
+            </span>
+          )}
         </div>
 
-        {/* ── Content ── */}
-        {loading ? (
-          <div className="flex flex-col gap-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-40 rounded-3xl animate-pulse"
-                style={{ background: 'var(--color-border)', animationDelay: `${i * 80}ms` }} />
-            ))}
-          </div>
-        ) : dates.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="flex flex-col gap-8">
-            {groups.map(({ label, emoji, items }) => (
-              <div key={label}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span style={{ fontSize: 14 }}>{emoji}</span>
-                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--color-text-muted)' }}>
-                    {label}
-                  </span>
-                  <div className="flex-1 h-px" style={{ background: 'var(--color-border)' }} />
-                  <span
-                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                    style={{ background: 'white', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}
-                  >
-                    {items.length}
-                  </span>
-                </div>
+        <button
+          onClick={() => setShowModal(true)}
+          style={{ display: "flex", alignItems: "center", gap: "8px", padding: "9px 18px", borderRadius: "10px", border: "none", background: "var(--color-primary)", color: "#fff", fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-primary)", fontWeight: 600 }}
+        >
+          <span style={{ fontSize: "16px", lineHeight: 1 }}>+</span>
+          Propose a date
+        </button>
+      </header>
 
-                <div className="flex flex-col gap-3">
-                  {items.map((d, i) => (
-                    <div key={d.id} className="date-card" style={{ animationDelay: `${i * 55}ms` }}>
-                      <DateCard date={d} onRespond={handleRespond} onCancel={handleCancel} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+      {/* Inbound pending banner */}
+      {inboundPending > 0 && (
+        <div
+          onClick={() => setTab("pending")}
+          style={{ margin: "16px 24px 0", padding: "12px 16px", borderRadius: "12px", background: "#fce8eb", border: "1px solid #f5c0c8", display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}
+        >
+          <span style={{ fontSize: "18px" }}>💌</span>
+          <span style={{ fontSize: "13px", color: "var(--color-primary)", fontWeight: 600 }}>
+            You have {inboundPending} date proposal{inboundPending > 1 ? "s" : ""} waiting for your response
+          </span>
+          <span style={{ marginLeft: "auto", fontSize: "13px", color: "var(--color-primary)" }}>→</span>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div style={{ padding: "16px 24px 0", display: "flex", gap: "8px", borderBottom: "1px solid var(--color-border)", background: "#fff", marginTop: inboundPending > 0 ? "12px" : "0" }}>
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            style={{
+              padding: "8px 16px", borderRadius: "8px 8px 0 0", border: "none",
+              background: tab === t.key ? "var(--color-background)" : "transparent",
+              borderBottom: tab === t.key ? `2px solid var(--color-primary)` : "2px solid transparent",
+              color: tab === t.key ? "var(--color-primary)" : "var(--color-text-muted)",
+              fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-primary)",
+              fontWeight: tab === t.key ? 600 : 400,
+              display: "flex", alignItems: "center", gap: "6px",
+            }}
+          >
+            {t.label}
+            {t.count !== undefined && t.count > 0 && (
+              <span style={{ fontSize: "11px", padding: "1px 6px", borderRadius: "999px", background: tab === t.key ? "var(--color-primary)" : "#e5e7eb", color: tab === t.key ? "#fff" : "#6b7280" }}>
+                {t.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <main style={{ padding: "20px 24px", maxWidth: "680px", margin: "0 auto" }}>
+        {error && (
+          <div style={{ padding: "10px 14px", borderRadius: "10px", background: "#fce8eb", color: "var(--color-error)", fontSize: "13px", marginBottom: "16px" }}>
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+            <div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "2px solid var(--color-primary)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <div style={{ fontSize: "48px", marginBottom: "12px" }}>
+              {tab === "upcoming" ? "📆" : tab === "pending" ? "💌" : "🗓️"}
+            </div>
+            <p style={{ color: "var(--color-text-muted)", fontSize: "14px", margin: 0 }}>
+              {tab === "upcoming" && "No upcoming dates — propose one!"}
+              {tab === "pending" && "No pending proposals"}
+              {tab === "past" && "No past dates yet"}
+              {tab === "all" && "No dates yet — propose one!"}
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {filtered.map(d => (
+              <DateCard key={d.id} date={d} onUpdate={fetchDates} />
             ))}
           </div>
         )}
-      </div>
+      </main>
 
-      {showModal && <ProposeModal onClose={() => setShowModal(false)} onPropose={handlePropose} />}
+      {showModal && (
+        <ProposeModal
+          onClose={() => setShowModal(false)}
+          onSuccess={() => { setShowModal(false); fetchDates(); }}
+        />
+      )}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

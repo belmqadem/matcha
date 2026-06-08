@@ -1,38 +1,30 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useRef, useState, useCallback } from "react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface BrowseUser {
+interface MapUser {
   id: string;
   username: string;
   first_name: string;
   last_name: string;
-  gender: string;
-  biography: string;
-  fame_rating: number;
-  location_city: string;
+  profile_picture_id: number | null;
+  profile_picture_url: string | null;
+  fame_rating: string;
   is_online: boolean;
-  last_seen: string;
-  profile_picture_id: string | null;
-  birth_date: string;
+  lat: number;
+  lng: number;
+  location_city: string;
   distance_km: number;
-  photos: { id: string; url: string; order_index: number }[];
   tags: string[];
-  liked_by_me: boolean;
-  liked_me: boolean;
-  is_connected: boolean;
-  latitude?: number;
-  longitude?: number;
 }
 
-interface BrowseResponse {
-  users: BrowseUser[];
+interface MapResponse {
+  users: MapUser[];
   total: number;
-  page: number;
-  limit: number;
+  radius_km: number;
+  center: { lat: number; lng: number };
 }
 
 interface MyLocation {
@@ -41,670 +33,460 @@ interface MyLocation {
   location_city: string;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const MAX_KM_OPTIONS = [5, 10, 25, 50, 100];
-const API = '/api';
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getAge(birth_date: string): number {
-  const today = new Date();
-  const dob = new Date(birth_date);
-  let age = today.getFullYear() - dob.getFullYear();
-  const m = today.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
-  return age;
+function getInitials(first: string, last: string) {
+  return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
 }
 
-/**
- * Scatter users in a small radius around the current user's position so pins
- * don't stack. Positions are stable per user id — computed once and cached.
- */
-function scatterAround(lat: number, lng: number, distKm: number): [number, number] {
-  const angle = Math.random() * 2 * Math.PI;
-  const dLat = (distKm * Math.cos(angle)) / 111;
-  const dLng = (distKm * Math.sin(angle)) / (111 * Math.cos((lat * Math.PI) / 180));
-  return [lat + dLat, lng + dLng];
+const AVATAR_COLORS = [
+  "#e94057","#f5a623","#4a90e2","#7ed321",
+  "#9013fe","#50e3c2","#d0021b","#bd10e0",
+];
+function avatarColor(id: string) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
 
-function buildAvatarHtml(user: BrowseUser): string {
-  const photoUrl = user.photos?.[0]?.url;
-  if (photoUrl) {
-    return `<img src="${photoUrl}" alt="${user.first_name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`;
-  }
-  const initials = `${user.first_name[0] ?? ''}${user.last_name[0] ?? ''}`.toUpperCase();
-  return `<span style="font-family:'Fraunces',serif;font-size:14px;color:#fff;font-weight:600;">${initials}</span>`;
+function fmtDist(km: number) {
+  return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
 }
 
-function createUserIcon(user: BrowseUser): L.DivIcon {
-  const online = user.is_online;
-  const connected = user.is_connected;
-  const color = connected ? '#e94057' : online ? '#10b981' : '#9ca3af';
-  const ring = user.liked_me ? '3px solid #e94057' : `3px solid ${color}`;
-
+function makeUserIcon(user: MapUser): L.DivIcon {
+  const color = avatarColor(user.id);
+  const initials = getInitials(user.first_name, user.last_name);
+  const inner = user.profile_picture_url && user.profile_picture_id && user.profile_picture_id > 0
+    ? `<img src="${user.profile_picture_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+    : `<span style="font-size:13px;font-weight:700;color:#fff;font-family:'Fraunces',serif;">${initials}</span>`;
+  const onlineDot = user.is_online
+    ? `<div style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #fff;"></div>`
+    : "";
   return L.divIcon({
-    className: '',
-    iconSize: [48, 56],
-    iconAnchor: [24, 56],
-    popupAnchor: [0, -58],
-    html: `
-      <div style="
-        position:relative;
-        width:48px;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-      ">
-        <div style="
-          width:44px;height:44px;
-          border-radius:50%;
-          border:${ring};
-          background:#e5e7eb;
-          overflow:hidden;
-          display:flex;align-items:center;justify-content:center;
-          box-shadow:0 4px 14px rgba(0,0,0,0.18);
-          background:#fff;
-        ">${buildAvatarHtml(user)}</div>
-        ${online ? `<div style="
-          position:absolute;top:30px;right:2px;
-          width:11px;height:11px;
-          border-radius:50%;
-          background:#10b981;
-          border:2px solid #fff;
-        "></div>` : ''}
-        <div style="
-          width:0;height:0;
-          border-left:7px solid transparent;
-          border-right:7px solid transparent;
-          border-top:8px solid ${connected ? '#e94057' : '#fff'};
-          filter: drop-shadow(0 2px 3px rgba(0,0,0,0.15));
-          margin-top:-1px;
-        "></div>
-      </div>
-    `,
+    html: `<div style="width:40px;height:40px;border-radius:50%;background:${color};border:3px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2);position:relative;cursor:pointer;overflow:hidden;">${inner}${onlineDot}</div>`,
+    className: "",
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -24],
   });
 }
 
-function createMeIcon(): L.DivIcon {
+function makeMeIcon(): L.DivIcon {
   return L.divIcon({
-    className: '',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-    html: `
-      <div style="
-        width:20px;height:20px;border-radius:50%;
-        background:#e94057;
-        border:3px solid #fff;
-        box-shadow:0 0 0 3px rgba(233,64,87,0.3), 0 4px 12px rgba(233,64,87,0.4);
-        animation: pulse-me 2s infinite;
-      "></div>
-      <style>
-        @keyframes pulse-me {
-          0%,100% { box-shadow:0 0 0 3px rgba(233,64,87,0.3),0 4px 12px rgba(233,64,87,0.4); }
-          50% { box-shadow:0 0 0 8px rgba(233,64,87,0.1),0 4px 12px rgba(233,64,87,0.4); }
-        }
-      </style>
-    `,
+    html: `<div style="width:46px;height:46px;border-radius:50%;background:#e94057;border:3px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 14px rgba(233,64,87,0.45);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    </div>`,
+    className: "",
+    iconSize: [46, 46],
+    iconAnchor: [23, 23],
   });
-}
-
-// ─── Popup HTML ───────────────────────────────────────────────────────────────
-
-function popupHtml(user: BrowseUser): string {
-  const age = getAge(user.birth_date);
-  const photoUrl = user.photos?.[0]?.url;
-  const tagsHtml = user.tags
-    .slice(0, 3)
-    .map(
-      (t) =>
-        `<span style="
-        background:rgba(233,64,87,0.08);color:#e94057;
-        padding:2px 8px;border-radius:99px;font-size:11px;
-        font-family:'Fraunces',serif;
-      ">#${t}</span>`
-    )
-    .join('');
-
-  return `
-    <div style="
-      font-family:'Fraunces',serif;
-      width:220px;
-      border-radius:16px;
-      overflow:hidden;
-    ">
-      ${
-        photoUrl
-          ? `<div style="height:130px;overflow:hidden;">
-          <img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;" />
-        </div>`
-          : `<div style="
-          height:100px;
-          background:linear-gradient(135deg,#e94057,#f27121);
-          display:flex;align-items:center;justify-content:center;
-          font-size:36px;color:#fff;font-weight:700;
-        ">${user.first_name[0]}${user.last_name[0]}</div>`
-      }
-      <div style="padding:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <span style="font-size:15px;font-weight:700;color:#1a1a2e;">
-            ${user.first_name}, ${age}
-          </span>
-          ${
-            user.is_online
-              ? `<span style="font-size:11px;color:#10b981;font-weight:600;">● Online</span>`
-              : `<span style="font-size:11px;color:#9ca3af;">Offline</span>`
-          }
-        </div>
-        <div style="font-size:12px;color:#6b7280;margin-bottom:8px;">
-          📍 ${user.distance_km < 1 ? '<1' : Math.round(user.distance_km)} km away
-          ${user.location_city ? `· ${user.location_city}` : ''}
-        </div>
-        ${tagsHtml ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">${tagsHtml}</div>` : ''}
-        ${
-          user.biography
-            ? `<p style="font-size:12px;color:#374151;line-height:1.4;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
-          ${user.biography}
-        </p>`
-            : ''
-        }
-        <button
-          onclick="window.__matchaViewProfile('${user.id}')"
-          style="
-            width:100%;padding:8px;
-            background:#e94057;color:#fff;
-            border:none;border-radius:10px;
-            font-family:'Fraunces',serif;font-size:13px;font-weight:600;
-            cursor:pointer;
-          "
-        >View Profile</button>
-      </div>
-    </div>
-  `;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MapPage() {
-  const navigate = useNavigate();
-  const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<L.Marker[]>([]);
+  const mapRef = useRef<L.Map | null>(null);
   const meMarkerRef = useRef<L.Marker | null>(null);
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const radiusCircleRef = useRef<L.Circle | null>(null);
 
-  // FIX 1: Cache scattered positions by user id so pins don't jump on
-  // filter toggles. Cleared when maxKm changes (new fetch = new user set).
-  const scatterCacheRef = useRef<Map<string, [number, number]>>(new Map());
-
-  const [myLocation, setMyLocation] = useState<MyLocation | null>(null);
-  const [users, setUsers] = useState<BrowseUser[]>([]);
+  const [users, setUsers] = useState<MapUser[]>([]);
+  const [center, setCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [radiusKm, setRadiusKm] = useState(50);
+  const [selectedUser, setSelectedUser] = useState<MapUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [locError, setLocError] = useState<string | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "online">("all");
+  const [likeStates, setLikeStates] = useState<Record<string, boolean>>({});
 
-  // Filters
-  const [maxKm, setMaxKm] = useState(25);
-  const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-  const [showConnectedOnly, setShowConnectedOnly] = useState(false);
-
-  // Stats
-  const [onlineCount, setOnlineCount] = useState(0);
-  const [connectedCount, setConnectedCount] = useState(0);
-
-  // ── FIX 2: Use a mounted flag for the global navigate so popup buttons
-  // remain safe after fast unmount/remount cycles. ─────────────────────────
+  // ── Init map ────────────────────────────────────────────────────────────────
   useEffect(() => {
-    let mounted = true;
-    (window as any).__matchaViewProfile = (id: string) => {
-      if (mounted) navigate(`/profile/${id}`);
-    };
-    return () => {
-      mounted = false;
-      delete (window as any).__matchaViewProfile;
-    };
-  }, [navigate]);
-
-  // ── Init map ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
-
+    if (mapRef.current || !mapContainerRef.current) return;
     const map = L.map(mapContainerRef.current, {
       center: [48.8566, 2.3522],
       zoom: 12,
       zoomControl: false,
     });
-
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-      subdomains: 'abcd',
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
     }).addTo(map);
-
+    L.control.zoom({ position: "bottomright" }).addTo(map);
     mapRef.current = map;
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
+    return () => { map.remove(); mapRef.current = null; };
   }, []);
 
-  // ── Fetch my location ─────────────────────────────────────────────────────
-  const fetchMyLocation = useCallback(async (): Promise<MyLocation | null> => {
-    // 1. Try IP-based location
+  // ── Fetch map data ───────────────────────────────────────────────────────────
+  const fetchMapData = useCallback(async (km = radiusKm) => {
+    setLoading(true);
+    setError(null);
     try {
-      const res = await fetch(`${API}/profile/me/location/ip`, { credentials: 'include' });
-      if (res.ok) {
-        // Contract: flat { latitude, longitude, location_city }
-        const data: MyLocation = await res.json();
-        setMyLocation(data);
-        return data;
+      const res = await fetch(`/api/browse/map?max_km=${km}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed to load map");
       }
-    } catch (_) {}
+      const data: MapResponse = await res.json();
+      setUsers(data.users);
+      setCenter(data.center);
+      setRadiusKm(data.radius_km);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }, [radiusKm]);
 
-    // 2. Fall back to stored location on the user's profile
-    try {
-      const res = await fetch(`${API}/users/me`, { credentials: 'include' });
-      if (res.ok) {
-        // Contract: { user: { latitude, longitude, location_city, ... } }
-        const { user } = await res.json();
-        if (user?.latitude && user?.longitude) {
-          const loc: MyLocation = {
-            latitude: user.latitude,
-            longitude: user.longitude,
-            location_city: user.location_city ?? '',
-          };
-          setMyLocation(loc);
-          return loc;
-        }
-      }
-    } catch (_) {}
+  useEffect(() => { fetchMapData(); }, []);
 
-    setLocError('Could not determine your location. Set your location in your profile settings.');
-    return null;
-  }, []);
-
-  // ── Fetch users from browse ───────────────────────────────────────────────
-  // FIX 3: Surface API 400 errors from /browse instead of swallowing them.
-  const fetchUsers = useCallback(
-    async (loc: MyLocation): Promise<BrowseUser[]> => {
-      try {
-        const params = new URLSearchParams({
-          sort: 'distance',
-          order: 'asc',
-          max_km: String(maxKm),
-          limit: '50',
-          page: '1',
-        });
-        const res = await fetch(`${API}/browse?${params}`, { credentials: 'include' });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          const detail = body?.details?.join(', ') ?? body?.error ?? 'Unknown error';
-          console.error(`[MapPage] /browse error ${res.status}:`, detail);
-          return [];
-        }
-
-        const data: BrowseResponse = await res.json();
-        return data.users;
-      } catch (err) {
-        console.error('[MapPage] Failed to fetch users:', err);
-        return [];
-      }
-    },
-    [maxKm]
-  );
-
-  // ── Place markers on map ──────────────────────────────────────────────────
-  // FIX 4: placeMarkers no longer depends on showOnlineOnly / showConnectedOnly
-  // via useCallback — it reads them as plain args so its reference stays stable
-  // and never causes a double-render. Filters are passed in directly.
-  const placeMarkers = useCallback(
-    (
-      usersToPlace: BrowseUser[],
-      loc: MyLocation,
-      onlineOnly: boolean,
-      connectedOnly: boolean
-    ) => {
-      const map = mapRef.current;
-      if (!map) return;
-
-      // Clear old markers
-      markersRef.current.forEach((m) => m.remove());
-      markersRef.current = [];
-
-      // Me marker
-      if (meMarkerRef.current) meMarkerRef.current.remove();
-      meMarkerRef.current = L.marker([loc.latitude, loc.longitude], {
-        icon: createMeIcon(),
-        zIndexOffset: 1000,
-      })
-        .addTo(map)
-        .bindTooltip('You', { permanent: false, direction: 'top' });
-
-      const filtered = usersToPlace.filter((u) => {
-        if (onlineOnly && !u.is_online) return false;
-        if (connectedOnly && !u.is_connected) return false;
-        return true;
-      });
-
-      filtered.forEach((user) => {
-        // FIX 1 (continued): Reuse cached position so pins are stable across
-        // filter toggles. Only compute a new scatter when the user is new.
-        if (!scatterCacheRef.current.has(user.id)) {
-          scatterCacheRef.current.set(
-            user.id,
-            scatterAround(loc.latitude, loc.longitude, user.distance_km)
-          );
-        }
-        const [lat, lng] = scatterCacheRef.current.get(user.id)!;
-
-        const marker = L.marker([lat, lng], { icon: createUserIcon(user) })
-          .addTo(map)
-          .bindPopup(popupHtml(user), {
-            maxWidth: 240,
-            className: 'matcha-popup',
+  // ── GPS update location ──────────────────────────────────────────────────────
+  const handleGps = () => {
+    if (!navigator.geolocation) return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        try {
+          const res = await fetch("/api/profile/me/location/gps", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ latitude: coords.latitude, longitude: coords.longitude }),
           });
-        markersRef.current.push(marker);
-      });
+          if (!res.ok) throw new Error("Failed to update location");
+          await fetchMapData(radiusKm);
+        } catch (e: unknown) {
+          setError(e instanceof Error ? e.message : "GPS error");
+        } finally {
+          setGpsLoading(false);
+        }
+      },
+      (err) => { setError(err.message); setGpsLoading(false); },
+      { enableHighAccuracy: true }
+    );
+  };
 
-      // Fit bounds
-      if (filtered.length > 0) {
-        const allLatLngs: L.LatLngTuple[] = [
-          [loc.latitude, loc.longitude],
-          ...markersRef.current.map((m) => [m.getLatLng().lat, m.getLatLng().lng] as L.LatLngTuple),
-        ];
-        map.fitBounds(L.latLngBounds(allLatLngs), { padding: [48, 48], maxZoom: 14 });
-      } else {
-        map.setView([loc.latitude, loc.longitude], 13);
+  // ── Update "me" marker + radius circle ───────────────────────────────────────
+  useEffect(() => {
+    if (!mapRef.current || !center) return;
+    const map = mapRef.current;
+
+    if (meMarkerRef.current) {
+      meMarkerRef.current.setLatLng([center.lat, center.lng]);
+    } else {
+      meMarkerRef.current = L.marker([center.lat, center.lng], { icon: makeMeIcon(), zIndexOffset: 1000 })
+        .addTo(map)
+        .bindTooltip("You", { direction: "top", offset: [0, -10] });
+    }
+
+    if (radiusCircleRef.current) {
+      radiusCircleRef.current.setLatLng([center.lat, center.lng]);
+      radiusCircleRef.current.setRadius(radiusKm * 1000);
+    } else {
+      radiusCircleRef.current = L.circle([center.lat, center.lng], {
+        radius: radiusKm * 1000,
+        color: "#e94057",
+        fillColor: "#e94057",
+        fillOpacity: 0.04,
+        weight: 1,
+        dashArray: "6 4",
+      }).addTo(map);
+    }
+
+    map.setView([center.lat, center.lng], 12, { animate: true });
+  }, [center, radiusKm]);
+
+  // ── Update user markers ──────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+    const existing = markersRef.current;
+
+    // Remove stale markers
+    existing.forEach((marker, id) => {
+      if (!users.find(u => u.id === id)) {
+        marker.remove();
+        existing.delete(id);
       }
-    },
-    [] // no deps — reads filters from arguments, reads map/markers from refs
-  );
+    });
 
-  // ── Initial load ──────────────────────────────────────────────────────────
-  // FIX 5: Include fetchUsers in deps so the closure is never stale if maxKm
-  // changes before the async location fetch completes.
-  useEffect(() => {
-    let alive = true;
-    setLoading(true);
-    (async () => {
-      const loc = await fetchMyLocation();
-      if (!loc || !alive) return;
-      const fetchedUsers = await fetchUsers(loc);
-      if (!alive) return;
-      setUsers(fetchedUsers);
-      setOnlineCount(fetchedUsers.filter((u) => u.is_online).length);
-      setConnectedCount(fetchedUsers.filter((u) => u.is_connected).length);
-      placeMarkers(fetchedUsers, loc, showOnlineOnly, showConnectedOnly);
-      setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchMyLocation, fetchUsers]);
-  // Note: showOnlineOnly / showConnectedOnly intentionally omitted — the
-  // initial load should not re-run when filters change; that's handled below.
+    users.forEach(user => {
+      if (existing.has(user.id)) {
+        existing.get(user.id)!.setIcon(makeUserIcon(user));
+      } else {
+        const marker = L.marker([user.lat, user.lng], { icon: makeUserIcon(user) })
+          .addTo(map)
+          .on("click", () => setSelectedUser(user));
+        existing.set(user.id, marker);
+      }
+    });
+  }, [users]);
 
-  // ── Re-fetch when radius changes ──────────────────────────────────────────
-  useEffect(() => {
-    if (!myLocation) return;
+  // ── Filtered list ─────────────────────────────────────────────────────────────
+  const filtered = filter === "online" ? users.filter(u => u.is_online) : users;
 
-    // Clear the scatter cache whenever we fetch a fresh user set.
-    scatterCacheRef.current.clear();
+  // ── Like (optimistic) ────────────────────────────────────────────────────────
+  const handleLike = async (userId: string) => {
+    const already = likeStates[userId] ?? false;
+    setLikeStates(prev => ({ ...prev, [userId]: !already }));
+    try {
+      if (already) {
+        await fetch(`/api/likes/${userId}`, { method: "DELETE" });
+      } else {
+        const res = await fetch(`/api/likes/${userId}`, { method: "POST" });
+        if (!res.ok && res.status !== 409) throw new Error();
+      }
+    } catch {
+      setLikeStates(prev => ({ ...prev, [userId]: already })); // rollback
+    }
+  };
 
-    let alive = true;
-    setLoading(true);
-    (async () => {
-      const fetchedUsers = await fetchUsers(myLocation);
-      if (!alive) return;
-      setUsers(fetchedUsers);
-      setOnlineCount(fetchedUsers.filter((u) => u.is_online).length);
-      setConnectedCount(fetchedUsers.filter((u) => u.is_connected).length);
-      placeMarkers(fetchedUsers, myLocation, showOnlineOnly, showConnectedOnly);
-      setLoading(false);
-    })();
-    return () => {
-      alive = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [maxKm]);
-  // fetchUsers, myLocation, placeMarkers are stable refs or captured at call
-  // time; adding them would cause extra re-runs. maxKm is the only trigger.
+  // ── Radius change ────────────────────────────────────────────────────────────
+  const handleRadiusChange = (km: number) => {
+    setRadiusKm(km);
+    fetchMapData(km);
+  };
 
-  // ── Re-place markers when visible filters change (no refetch needed) ──────
-  // FIX 4 (continued): placeMarkers is now stable (no useCallback deps), so
-  // this effect fires exactly once per filter change — no double-render.
-  useEffect(() => {
-    if (!myLocation || users.length === 0) return;
-    placeMarkers(users, myLocation, showOnlineOnly, showConnectedOnly);
-  }, [showOnlineOnly, showConnectedOnly, myLocation, users, placeMarkers]);
-
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="relative w-full h-[calc(100vh-64px)] overflow-hidden bg-[var(--color-background)]">
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--color-background)", fontFamily: "var(--font-primary)" }}>
 
-      {/* ── Popup style injection ── */}
-      <style>{`
-        .matcha-popup .leaflet-popup-content-wrapper {
-          padding: 0;
-          border-radius: 16px;
-          overflow: hidden;
-          box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-          border: none;
-        }
-        .matcha-popup .leaflet-popup-content {
-          margin: 0;
-          width: auto !important;
-        }
-        .matcha-popup .leaflet-popup-tip-container {
-          display: none;
-        }
-        .leaflet-control-zoom {
-          border: none !important;
-          box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important;
-          border-radius: 12px !important;
-          overflow: hidden;
-        }
-        .leaflet-control-zoom a {
-          font-family: 'Fraunces', serif !important;
-          color: #1a1a2e !important;
-          background: #fff !important;
-          border: none !important;
-        }
-        .leaflet-control-zoom a:hover {
-          background: #f7f7f7 !important;
-        }
-      `}</style>
+      {/* Header */}
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", background: "#fff", borderBottom: "1px solid var(--color-border)", flexShrink: 0, gap: "12px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ color: "var(--color-primary)", fontSize: "20px" }}>♥</span>
+          <h1 style={{ fontFamily: "var(--font-primary)", fontSize: "18px", fontWeight: 700, color: "var(--color-text)", margin: 0 }}>
+            Map
+          </h1>
+          {!loading && (
+            <span style={{ fontSize: "12px", padding: "2px 10px", borderRadius: "999px", background: "#fce8eb", color: "var(--color-primary)" }}>
+              {users.length} nearby
+            </span>
+          )}
+        </div>
 
-      {/* ── Map container ── */}
-      <div ref={mapContainerRef} className="absolute inset-0 z-0" />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+          {/* Radius selector */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontSize: "12px", color: "var(--color-text-muted)" }}>Radius</span>
+            {[10, 25, 50, 100].map(km => (
+              <button
+                key={km}
+                onClick={() => handleRadiusChange(km)}
+                style={{
+                  padding: "3px 10px", borderRadius: "999px", fontSize: "12px", cursor: "pointer",
+                  background: radiusKm === km ? "var(--color-primary)" : "transparent",
+                  color: radiusKm === km ? "#fff" : "var(--color-text-muted)",
+                  border: `1px solid ${radiusKm === km ? "var(--color-primary)" : "var(--color-border)"}`,
+                  fontFamily: "var(--font-primary)",
+                }}
+              >
+                {km}km
+              </button>
+            ))}
+          </div>
 
-      {/* ── Top control bar ── */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[999] flex items-center gap-2 px-4">
-        {/* Radius picker */}
-        <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg px-3 py-2 border border-[var(--color-border)]">
-          <span className="text-xs text-[var(--color-text-muted)] font-medium mr-1" style={{ fontFamily: 'Fraunces, serif' }}>
-            Radius
-          </span>
-          {MAX_KM_OPTIONS.map((km) => (
-            <button
-              key={km}
-              onClick={() => setMaxKm(km)}
-              className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all duration-150 ${
-                maxKm === km
-                  ? 'bg-[var(--color-primary)] text-white shadow-sm'
-                  : 'text-[var(--color-text-muted)] hover:bg-gray-100'
-              }`}
-              style={{ fontFamily: 'Fraunces, serif' }}
-            >
-              {km} km
+          {/* Filter */}
+          {(["all", "online"] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{
+              padding: "3px 12px", borderRadius: "999px", fontSize: "12px", cursor: "pointer",
+              background: filter === f ? "#1a1a2e" : "transparent",
+              color: filter === f ? "#fff" : "var(--color-text-muted)",
+              border: `1px solid ${filter === f ? "#1a1a2e" : "var(--color-border)"}`,
+              fontFamily: "var(--font-primary)",
+            }}>
+              {f === "all" ? "All" : "🟢 Online"}
             </button>
           ))}
-        </div>
-      </div>
 
-      {/* ── Side filter panel ── */}
-      <div className="absolute top-20 left-4 z-[999] flex flex-col gap-2">
-        <button
-          onClick={() => setShowOnlineOnly((p) => !p)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-2xl shadow-lg text-sm font-semibold transition-all duration-150 border ${
-            showOnlineOnly
-              ? 'bg-emerald-500 text-white border-emerald-500'
-              : 'bg-white/95 backdrop-blur-sm text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-gray-50'
-          }`}
-          style={{ fontFamily: 'Fraunces, serif' }}
-        >
-          <span className="w-2 h-2 rounded-full bg-current opacity-80" />
-          Online only
-        </button>
-
-        <button
-          onClick={() => setShowConnectedOnly((p) => !p)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-2xl shadow-lg text-sm font-semibold transition-all duration-150 border ${
-            showConnectedOnly
-              ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]'
-              : 'bg-white/95 backdrop-blur-sm text-[var(--color-text-muted)] border-[var(--color-border)] hover:bg-gray-50'
-          }`}
-          style={{ fontFamily: 'Fraunces, serif' }}
-        >
-          <span>♥</span>
-          Matches only
-        </button>
-      </div>
-
-      {/* ── Stats panel (bottom-left) ── */}
-      <div className="absolute bottom-6 left-4 z-[999]">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg px-4 py-3 border border-[var(--color-border)] min-w-[160px]">
-          <p
-            className="text-xs text-[var(--color-text-muted)] mb-2 uppercase tracking-widest"
-            style={{ fontFamily: 'Fraunces, serif' }}
+          {/* GPS */}
+          <button
+            onClick={handleGps}
+            disabled={gpsLoading}
+            style={{
+              display: "flex", alignItems: "center", gap: "6px",
+              padding: "5px 14px", borderRadius: "8px", fontSize: "12px", cursor: "pointer",
+              background: "var(--color-primary)", color: "#fff", border: "none",
+              fontFamily: "var(--font-primary)", opacity: gpsLoading ? 0.7 : 1,
+            }}
           >
-            Nearby
-          </p>
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center justify-between gap-6">
-              <span className="text-xs text-[var(--color-text-muted)]" style={{ fontFamily: 'Fraunces, serif' }}>
-                Total
-              </span>
-              <span className="text-sm font-bold text-[var(--color-text)]" style={{ fontFamily: 'Fraunces, serif' }}>
-                {users.length}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-6">
-              <span className="text-xs text-emerald-500" style={{ fontFamily: 'Fraunces, serif' }}>
-                Online
-              </span>
-              <span className="text-sm font-bold text-emerald-500" style={{ fontFamily: 'Fraunces, serif' }}>
-                {onlineCount}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-6">
-              <span className="text-xs text-[var(--color-primary)]" style={{ fontFamily: 'Fraunces, serif' }}>
-                Matched
-              </span>
-              <span className="text-sm font-bold text-[var(--color-primary)]" style={{ fontFamily: 'Fraunces, serif' }}>
-                {connectedCount}
-              </span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {gpsLoading ? "Locating…" : "Use GPS"}
+          </button>
+        </div>
+      </header>
+
+      {/* Error */}
+      {error && (
+        <div style={{ margin: "8px 16px", padding: "8px 14px", borderRadius: "8px", background: "#fce8eb", color: "var(--color-error)", fontSize: "13px", border: "1px solid #f5c0c8" }}>
+          {error}
+        </div>
+      )}
+
+      {/* Body */}
+      <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
+
+        {/* Map */}
+        <div ref={mapContainerRef} style={{ flex: 1, height: "100%" }} />
+
+        {/* Loading overlay */}
+        {loading && (
+          <div style={{ position: "absolute", inset: 0, background: "rgba(247,247,247,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", border: "2px solid var(--color-primary)", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+              <span style={{ fontSize: "13px", color: "var(--color-text-muted)", fontFamily: "var(--font-primary)" }}>Loading map…</span>
             </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* ── Legend ── */}
-      <div className="absolute bottom-6 right-16 z-[999]">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg px-4 py-3 border border-[var(--color-border)]">
-          <p
-            className="text-xs text-[var(--color-text-muted)] mb-2 uppercase tracking-widest"
-            style={{ fontFamily: 'Fraunces, serif' }}
-          >
-            Legend
-          </p>
-          <div className="flex flex-col gap-1.5">
-            {[
-              { color: '#e94057', label: 'Matched' },
-              { color: '#10b981', label: 'Online' },
-              { color: '#9ca3af', label: 'Offline' },
-            ].map(({ color, label }) => (
-              <div key={label} className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full border-2 border-white shadow-sm"
-                  style={{ background: color }}
-                />
-                <span
-                  className="text-xs text-[var(--color-text-muted)]"
-                  style={{ fontFamily: 'Fraunces, serif' }}
-                >
-                  {label}
-                </span>
+        {/* Sidebar */}
+        <aside style={{ width: "280px", background: "#fff", borderLeft: "1px solid var(--color-border)", display: "flex", flexDirection: "column", overflow: "hidden", flexShrink: 0 }}>
+          <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--color-border)", fontSize: "11px", color: "var(--color-text-muted)" }}>
+            {filtered.length} {filter === "online" ? "online" : "people"} within {radiusKm}km
+          </div>
+
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {filtered.length === 0 && !loading && (
+              <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--color-text-muted)", fontSize: "13px" }}>
+                No {filter === "online" ? "online " : ""}users nearby
               </div>
-            ))}
-            <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-[var(--color-border)]">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ background: '#e94057', boxShadow: '0 0 0 3px rgba(233,64,87,0.25)' }}
-              />
-              <span
-                className="text-xs text-[var(--color-text-muted)]"
-                style={{ fontFamily: 'Fraunces, serif' }}
+            )}
+
+            {filtered.map(user => (
+              <button
+                key={user.id}
+                onClick={() => {
+                  setSelectedUser(user);
+                  if (mapRef.current) mapRef.current.setView([user.lat, user.lng], 14, { animate: true });
+                }}
+                style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  width: "100%", padding: "10px 16px", textAlign: "left",
+                  background: selectedUser?.id === user.id ? "#fce8eb" : "transparent",
+                  border: "none", borderBottom: "1px solid var(--color-border)",
+                  cursor: "pointer", fontFamily: "var(--font-primary)",
+                  transition: "background 0.15s",
+                }}
               >
-                You
-              </span>
+                {/* Avatar */}
+                <div style={{ position: "relative", flexShrink: 0 }}>
+                  <div style={{
+                    width: "38px", height: "38px", borderRadius: "50%",
+                    background: avatarColor(user.id),
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "13px", fontWeight: 700, color: "#fff", overflow: "hidden",
+                  }}>
+                    {user.profile_picture_url && user.profile_picture_id && user.profile_picture_id > 0
+                      ? <img src={user.profile_picture_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                      : getInitials(user.first_name, user.last_name)
+                    }
+                  </div>
+                  {user.is_online && (
+                    <div style={{ position: "absolute", bottom: "1px", right: "1px", width: "9px", height: "9px", borderRadius: "50%", background: "#22c55e", border: "2px solid #fff" }} />
+                  )}
+                </div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--color-text)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {user.first_name} {user.last_name}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--color-text-muted)", marginTop: "2px", display: "flex", gap: "6px" }}>
+                    <span>{fmtDist(user.distance_km)}</span>
+                    <span>·</span>
+                    <span>★ {parseFloat(user.fame_rating).toFixed(0)}</span>
+                    {user.location_city && <><span>·</span><span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.location_city}</span></>}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </aside>
+
+        {/* Selected user popup card */}
+        {selectedUser && (
+          <div style={{
+            position: "absolute", bottom: "24px", left: "24px", zIndex: 1000,
+            background: "#fff", border: "1px solid var(--color-border)",
+            borderRadius: "16px", padding: "16px", width: "300px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12)", fontFamily: "var(--font-primary)",
+          }}>
+            <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+              {/* Avatar */}
+              <div style={{ position: "relative", flexShrink: 0 }}>
+                <div style={{
+                  width: "52px", height: "52px", borderRadius: "50%",
+                  background: avatarColor(selectedUser.id),
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "18px", fontWeight: 700, color: "#fff", overflow: "hidden",
+                }}>
+                  {selectedUser.profile_picture_url && selectedUser.profile_picture_id && selectedUser.profile_picture_id > 0
+                    ? <img src={selectedUser.profile_picture_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                    : getInitials(selectedUser.first_name, selectedUser.last_name)
+                  }
+                </div>
+                {selectedUser.is_online && (
+                  <div style={{ position: "absolute", bottom: "2px", right: "2px", width: "12px", height: "12px", borderRadius: "50%", background: "#22c55e", border: "2px solid #fff" }} />
+                )}
+              </div>
+
+              {/* Details */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--color-text)" }}>
+                    {selectedUser.first_name} {selectedUser.last_name}
+                  </span>
+                  <button onClick={() => setSelectedUser(null)} style={{ background: "none", border: "none", fontSize: "18px", color: "var(--color-text-muted)", cursor: "pointer", lineHeight: 1, padding: "0 0 0 4px" }}>×</button>
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--color-text-muted)", marginTop: "2px" }}>
+                  @{selectedUser.username} · {selectedUser.location_city}
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--color-text-muted)", marginTop: "2px" }}>
+                  {fmtDist(selectedUser.distance_km)} away · ★ {parseFloat(selectedUser.fame_rating).toFixed(0)}
+                </div>
+              </div>
+            </div>
+
+            {/* Tags */}
+            {selectedUser.tags.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginTop: "10px" }}>
+                {selectedUser.tags.slice(0, 5).map(tag => (
+                  <span key={tag} style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "999px", background: "#fce8eb", color: "var(--color-primary)" }}>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+              <button
+                onClick={() => handleLike(selectedUser.id)}
+                style={{
+                  flex: 1, padding: "7px 0", borderRadius: "8px", fontSize: "12px", cursor: "pointer",
+                  background: likeStates[selectedUser.id] ? "var(--color-primary)" : "transparent",
+                  color: likeStates[selectedUser.id] ? "#fff" : "var(--color-primary)",
+                  border: "1px solid var(--color-primary)",
+                  fontFamily: "var(--font-primary)",
+                }}
+              >
+                {likeStates[selectedUser.id] ? "♥ Liked" : "♡ Like"}
+              </button>
+              <a
+                href={`/profile/${selectedUser.id}`}
+                style={{
+                  flex: 1, padding: "7px 0", borderRadius: "8px", fontSize: "12px",
+                  background: "#1a1a2e", color: "#fff", textDecoration: "none",
+                  fontFamily: "var(--font-primary)", textAlign: "center", display: "block",
+                }}
+              >
+                View profile
+              </a>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* ── Loading overlay ── */}
-      {loading && (
-        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-[var(--color-background)]/60 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <div className="relative w-12 h-12">
-              <div className="absolute inset-0 rounded-full border-4 border-[var(--color-primary)]/20" />
-              <div
-                className="absolute inset-0 rounded-full border-4 border-transparent border-t-[var(--color-primary)]"
-                style={{ animation: 'spin 0.9s linear infinite' }}
-              />
-              <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-            </div>
-            <p
-              className="text-sm text-[var(--color-text-muted)] italic"
-              style={{ fontFamily: 'Fraunces, serif' }}
-            >
-              Finding people near you…
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* ── Location error ── */}
-      {locError && !loading && (
-        <div className="absolute inset-0 z-[1000] flex items-center justify-center">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm mx-4 text-center border border-[var(--color-border)]">
-            <div className="text-4xl mb-3">📍</div>
-            <h2
-              className="text-lg font-bold text-[var(--color-text)] mb-2"
-              style={{ fontFamily: 'Fraunces, serif' }}
-            >
-              Location unavailable
-            </h2>
-            <p
-              className="text-sm text-[var(--color-text-muted)] mb-5"
-              style={{ fontFamily: 'Fraunces, serif' }}
-            >
-              {locError}
-            </p>
-            <button
-              onClick={() => navigate('/profile/edit')}
-              className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-xl text-sm font-semibold"
-              style={{ fontFamily: 'Fraunces, serif' }}
-            >
-              Update location in settings
-            </button>
-          </div>
-        </div>
-      )}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
