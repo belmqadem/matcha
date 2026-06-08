@@ -47,6 +47,13 @@ EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;
 
+DO $$
+BEGIN
+	CREATE TYPE date_status AS ENUM ('pending', 'accepted', 'declined', 'cancelled');
+EXCEPTION
+	WHEN duplicate_object THEN NULL;
+END $$;
+
 CREATE TABLE IF NOT EXISTS users (
   id                UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   username          VARCHAR(30)   UNIQUE NOT NULL,
@@ -163,7 +170,7 @@ CREATE TABLE IF NOT EXISTS dates (
   receiver_id  UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   scheduled_at TIMESTAMP   WITH TIME ZONE NOT NULL,
   location     VARCHAR(255),
-  status       VARCHAR(20) NOT NULL DEFAULT 'pending',
+  status       date_status NOT NULL DEFAULT 'pending',
   created_at   TIMESTAMP   WITH TIME ZONE DEFAULT NOW(),
   updated_at   TIMESTAMP   WITH TIME ZONE DEFAULT NOW()
 );
