@@ -1,32 +1,40 @@
+/* src/index.css */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap');
-@import 'tailwindcss';
+@import "tailwindcss";
 
-:root {
+@theme {
+  /* Semantic Color Tokens */
   --color-primary: #e94057;
+  --color-primary-hover: #d83548;
   --color-background: #f7f7f7;
+  --color-surface: #ffffff;
   --color-text: #1a1a2e;
   --color-text-muted: #6b7280;
   --color-border: #e5e7eb;
-	--color-error: #dc2626;
+  --color-error: #dc2626;
+
+  /* Typography Tokens */
   --font-primary: 'Fraunces', serif;
 }
 
-body {
-  background-color: var(--color-background);
-  color: var(--color-text);
-  font-family: var(--font-primary);
-}
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-primary);
+  }
 
-button {
-  @apply cursor-pointer text-sm;
-}
+  button {
+    cursor: pointer;
+  }
 
-input,
-select,
-textarea {
-  @apply text-sm focus:outline-none;
-}
+  input, select, textarea {
+    outline: none;
+  }
 
-::selection {
-	@apply bg-(--color-primary)/80 text-white;
+  ::selection {
+    /* Safe color mixing using CSS natively */
+    background-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
+    color: white;
+  }
 }

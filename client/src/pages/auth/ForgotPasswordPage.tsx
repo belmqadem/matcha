@@ -1,10 +1,11 @@
+// src/pages/auth/ForgotPasswordPage.tsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Mail } from 'lucide-react';
-import { authApi } from '@/api/authApi';
+import { authService } from '@/services/authService';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
@@ -23,7 +24,7 @@ const ForgotPasswordPage = () => {
     setIsLoading(true);
     setError('');
     try {
-      await authApi.forgotPassword(email);
+      await authService.forgotPassword(email);
       setSubmitted(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
@@ -36,22 +37,22 @@ const ForgotPasswordPage = () => {
     <AuthLayout header="Forgot your Password?">
       {submitted ? (
         <div className="text-center py-4">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-(--color-primary) text-white">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 bg-primary text-white">
             <Mail />
           </div>
-          <p className="text-sm text-(--color-text)/80 mb-6">
+          <p className="text-sm text-text/80 mb-6">
             We sent a reset link to{' '}
-            <span className="font-semibold text-(--color-primary)">{email}</span>. Check your inbox.
+            <span className="font-semibold text-primary">{email}</span>. Check your inbox.
           </p>
           <Link
             to="/login"
-            className="text-(--color-primary) text-sm font-semibold hover:underline"
+            className="text-primary text-sm font-semibold hover:underline"
           >
             Back to Login
           </Link>
         </div>
       ) : (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             id="email"
             type="email"
@@ -65,9 +66,9 @@ const ForgotPasswordPage = () => {
             icon={Mail}
           />
 
-          {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
+          {error && <p className="text-sm font-medium text-error mb-3 text-center">{error}</p>}
 
-          <div className="mt-8">
+          <div className="pt-4">
             <Button type="submit" disabled={isLoading}>
               {isLoading ? 'Sending…' : 'Submit'}
             </Button>
@@ -76,9 +77,9 @@ const ForgotPasswordPage = () => {
       )}
 
       {!submitted && (
-        <p className="text-center text-xs text-(--color-text)/80 mt-5">
+        <p className="text-center text-sm text-text-muted mt-6">
           Remembered it?{' '}
-          <Link to="/login" className="text-(--color-primary) font-semibold hover:underline">
+          <Link to="/login" className="text-primary font-bold hover:underline">
             Login
           </Link>
         </p>

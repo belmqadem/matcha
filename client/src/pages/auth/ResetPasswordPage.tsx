@@ -1,28 +1,28 @@
+// src/pages/auth/ResetPasswordPage.tsx
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import ShowPasswordButton from '@/components/ui/ ShowPasswordButton';
+import ShowPasswordButton from '@/components/ui/ShowPasswordButton';
 import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
 import { Lock } from 'lucide-react';
-import { authApi } from '@/api/authApi';
+import { authService } from '@/services/authService';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  // const [searchParams] = useSearchParams();
-  // const token = searchParams.get('token'); // e.g. /reset-password?token=abc123
   const { token } = useParams<{ token: string }>();
   const [form, setForm] = useState({ password: '', confirm: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
   const passwordVisibility = usePasswordVisibility();
   const confirmVisibility = usePasswordVisibility();
 
-  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    setError('');
+    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,20 +42,18 @@ const ResetPasswordPage = () => {
     }
 
     setIsLoading(true);
-    setError('');
     try {
-      await authApi.resetPassword(token, form.password);
+      await authService.resetPassword(token, form.password);
       navigate('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');
-    } finally {
       setIsLoading(false);
     }
   };
 
   return (
     <AuthLayout header="Reset your Password">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           id="password"
           type={passwordVisibility.inputType}
@@ -77,18 +75,18 @@ const ResetPasswordPage = () => {
           showPasswordIcon={<ShowPasswordButton password={confirmVisibility} />}
         />
 
-        {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
+        {error && <p className="text-sm font-medium text-error mb-3 text-center">{error}</p>}
 
-        <div className="mt-6">
+        <div className="pt-4">
           <Button type="submit" disabled={isLoading}>
             {isLoading ? 'Resetting…' : 'Reset'}
           </Button>
         </div>
       </form>
 
-      <p className="text-center text-xs text-(--color-text)/80 mt-5">
+      <p className="text-center text-sm text-text-muted mt-6">
         Back to{' '}
-        <Link to="/login" className="text-(--color-primary) font-semibold hover:underline">
+        <Link to="/login" className="text-primary font-bold hover:underline">
           Login
         </Link>
       </p>

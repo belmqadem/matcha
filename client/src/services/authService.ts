@@ -1,40 +1,7 @@
+// src/services/authService.ts
+import type { RegisterPayload, LoginPayload, AuthUser, FullUser } from '@/types/auth';
+
 const BASE_URL = '/api/auth';
-
-export interface RegisterPayload {
-  email: string;
-  username: string;
-  password: string;
-  first_name: string;
-  last_name: string;
-}
-
-export interface LoginPayload {
-  username: string;
-  password: string;
-}
-
-export interface AuthUser {
-  id: number;
-  username: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  profile_picture_id: number | null;
-}
-
-export interface FullUser extends AuthUser {
-  gender: string | null;
-  sexual_preference: string | null;
-  biography: string | null;
-  fame_rating: number;
-  location_city: string | null;
-  is_online: boolean;
-  last_seen: string | null;
-  birth_date: string | null;
-  created_at: string;
-  tags: string[];
-  photos: { id: number; url: string; order_index: number; created_at: string }[];
-}
 
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -43,7 +10,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return body as T;
 }
 
-export const authApi = {
+export const authService = {
   register: (payload: RegisterPayload) =>
     fetch(`${BASE_URL}/register`, {
       method: 'POST',

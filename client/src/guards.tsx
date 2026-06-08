@@ -1,43 +1,26 @@
-import { useEffect, useState } from 'react';
+// src/guards.tsx
 import { Navigate, Outlet } from 'react-router-dom';
-import { authApi, type FullUser } from '@/api/authApi';
-
-type Status = 'loading' | 'ok' | 'unauth' | 'incomplete';
+import { useAuth } from '@/context/AuthContext';
 
 // ── Require the user to be logged in ──────────────────────────────────────────
-// If not authenticated → /login
-// While checking → blank screen (or swap with a spinner if you prefer)
 export const RequireAuth = () => {
-  const [status, setStatus] = useState<Status>('loading');
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    authApi.me()
-      .then(() => setStatus('ok'))
-      .catch(() => setStatus('unauth'));
-  }, []);
+  if (loading) return null; // Or a spinner
+  if (!user) return <Navigate to="/login" replace />;
 
-  if (status === 'loading') return null;
-  if (status === 'unauth') return <Navigate to="/login" replace />;
   return <Outlet />;
 };
 
 // ── Require the user to have a complete profile ───────────────────────────────
-// If gender is null (OAuth users who haven't finished onboarding) → /profile/setup
-// This also handles the case where a Google/42 user is redirected to /browse
-// before completing setup.
 export const RequireProfile = () => {
-  const [status, setStatus] = useState<Status>('loading');
+  const { user, loading } = useAuth();
 
-  useEffect(() => {
-    authApi.me()
-      .then(({ user }: { user: FullUser }) => {
-        setStatus(user.birth_date ? 'ok' : 'incomplete');
-      })
-      .catch(() => setStatus('unauth'));
-  }, []);
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
 
-  if (status === 'loading') return null;
-  if (status === 'unauth') return <Navigate to="/login" replace />;
-  if (status === 'incomplete') return <Navigate to="/profile/setup" replace />;
+  // If gender is missing, they haven't finished onboarding
+  if (!user.gender) return <Navigate to="/profile/setup" replace />;
+
   return <Outlet />;
 };
