@@ -249,11 +249,29 @@ export const editPhoto = async (userId, photoId, { rotate, crop }) => {
   try {
     let image = sharp(filePath);
 
+    // Step 1 — rotate first
     if (rotate) {
       image = image.rotate(rotate);
     }
 
+    // Step 2 — validate crop bounds against post-rotation dimensions
     if (crop) {
+      const metadata = await image.metadata();
+      const imgWidth = metadata.width ?? 0;
+      const imgHeight = metadata.height ?? 0;
+
+      if (
+        crop.left < 0 ||
+        crop.top < 0 ||
+        crop.left + crop.width > imgWidth ||
+        crop.top + crop.height > imgHeight
+      ) {
+        throw new AppError(
+          `Crop region exceeds image bounds (${imgWidth}x${imgHeight})`,
+          HTTP_STATUS.BAD_REQUEST,
+        );
+      }
+
       image = image.extract({
         left: crop.left,
         top: crop.top,
@@ -266,7 +284,7 @@ export const editPhoto = async (userId, photoId, { rotate, crop }) => {
     if (ext === ".jpg" || ext === ".jpeg") {
       await image.jpeg({ quality: 85 }).toFile(tmpPath);
     } else if (ext === ".png") {
-      await image.png({ quality: 85 }).toFile(tmpPath);
+      await image.png({ compressionLevel: 6 }).toFile(tmpPath);
     } else {
       await image.webp({ quality: 85 }).toFile(tmpPath);
     }
@@ -274,7 +292,8 @@ export const editPhoto = async (userId, photoId, { rotate, crop }) => {
     await fs.rename(tmpPath, filePath);
   } catch (err) {
     await fs.unlink(tmpPath).catch(() => {});
-    throw err;
+    if (err instanceof AppError) throw err;
+    throw new AppError("Failed to process image", HTTP_STATUS.BAD_REQUEST);
   }
 
   await invalidateUserCaches(userId);
@@ -325,7 +344,7 @@ export const applyFilter = async (userId, photoId, { filter, intensity }) => {
     if (ext === ".jpg" || ext === ".jpeg") {
       await image.jpeg({ quality: 85 }).toFile(tmpPath);
     } else if (ext === ".png") {
-      await image.png({ quality: 85 }).toFile(tmpPath);
+      await image.png({ compressionLevel: 6 }).toFile(tmpPath);
     } else {
       await image.webp({ quality: 85 }).toFile(tmpPath);
     }
@@ -333,7 +352,8 @@ export const applyFilter = async (userId, photoId, { filter, intensity }) => {
     await fs.rename(tmpPath, filePath);
   } catch (err) {
     await fs.unlink(tmpPath).catch(() => {});
-    throw err;
+    if (err instanceof AppError) throw err;
+    throw new AppError("Failed to process image", HTTP_STATUS.BAD_REQUEST);
   }
 
   await invalidateUserCaches(userId);
@@ -491,7 +511,7 @@ export const uploadPhoto = async (userId, file) => {
     if (format.format === "jpeg") {
       image = image.jpeg({ quality: 80 });
     } else if (format.format === "png") {
-      image = image.png({ quality: 80 });
+      image = image.png({ compressionLevel: 6 });
     } else {
       image = image.webp({ quality: 80 });
     }

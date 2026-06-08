@@ -44,17 +44,17 @@ router.patch(
 );
 
 router.post(
-  "/me/photos/:id/edit",
+  "/me/photos/:photoId/edit",
   authenticate,
-  validateId(),
+  validateId("photoId", "photo"),
   validate(editPhotoSchema),
   asyncHandler(profileController.editPhoto),
 );
 
 router.post(
-  "/me/photos/:id/filter",
+  "/me/photos/:photoId/filter",
   authenticate,
-  validateId(),
+  validateId("photoId", "photo"),
   validate(filterPhotoSchema),
   asyncHandler(profileController.applyFilter),
 );

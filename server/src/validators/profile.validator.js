@@ -112,17 +112,14 @@ export const reorderPhotosSchema = z
   .object({
     order: z.array(z.number().int().positive()).min(1).max(5),
   })
-  .strict();
+  .strict()
+  .refine((data) => new Set(data.order).size === data.order.length, {
+    message: "Photo IDs must be unique",
+  });
 
 export const editPhotoSchema = z
   .object({
-    rotate: z
-      .number()
-      .int()
-      .multipleOf(90)
-      .min(-270)
-      .max(270)
-      .optional(),
+    rotate: z.number().int().multipleOf(90).min(-270).max(270).optional(),
     crop: z
       .object({
         left: z.number().int().min(0),
@@ -133,10 +130,9 @@ export const editPhotoSchema = z
       .optional(),
   })
   .strict()
-  .refine(
-    (data) => data.rotate !== undefined || data.crop !== undefined,
-    { message: "At least one of rotate or crop must be provided" },
-  );
+  .refine((data) => data.rotate !== undefined || data.crop !== undefined, {
+    message: "At least one of rotate or crop must be provided",
+  });
 
 export const filterPhotoSchema = z
   .object({

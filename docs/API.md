@@ -160,10 +160,10 @@ PATCH /api/profile/me/photos/reorder
 **Notes:** `order` must contain only IDs belonging to the current user. `order_index` starts at 0.
 **Errors:** 400 validation, 400 invalid photo IDs
 
-POST /api/profile/me/photos/:id/edit
+POST /api/profile/me/photos/:photoId/edit
 
 **Auth:** required
-**Params:** `id` (integer — photo SERIAL id)
+**Params:** `photoId` (integer — photo SERIAL id)
 **Body:** `{ rotate?: number, crop?: { left, top, width, height } }` — at least one required
 **Response 200:** `{ photo: { id, url, order_index, created_at } }`
 **Notes:**
@@ -172,10 +172,10 @@ POST /api/profile/me/photos/:id/edit
 - Edits are destructive — the original file is overwritten.
 **Errors:** 400 validation, 404 not found
 
-POST /api/profile/me/photos/:id/filter
+POST /api/profile/me/photos/:photoId/filter
 
 **Auth:** required
-**Params:** `id` (integer — photo SERIAL id)
+**Params:** `photoId` (integer — photo SERIAL id)
 **Body:** `{ filter: string, intensity?: number }` — `intensity` is 0–100, default 50
 **Response 200:** `{ photo: { id, url, order_index, created_at } }`
 **Notes:**
