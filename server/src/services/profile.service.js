@@ -203,13 +203,16 @@ export const reorderPhotos = async (userId, order) => {
   try {
     await client.query("BEGIN");
 
-    await Promise.all(
-      order.map((photoId, index) =>
-        client.query(
-          "UPDATE photos SET order_index = $1 WHERE id = $2 AND user_id = $3",
-          [index, photoId, userId],
-        ),
-      ),
+    await client.query(
+      `UPDATE photos AS p
+       SET order_index = v.idx
+       FROM (
+         SELECT
+           unnest($1::int[]) AS id,
+           generate_series(0, array_length($1::int[], 1) - 1) AS idx
+       ) AS v
+       WHERE p.id = v.id AND p.user_id = $2`,
+      [order, userId],
     );
 
     await client.query("COMMIT");
