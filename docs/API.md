@@ -152,6 +152,41 @@ POST /api/profile/me/photos
 **Response 201:** `{ photo }`
 **Errors:** 400 validation, 400 photo limit reached, 400 invalid file type
 
+PATCH /api/profile/me/photos/reorder
+
+**Auth:** required
+**Body:** `{ order: number[] }` — array of photo IDs in desired display order (min 1, max 5)
+**Response 200:** `{ photos: [{ id, url, order_index, created_at }] }`
+**Notes:** `order` must contain only IDs belonging to the current user. `order_index` starts at 0.
+**Errors:** 400 validation, 400 invalid photo IDs
+
+POST /api/profile/me/photos/:id/edit
+
+**Auth:** required
+**Params:** `id` (integer — photo SERIAL id)
+**Body:** `{ rotate?: number, crop?: { left, top, width, height } }` — at least one required
+**Response 200:** `{ photo: { id, url, order_index, created_at } }`
+**Notes:**
+- `rotate`: multiples of 90 only, range −270 to 270. Applied before crop.
+- `crop`: pixel coordinates of the region to extract. `width` and `height` minimum 10px.
+- Edits are destructive — the original file is overwritten.
+**Errors:** 400 validation, 404 not found
+
+POST /api/profile/me/photos/:id/filter
+
+**Auth:** required
+**Params:** `id` (integer — photo SERIAL id)
+**Body:** `{ filter: string, intensity?: number }` — `intensity` is 0–100, default 50
+**Response 200:** `{ photo: { id, url, order_index, created_at } }`
+**Notes:**
+- `filter` values: `grayscale`, `sepia`, `blur`, `brighten`, `darken`
+- `grayscale` / `sepia`: `intensity` ignored
+- `blur`: intensity 0–100 maps to sigma 0.3–10
+- `brighten`: intensity 0–100 maps to brightness multiplier 1.0–2.0
+- `darken`: intensity 0–100 maps to brightness multiplier 1.0–0.1
+- Filters are destructive — the original file is overwritten.
+**Errors:** 400 validation, 404 not found
+
 DELETE /api/profile/me/photos/:photoId
 
 **Response 200:** `{ message: "Photo deleted." }`
