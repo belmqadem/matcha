@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Heart, MapPin, Star, Eye, MessageCircle, Flag, Ban, CheckCircle2,
-  Loader2, AlertTriangle, Clock
+  Loader2, AlertTriangle, Clock, Shield
 } from 'lucide-react';
 import { userService } from '@/services/userService';
 import type { PublicProfile } from '@/types/user';
@@ -40,7 +40,8 @@ export default function ProfilePage() {
   }, [id]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 size={32} className="text-primary animate-spin" /></div>;
-  if (error || !profile) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background"><p className="text-sm font-medium text-text-muted">{error || 'Profile not found.'}</p><button onClick={() => navigate(-1)} className="text-sm font-bold text-primary bg-white px-6 py-2 rounded-full shadow-sm">Go back</button></div>;
+
+  if (error || !profile) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background"><p className="text-sm font-medium text-text-muted">{error || 'Profile not found.'}</p><button onClick={() => navigate(-1)} className="text-sm font-bold text-primary bg-surface px-6 py-2 rounded-full shadow-sm">Go back</button></div>;
 
   const sorted = profile.photos.slice().sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
   const fame = Math.min(100, Math.max(0, profile.fame_rating ?? 0));
@@ -92,7 +93,7 @@ export default function ProfilePage() {
 
         {/* LEFT COLUMN */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white rounded-[32px] border border-border shadow-sm overflow-hidden animate-[fadeUp_0.4s_ease-out]">
+          <div className="bg-surface rounded-[32px] border border-border shadow-sm overflow-hidden animate-[fadeUp_0.4s_ease-out]">
             <div className="flex flex-col sm:flex-row min-h-[340px]">
               <div className="relative w-full sm:w-[320px] bg-background flex-shrink-0">
                 {sorted.length > 0 ? (
@@ -103,11 +104,11 @@ export default function ProfilePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                 <div className="absolute bottom-4 left-4">
                   {profile.is_online ? (
-                    <span className="flex items-center gap-1.5 bg-green-500 text-white text-[10px] font-black px-3 py-1.5 rounded-full tracking-widest shadow-lg">
-                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" /> ONLINE
+                    <span className="flex items-center gap-1.5 bg-primary text-surface text-[10px] font-black px-3 py-1.5 rounded-full tracking-widest shadow-lg">
+                      <div className="w-1.5 h-1.5 bg-surface rounded-full animate-pulse" /> ONLINE
                     </span>
                   ) : profile.last_seen ? (
-                    <span className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-white/20">
+                    <span className="flex items-center gap-1.5 bg-text/40 backdrop-blur-md text-surface text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg border border-surface/20">
                       <Clock size={12} /> {timeAgo(profile.last_seen)}
                     </span>
                   ) : null}
@@ -139,9 +140,9 @@ export default function ProfilePage() {
                   )}
 
                   {!profile.is_connected && profile.liked_me && !profile.liked_by_me && (
-                    <div className="flex items-center gap-2 bg-amber-50 border-2 border-amber-200 rounded-2xl px-4 py-3 mb-5">
-                      <Heart size={18} className="text-amber-500" />
-                      <span className="text-[13px] font-bold text-amber-700">{profile.first_name} already liked you — like back to connect!</span>
+                    <div className="flex items-center gap-2 bg-primary/10 border-2 border-primary/20 rounded-2xl px-4 py-3 mb-5">
+                      <Heart size={18} className="text-primary" />
+                      <span className="text-[13px] font-bold text-primary">{profile.first_name} already liked you — like back to connect!</span>
                     </div>
                   )}
 
@@ -162,7 +163,7 @@ export default function ProfilePage() {
           </div>
 
           {sorted.length > 1 && (
-            <div className="bg-white rounded-[32px] p-7 border border-border shadow-sm animate-[fadeUp_0.5s_ease-out]">
+            <div className="bg-surface rounded-[32px] p-7 border border-border shadow-sm animate-[fadeUp_0.5s_ease-out]">
               <h3 className="text-lg font-black text-text mb-5">More Photos</h3>
               <div className="flex gap-4 overflow-x-auto pb-2 snap-x">
                 {sorted.map((photo, i) => (
@@ -174,7 +175,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="bg-white rounded-[32px] p-7 border border-border shadow-sm animate-[fadeUp_0.6s_ease-out]">
+          <div className="bg-surface rounded-[32px] p-7 border border-border shadow-sm animate-[fadeUp_0.6s_ease-out]">
             <h3 className="text-[18px] font-black text-text mb-5">About {profile.first_name}</h3>
             <div className="grid grid-cols-2 gap-y-6 gap-x-8">
               {[
@@ -194,30 +195,30 @@ export default function ProfilePage() {
 
         {/* RIGHT SIDEBAR */}
         <div className="flex flex-col gap-6 sticky top-8 animate-[fadeUp_0.7s_ease-out]">
-          <div className="bg-white rounded-[32px] p-6 border border-border shadow-sm flex flex-col gap-3">
+          <div className="bg-surface rounded-[32px] p-6 border border-border shadow-sm flex flex-col gap-3">
             {actionError && <div className="bg-error/10 text-error text-[12px] font-bold px-4 py-3 rounded-xl flex items-center gap-2 mb-2"><AlertTriangle size={14} /> {actionError}</div>}
 
-            <button onClick={handleLike} disabled={likeLoading || profile.is_blocked_by_me} className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[18px] font-black text-[15px] transition-all duration-300 active:scale-95 ${profile.is_blocked_by_me ? 'opacity-40 cursor-not-allowed bg-background text-text-muted' : profile.liked_by_me ? 'bg-white text-primary border-2 border-primary hover:bg-primary/5' : 'bg-primary text-white hover:shadow-md border-2 border-primary'}`}>
+            <button onClick={handleLike} disabled={likeLoading || profile.is_blocked_by_me} className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[18px] font-black text-[15px] transition-all duration-300 active:scale-95 ${profile.is_blocked_by_me ? 'opacity-40 cursor-not-allowed bg-background text-text-muted' : profile.liked_by_me ? 'bg-surface text-primary border-2 border-primary hover:bg-primary/5' : 'bg-primary text-surface hover:shadow-md border-2 border-primary'}`}>
               {likeLoading ? <Loader2 size={18} className="animate-spin" /> : <Heart size={18} fill={profile.liked_by_me ? "currentColor" : "none"} />}
               {profile.liked_by_me ? 'Unlike Profile' : profile.liked_me ? 'Match Now' : 'Send Like'}
             </button>
 
-            <button onClick={() => navigate(`/chat/${profile.id}`)} disabled={!profile.is_connected} className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[18px] font-black text-[15px] transition-all duration-300 ${profile.is_connected ? 'bg-text text-white hover:bg-black active:scale-95 shadow-md cursor-pointer' : 'bg-background text-text-muted border-2 border-border opacity-60 cursor-not-allowed'}`}>
+            <button onClick={() => navigate(`/chat/${profile.id}`)} disabled={!profile.is_connected} className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-[18px] font-black text-[15px] transition-all duration-300 ${profile.is_connected ? 'bg-text text-surface hover:opacity-90 active:scale-95 shadow-md cursor-pointer' : 'bg-background text-text-muted border-2 border-border opacity-60 cursor-not-allowed'}`}>
               <MessageCircle size={18} /> {profile.is_connected ? 'Send Message' : 'Match to chat'}
             </button>
 
             <div className="h-0.5 bg-background my-2" />
 
-            <button onClick={() => setConfirm(profile.is_blocked_by_me ? 'unblock' : 'block')} disabled={blockLoading} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[14px] transition-all ${profile.is_blocked_by_me ? 'bg-orange-50 text-orange-600 border-2 border-orange-200 hover:bg-orange-100' : 'bg-transparent text-text-muted hover:bg-background hover:text-text'}`}>
+            <button onClick={() => setConfirm(profile.is_blocked_by_me ? 'unblock' : 'block')} disabled={blockLoading} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[14px] transition-all ${profile.is_blocked_by_me ? 'bg-error/10 text-error border-2 border-error/20 hover:bg-error/20' : 'bg-transparent text-text-muted hover:bg-background hover:text-text'}`}>
               <Ban size={16} /> {profile.is_blocked_by_me ? 'Unblock User' : 'Block User'}
             </button>
 
-            <button onClick={() => !profile.is_fake_reported && setConfirm('report')} disabled={profile.is_fake_reported} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[14px] transition-all ${profile.is_fake_reported ? 'bg-background text-text-muted cursor-not-allowed border-2 border-border' : 'bg-transparent text-text-muted hover:bg-red-50 hover:text-red-500'}`}>
+            <button onClick={() => !profile.is_fake_reported && setConfirm('report')} disabled={profile.is_fake_reported} className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-[14px] transition-all ${profile.is_fake_reported ? 'bg-background text-text-muted cursor-not-allowed border-2 border-border' : 'bg-transparent text-text-muted hover:bg-error/10 hover:text-error'}`}>
               <Flag size={16} /> {profile.is_fake_reported ? 'Account Reported' : 'Report Fake Account'}
             </button>
           </div>
 
-          <div className="bg-white rounded-[32px] p-6 border border-border shadow-sm">
+          <div className="bg-surface rounded-[32px] p-6 border border-border shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[15px] font-black text-text">Fame Rating</h3>
               <div className="flex items-center gap-1.5 bg-primary/10 px-3 py-1 rounded-full">
@@ -226,7 +227,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="h-2.5 rounded-full bg-background overflow-hidden mb-6">
-              <div className="h-full rounded-full bg-gradient-to-r from-primary to-pink-400 transition-all duration-1000 ease-out" style={{ width: `${fame}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary-hover transition-all duration-1000 ease-out" style={{ width: `${fame}%` }} />
             </div>
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between py-2 border-t-2 border-background">
@@ -240,7 +241,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <button onClick={() => navigate(-1)} className="w-full py-4 rounded-[18px] border-2 border-border bg-white text-text-muted text-[14px] font-black cursor-pointer hover:border-primary hover:text-primary transition-all shadow-sm active:scale-95">
+          <button onClick={() => navigate(-1)} className="w-full py-4 rounded-[18px] border-2 border-border bg-surface text-text-muted text-[14px] font-black cursor-pointer hover:border-primary hover:text-primary transition-all shadow-sm active:scale-95">
             Back
           </button>
         </div>

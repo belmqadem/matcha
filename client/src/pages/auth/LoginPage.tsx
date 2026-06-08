@@ -1,20 +1,19 @@
-// src/pages/auth/LoginPage.tsx
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Divider from '@/components/ui/Divider';
 import Input from '@/components/ui/Input';
-import ShowPasswordButton from '@/components/ui/ShowPasswordButton'; // Fixed the space in this import!
+import ShowPasswordButton from '@/components/ui/ShowPasswordButton';
 import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
 import { Lock, User } from 'lucide-react';
 
-// Import our new architecture
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/services/authService';
 
 const LoginPage = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const passwordVisibility = usePasswordVisibility();
 
@@ -30,7 +29,7 @@ const LoginPage = () => {
 
   const handleChange = (field: 'username' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (error) setError(''); // Clear error on typing
+    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,11 +42,18 @@ const LoginPage = () => {
 
     setIsSubmitting(true);
     try {
-      // The login function from useAuth handles the API call AND the redirect logic
-      await login(form);
+      // 1. Call the context action
+      const loggedInUser = await login(form);
+
+      // 2. Handle component-level routing logic
+      if (!loggedInUser.gender) {
+        navigate('/profile/setup');
+      } else {
+        navigate('/browse');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
-      setIsSubmitting(false); // Only reset loading state if it fails (success unmounts the page)
+      setIsSubmitting(false);
     }
   };
 

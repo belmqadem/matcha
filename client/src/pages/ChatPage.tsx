@@ -45,6 +45,7 @@ function groupMessagesByDate(messages: Message[]) {
   return groups;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function normalizeMessage(m: any): Message {
   return {
     id: m.id,
@@ -75,12 +76,11 @@ function FloatingHearts() {
       {hearts.map((h) => (
         <div
           key={h.id}
-          className="absolute"
+          className="absolute text-primary"
           style={{
             bottom: '-60px',
             left: `${h.left}%`,
             fontSize: `${h.size}px`,
-            color: 'var(--color-primary)',
             opacity: h.opacity,
             animation: `floatHeart ${h.duration}s ease-in-out ${h.delay}s infinite`,
             ['--wobble' as string]: `${h.wobble}px`,
@@ -109,8 +109,8 @@ function Avatar({
       <div
         className={`${dim[size]} rounded-full overflow-hidden flex items-center justify-center font-black border-2 ${
           grayscale
-            ? 'bg-(--color-background) text-(--color-text-muted) border-(--color-border) grayscale'
-            : 'bg-white text-(--color-primary) border-(--color-primary)/30'
+            ? 'bg-background text-text-muted border-border grayscale'
+            : 'bg-surface text-primary border-primary/30'
         }`}
       >
         {photoUrl
@@ -120,8 +120,8 @@ function Avatar({
       </div>
       {online !== undefined && !grayscale && (
         <span
-          className={`absolute -bottom-0.5 -right-0.5 ${dot[size]} rounded-full border-2 border-white ${
-            online ? 'bg-emerald-400' : 'bg-(--color-border)'
+          className={`absolute -bottom-0.5 -right-0.5 ${dot[size]} rounded-full border-2 border-surface ${
+            online ? 'bg-success' : 'bg-border'
           }`}
         />
       )}
@@ -150,8 +150,8 @@ function ProposeModal({
     try {
       await onPropose({ scheduled_at: new Date(scheduledAt).toISOString(), location: location.trim() || undefined });
       onClose();
-    } catch (e: any) {
-      setError(e.message || 'Failed to propose date.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to propose date.');
     } finally {
       setLoading(false);
     }
@@ -159,55 +159,53 @@ function ProposeModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(26,26,46,0.45)', backdropFilter: 'blur(6px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-text/45 backdrop-blur-md"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-3xl p-7 flex flex-col gap-5 bg-white shadow-2xl"
+        className="w-full max-w-sm rounded-3xl p-7 flex flex-col gap-5 bg-surface shadow-2xl shadow-primary/20"
         onClick={(e) => e.stopPropagation()}
-        style={{ boxShadow: '0 32px 80px rgba(233,64,87,0.15), 0 8px 24px rgba(0,0,0,0.12)' }}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="text-2xl mb-1">💌</div>
-            <h2 className="text-xl font-black text-(--color-text)">Ask {receiverName} out</h2>
-            <p className="text-[13px] text-(--color-text-muted) font-medium mt-0.5">Propose a time and place</p>
+            <h2 className="text-xl font-black text-text">Ask {receiverName} out</h2>
+            <p className="text-[13px] text-text-muted font-medium mt-0.5">Propose a time and place</p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-(--color-background) text-(--color-text-muted) hover:bg-(--color-border) transition-colors shrink-0 mt-1"
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-background text-text-muted hover:bg-border transition-colors shrink-0 mt-1"
           >
             <X size={15} />
           </button>
         </div>
 
         {error && (
-          <p className="text-xs px-4 py-2.5 rounded-2xl bg-red-50 text-(--color-error) font-bold border border-red-100">
+          <p className="text-xs px-4 py-2.5 rounded-2xl bg-error/10 text-error font-bold border border-error/20">
             {error}
           </p>
         )}
 
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-(--color-text-muted)">Date &amp; Time</span>
+            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-text-muted">Date &amp; Time</span>
             <input
               type="datetime-local"
               min={minDatetime}
               value={scheduledAt}
               onChange={(e) => setScheduledAt(e.target.value)}
-              className="px-4 py-3 rounded-2xl text-[14px] font-bold border-2 border-(--color-border) text-(--color-text) bg-(--color-background) focus:border-(--color-primary) focus:bg-white transition-all outline-none"
+              className="px-4 py-3 rounded-2xl text-[14px] font-bold border-2 border-border text-text bg-background focus:border-primary focus:bg-surface transition-all outline-none"
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-(--color-text-muted)">
+            <span className="text-[11px] font-black uppercase tracking-[0.12em] text-text-muted">
               Location <span className="font-medium normal-case tracking-normal">(optional)</span>
             </span>
             <input
               placeholder="Coffee at Café Kitsune…"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="px-4 py-3 rounded-2xl text-[14px] font-bold border-2 border-(--color-border) text-(--color-text) bg-(--color-background) focus:border-(--color-primary) focus:bg-white transition-all outline-none placeholder-[var(--color-border)]"
+              className="px-4 py-3 rounded-2xl text-[14px] font-bold border-2 border-border text-text bg-background focus:border-primary focus:bg-surface transition-all outline-none placeholder-border"
             />
           </label>
         </div>
@@ -215,7 +213,7 @@ function ProposeModal({
         <button
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full py-3.5 rounded-2xl text-[15px] font-black text-white bg-(--color-primary) hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(233,64,87,0.3)]"
+          className="w-full py-3.5 rounded-2xl text-[15px] font-black text-surface bg-primary hover:opacity-90 active:scale-95 transition-all disabled:opacity-60 flex items-center justify-center gap-2 shadow-lg shadow-primary/30"
         >
           {loading ? <Loader2 size={18} className="animate-spin" /> : <CalendarHeart size={18} />}
           {loading ? 'Proposing…' : 'Send Proposal'}
@@ -236,31 +234,29 @@ function ConfirmModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(26,26,46,0.45)', backdropFilter: 'blur(6px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-text/45 backdrop-blur-md"
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-xs rounded-3xl p-6 flex flex-col gap-4 bg-white"
-        style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.18)' }}
+        className="w-full max-w-xs rounded-3xl p-6 flex flex-col gap-4 bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div>
-          <h2 className="text-[18px] font-black text-(--color-text)">{title}</h2>
-          <p className="text-[13px] text-(--color-text-muted) font-medium mt-1 leading-relaxed">{description}</p>
+          <h2 className="text-[18px] font-black text-text">{title}</h2>
+          <p className="text-[13px] text-text-muted font-medium mt-1 leading-relaxed">{description}</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-2xl text-[14px] font-bold border-2 border-(--color-border) text-(--color-text) hover:border-(--color-text-muted) transition-colors"
+            className="flex-1 py-2.5 rounded-2xl text-[14px] font-bold border-2 border-border text-text hover:border-text-muted transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`flex-1 py-2.5 rounded-2xl text-[14px] font-black text-white transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
-              danger ? 'bg-(--color-error) hover:opacity-90' : 'bg-(--color-primary) hover:opacity-90'
+            className={`flex-1 py-2.5 rounded-2xl text-[14px] font-black text-surface transition-all active:scale-95 flex items-center justify-center gap-1.5 ${
+              danger ? 'bg-error hover:opacity-90' : 'bg-primary hover:opacity-90'
             }`}
           >
             {loading ? <Loader2 size={14} className="animate-spin" /> : confirmLabel}
@@ -284,27 +280,27 @@ function ConvoItem({ convo, active, myId, onClick }: {
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200 rounded-2xl ${
         active
-          ? 'bg-(--color-primary) text-white shadow-md'
-          : 'hover:bg-white/80 border border-transparent hover:border-(--color-border) bg-transparent'
+          ? 'bg-primary text-surface shadow-md'
+          : 'hover:bg-surface border border-transparent hover:border-border bg-transparent'
       }`}
     >
       <Avatar photoUrl={photoUrl} first={convo.first_name} last={convo.last_name} online={convo.is_online} />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className={`text-[15px] truncate ${active ? 'font-black text-white' : 'font-bold text-(--color-text)'}`}>
+          <p className={`text-[15px] truncate ${active ? 'font-black text-surface' : 'font-bold text-text'}`}>
             {convo.first_name} {convo.last_name}
           </p>
-          <span className={`text-[10px] font-semibold shrink-0 ${active ? 'text-white/70' : 'text-(--color-text-muted)'}`}>
+          <span className={`text-[10px] font-semibold shrink-0 ${active ? 'text-surface/70' : 'text-text-muted'}`}>
             {formatTime(convo.last_message_at)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2 mt-0.5">
-          <p className={`text-[13px] truncate ${active ? 'text-white/80 font-medium' : 'text-(--color-text-muted) font-medium'}`}>
+          <p className={`text-[13px] truncate ${active ? 'text-surface/80 font-medium' : 'text-text-muted font-medium'}`}>
             {isMine && <span className="opacity-60">You: </span>}
             {convo.last_message || <em className="opacity-50">Say hello!</em>}
           </p>
           {convo.unread_count > 0 && !active && (
-            <span className="shrink-0 bg-(--color-primary) text-white text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+            <span className="shrink-0 bg-primary text-surface text-[10px] font-black min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
               {convo.unread_count > 99 ? '99+' : convo.unread_count}
             </span>
           )}
@@ -321,18 +317,18 @@ function BlockedItem({ user, onUnblock }: { user: BlockedUser; onUnblock: (id: s
   const photoUrl = user.profile_picture_url || (user.profile_picture_id ? `/api/photos/${user.profile_picture_id}` : undefined);
 
   return (
-    <div className="w-full flex items-center gap-3 px-4 py-3 bg-white border border-(--color-border) rounded-2xl shadow-sm">
+    <div className="w-full flex items-center gap-3 px-4 py-3 bg-surface border border-border rounded-2xl shadow-sm">
       <Avatar photoUrl={photoUrl} first={user.first_name} last={user.last_name} grayscale />
       <div className="min-w-0 flex-1">
-        <p className="text-[15px] font-bold text-(--color-text) truncate">{user.first_name} {user.last_name}</p>
-        <p className="text-[12px] font-medium text-(--color-text-muted) truncate flex items-center gap-1">
+        <p className="text-[15px] font-bold text-text truncate">{user.first_name} {user.last_name}</p>
+        <p className="text-[12px] font-medium text-text-muted truncate flex items-center gap-1">
           <Ban size={10} /> Blocked {formatTime(user.blocked_at)}
         </p>
       </div>
       <button
         onClick={async () => { setUnblocking(true); await onUnblock(user.id); setUnblocking(false); }}
         disabled={unblocking}
-        className="shrink-0 px-4 py-1.5 rounded-full bg-(--color-background) border-2 border-(--color-border) text-[12px] font-bold text-(--color-text) hover:border-(--color-primary) hover:text-(--color-primary) transition-all disabled:opacity-50 active:scale-95"
+        className="shrink-0 px-4 py-1.5 rounded-full bg-background border-2 border-border text-[12px] font-bold text-text hover:border-primary hover:text-primary transition-all disabled:opacity-50 active:scale-95"
       >
         {unblocking ? <Loader2 size={14} className="animate-spin" /> : 'Unblock'}
       </button>
@@ -346,21 +342,21 @@ function Bubble({ msg, mine }: { msg: Message; mine: boolean }) {
   return (
     <div className={`flex items-end gap-2 ${mine ? 'flex-row-reverse' : 'flex-row'} mb-1`}>
       <div
-        className={`max-w-[72%] px-4 py-2.5 text-[15px] font-medium leading-relaxed shadow-sm ${
+        className={`max-w-[72%] px-4 py-2.5 text-[15px] font-medium leading-relaxed shadow-sm break-words ${
           mine
-            ? 'bg-(--color-primary) text-white rounded-[20px] rounded-br-[5px]'
-            : 'bg-white text-(--color-text) border border-(--color-border) rounded-[20px] rounded-bl-[5px]'
+            ? 'bg-primary text-surface rounded-[20px] rounded-br-[5px]'
+            : 'bg-surface text-text border border-border rounded-[20px] rounded-bl-[5px]'
         }`}
       >
-        <p style={{ wordBreak: 'break-word' }}>{msg.content}</p>
+        <p>{msg.content}</p>
         <div className={`flex items-center gap-1 mt-1 ${mine ? 'justify-end' : 'justify-start'}`}>
-          <span className={`text-[10px] font-bold ${mine ? 'text-white/60' : 'text-(--color-text-muted)'}`}>
+          <span className={`text-[10px] font-bold ${mine ? 'text-surface/60' : 'text-text-muted'}`}>
             {formatMessageTime(msg.sentAt)}
           </span>
           {mine && (
             msg.isRead
-              ? <CheckCheck size={13} className="text-white/80" />
-              : <Check size={13} className="text-white/50" />
+              ? <CheckCheck size={13} className="text-surface/80" />
+              : <Check size={13} className="text-surface/50" />
           )}
         </div>
       </div>
@@ -389,30 +385,29 @@ function ActionsMenu({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-(--color-border) z-50 py-2 overflow-hidden"
-      style={{ boxShadow: '0 16px 48px rgba(0,0,0,0.14)' }}
+      className="absolute right-0 top-full mt-2 w-52 bg-surface rounded-2xl shadow-xl border border-border z-50 py-2 overflow-hidden"
     >
       {iBlocked ? (
         <button
           onClick={() => { onUnblock(); onClose(); }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-(--color-text) hover:bg-(--color-background) transition-colors text-left"
+          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-text hover:bg-background transition-colors text-left"
         >
-          <ShieldOff size={16} className="text-(--color-text-muted)" />
+          <ShieldOff size={16} className="text-text-muted" />
           Unblock {firstName}
         </button>
       ) : (
         <button
           onClick={() => { onBlock(); onClose(); }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-(--color-error) hover:bg-red-50 transition-colors text-left"
+          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-error hover:bg-error/10 transition-colors text-left"
         >
           <Ban size={16} />
           Block {firstName}
         </button>
       )}
-      <div className="mx-4 my-1 border-t border-(--color-border)" />
+      <div className="mx-4 my-1 border-t border-border" />
       <button
         onClick={() => { onUnmatch(); onClose(); }}
-        className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-(--color-error) hover:bg-red-50 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-error hover:bg-error/10 transition-colors text-left"
       >
         <UserMinus size={16} />
         Unmatch {firstName}
@@ -489,6 +484,7 @@ export default function ChatPage() {
               first_name: u.first_name,
               last_name: u.last_name,
               profile_picture_id: u.profile_picture_id,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               profile_picture_url: u.photos?.find((p: any) => p.id === u.profile_picture_id)?.url ?? u.photos?.[0]?.url,
               is_online: u.is_online,
               last_message: '',
@@ -598,8 +594,8 @@ export default function ChatPage() {
       setMessages((prev) => [...older, ...prev]);
       setMsgPage(nextPage);
       requestAnimationFrame(() => { if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight - prevHeight; });
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error loading older messages.');
     } finally {
       setLoadingOlder(false);
     }
@@ -609,7 +605,7 @@ export default function ChatPage() {
     if (!input.trim() || !activeConvo || !me || sending || chatForbidden || iBlockedThem) return;
     const content = input.trim();
     if (content.length > 1000) { setError('Message too long (max 1000 chars)'); return; }
-    const optimistic: Message = { id: -1, from: me.id, content, sentAt: new Date().toISOString(), isRead: false };
+    const optimistic: Message = { id: -1, from: me.id.toString(), content, sentAt: new Date().toISOString(), isRead: false };
     setMessages((prev) => [...prev, optimistic]);
     setInput('');
     setSending(true);
@@ -617,7 +613,7 @@ export default function ChatPage() {
     setConvos((prev) => {
       const updated = prev.map((c) =>
         c.id === activeConvo.id
-          ? { ...c, last_message: content, last_message_at: optimistic.sentAt, last_message_sender_id: me.id }
+          ? { ...c, last_message: content, last_message_at: optimistic.sentAt, last_message_sender_id: me.id.toString() }
           : c
       );
       return updated.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
@@ -633,7 +629,7 @@ export default function ChatPage() {
     });
     const content = `📅 I've proposed a date: ${formattedDate}${data.location ? ` at ${data.location}` : ''}`;
     socket?.emit('chat:send', { to: activeConvo.id, content });
-    setMessages((prev) => [...prev, { id: Math.random(), from: me.id, content, sentAt: new Date().toISOString(), isRead: false }]);
+    setMessages((prev) => [...prev, { id: Math.random(), from: me.id.toString(), content, sentAt: new Date().toISOString(), isRead: false }]);
   };
 
   const handleBlock = async () => {
@@ -651,8 +647,8 @@ export default function ChatPage() {
         blocked_at: new Date().toISOString(),
       }]);
       setConfirmAction(null);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error blocking user.');
     } finally {
       setConfirmLoading(false);
     }
@@ -665,8 +661,8 @@ export default function ChatPage() {
       await chatService.unblock(targetId);
       setBlockedUsers((prev) => prev.filter((u) => u.id !== targetId));
       if (activeConvo?.id === targetId) setChatForbidden(false);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error unblocking user.');
     } finally {
       setConfirmLoading(false);
       setConfirmAction(null);
@@ -682,8 +678,8 @@ export default function ChatPage() {
       setActiveConvo(null);
       setMobileView('list');
       setConfirmAction(null);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error unmatching user.');
     } finally {
       setConfirmLoading(false);
     }
@@ -704,7 +700,7 @@ export default function ChatPage() {
   const hasOlder = messages.length < msgTotal;
 
   return (
-    <div className="relative h-screen flex flex-col bg-(--color-background) font-(--font-primary) overflow-hidden">
+    <div className="relative h-screen flex flex-col bg-background font-primary overflow-hidden">
 
       <style>{`
         @keyframes floatHeart {
@@ -761,7 +757,7 @@ export default function ChatPage() {
 
       {/* Error toast */}
       {error && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-(--color-error) text-white text-[13px] font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm">
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-[13px] font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm">
           <AlertCircle size={16} />
           <span>{error}</span>
           <button onClick={() => setError('')} className="hover:opacity-70 transition-opacity ml-1">
@@ -775,25 +771,25 @@ export default function ChatPage() {
         {/* ── SIDEBAR ── */}
         <aside className={`
           w-full md:w-80 lg:w-96 shrink-0 flex flex-col
-          bg-white/90 backdrop-blur-md rounded-[28px]
-          border border-(--color-border) shadow-sm overflow-hidden
+          bg-surface/90 backdrop-blur-md rounded-[28px]
+          border border-border shadow-sm overflow-hidden
           ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}
         `}>
-          <div className="px-5 pt-5 pb-4 border-b border-(--color-border) shrink-0">
+          <div className="px-5 pt-5 pb-4 border-b border-border shrink-0">
             <div className="flex items-center gap-2 mb-4">
-              <Heart size={20} className="text-(--color-primary) fill-(--color-primary)" />
-              <h1 className="text-[22px] font-black text-(--color-text)">Messages</h1>
+              <Heart size={20} className="text-primary fill-primary" />
+              <h1 className="text-[22px] font-black text-text">Messages</h1>
             </div>
 
-            <div className="flex bg-(--color-background) border border-(--color-border) rounded-full p-1 mb-4">
+            <div className="flex bg-background border border-border rounded-full p-1 mb-4">
               {(['messages', 'blocked'] as SidebarTab[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setSidebarTab(tab)}
                   className={`flex-1 py-2 rounded-full text-[13px] font-black transition-all duration-200 capitalize ${
                     sidebarTab === tab
-                      ? 'bg-white shadow-sm text-(--color-text)'
-                      : 'text-(--color-text-muted) hover:text-(--color-text)'
+                      ? 'bg-surface shadow-sm text-text'
+                      : 'text-text-muted hover:text-text'
                   }`}
                 >
                   {tab}
@@ -803,13 +799,13 @@ export default function ChatPage() {
 
             {sidebarTab === 'messages' && (
               <div className="relative">
-                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-(--color-text-muted)" />
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
                 <input
                   type="text"
                   placeholder="Search…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-(--color-background) border border-(--color-border) rounded-full pl-10 pr-4 py-2.5 text-[13px] font-bold text-(--color-text) placeholder-[var(--color-text-muted)] focus:border-(--color-primary) focus:bg-white transition-all outline-none"
+                  className="w-full bg-background border border-border rounded-full pl-10 pr-4 py-2.5 text-[13px] font-bold text-text placeholder-text-muted focus:border-primary focus:bg-surface transition-all outline-none"
                 />
               </div>
             )}
@@ -819,12 +815,12 @@ export default function ChatPage() {
             {sidebarTab === 'messages' ? (
               loadingInitial ? (
                 <div className="flex justify-center py-12">
-                  <Loader2 size={26} className="text-(--color-primary) animate-spin" />
+                  <Loader2 size={26} className="text-primary animate-spin" />
                 </div>
               ) : filteredConvos.length === 0 ? (
                 <div className="text-center py-12 px-6">
                   <div className="text-4xl mb-3">💌</div>
-                  <p className="text-[14px] font-bold text-(--color-text-muted)">
+                  <p className="text-[14px] font-bold text-text-muted">
                     {search ? 'No conversations match.' : 'Match with someone to start chatting!'}
                   </p>
                 </div>
@@ -834,7 +830,7 @@ export default function ChatPage() {
                     key={c.id}
                     convo={c}
                     active={activeConvo?.id === c.id}
-                    myId={me?.id ?? ''}
+                    myId={me?.id.toString() ?? ''}
                     onClick={() => { setActiveConvo(c); setMobileView('chat'); }}
                   />
                 ))
@@ -842,12 +838,12 @@ export default function ChatPage() {
             ) : (
               loadingInitial ? (
                 <div className="flex justify-center py-12">
-                  <Loader2 size={26} className="text-(--color-primary) animate-spin" />
+                  <Loader2 size={26} className="text-primary animate-spin" />
                 </div>
               ) : blockedUsers.length === 0 ? (
                 <div className="text-center py-12 px-6">
-                  <Ban size={36} className="text-(--color-border) mx-auto mb-3" />
-                  <p className="text-[14px] font-bold text-(--color-text-muted)">You haven't blocked anyone.</p>
+                  <Ban size={36} className="text-border mx-auto mb-3" />
+                  <p className="text-[14px] font-bold text-text-muted">You haven't blocked anyone.</p>
                 </div>
               ) : (
                 blockedUsers.map((u) => (
@@ -860,18 +856,18 @@ export default function ChatPage() {
 
         {/* ── CHAT THREAD ── */}
         <main className={`
-          flex-1 flex flex-col bg-white/95 backdrop-blur-md rounded-[28px]
-          border border-(--color-border) shadow-sm overflow-hidden min-w-0
+          flex-1 flex flex-col bg-surface/95 backdrop-blur-md rounded-[28px]
+          border border-border shadow-sm overflow-hidden min-w-0
           ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}
         `}>
           {!activeConvo ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-8">
-              <div className="w-20 h-20 rounded-full bg-(--color-primary)/8 border border-(--color-primary)/20 flex items-center justify-center">
-                <Heart size={36} className="text-(--color-primary) fill-(--color-primary)/30" />
+              <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                <Heart size={36} className="text-primary fill-primary/30" />
               </div>
               <div>
-                <h3 className="font-black text-(--color-text) text-xl mb-1.5">Your messages</h3>
-                <p className="text-[14px] text-(--color-text-muted) max-w-[260px] mx-auto font-medium leading-relaxed">
+                <h3 className="font-black text-text text-xl mb-1.5">Your messages</h3>
+                <p className="text-[14px] text-text-muted max-w-[260px] mx-auto font-medium leading-relaxed">
                   Select a conversation to start chatting. Only mutual matches can message!
                 </p>
               </div>
@@ -879,11 +875,11 @@ export default function ChatPage() {
           ) : (
             <>
               {/* Thread Header */}
-              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-(--color-border) bg-white shrink-0">
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border bg-surface shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <button
                     onClick={() => setMobileView('list')}
-                    className="md:hidden p-2 rounded-full border border-(--color-border) text-(--color-text-muted) hover:bg-(--color-background) transition-colors shrink-0"
+                    className="md:hidden p-2 rounded-full border border-border text-text-muted hover:bg-background transition-colors shrink-0"
                   >
                     <ArrowLeft size={17} />
                   </button>
@@ -900,15 +896,15 @@ export default function ChatPage() {
                       grayscale={iBlockedThem}
                     />
                     <div className="min-w-0">
-                      <p className="font-black text-[17px] text-(--color-text) group-hover:text-(--color-primary) transition-colors truncate">
+                      <p className="font-black text-[17px] text-text group-hover:text-primary transition-colors truncate">
                         {activeConvo.first_name} {activeConvo.last_name}
                       </p>
                       <p className="text-[12px] font-bold">
                         {iBlockedThem
-                          ? <span className="text-(--color-error)">Blocked</span>
+                          ? <span className="text-error">Blocked</span>
                           : activeConvo.is_online && !chatForbidden
-                            ? <span className="text-emerald-500">Active now</span>
-                            : <span className="text-(--color-text-muted)">@{activeConvo.username}</span>
+                            ? <span className="text-success">Active now</span>
+                            : <span className="text-text-muted">@{activeConvo.username}</span>
                         }
                       </p>
                     </div>
@@ -920,7 +916,7 @@ export default function ChatPage() {
                     <button
                       onClick={() => setShowProposeModal(true)}
                       title="Ask out"
-                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-(--color-primary)/25 bg-(--color-primary)/8 text-(--color-primary) text-[13px] font-black hover:bg-(--color-primary)/15 transition-all"
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-primary/25 bg-primary/10 text-primary text-[13px] font-black hover:bg-primary/20 transition-all"
                     >
                       <CalendarHeart size={16} />
                       <span className="hidden sm:inline">Ask out</span>
@@ -929,7 +925,7 @@ export default function ChatPage() {
                   <div className="relative">
                     <button
                       onClick={() => setShowActionsMenu((v) => !v)}
-                      className="p-2.5 rounded-full border border-(--color-border) text-(--color-text-muted) hover:border-(--color-primary)/40 hover:text-(--color-primary) transition-all bg-white"
+                      className="p-2.5 rounded-full border border-border text-text-muted hover:border-primary/40 hover:text-primary transition-all bg-surface"
                     >
                       <MoreVertical size={17} />
                     </button>
@@ -955,39 +951,39 @@ export default function ChatPage() {
               >
                 {iBlockedThem ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-(--color-background) flex items-center justify-center border border-(--color-border)">
-                      <Ban size={28} className="text-(--color-text-muted)" />
+                    <div className="w-16 h-16 rounded-full bg-background flex items-center justify-center border border-border">
+                      <Ban size={28} className="text-text-muted" />
                     </div>
-                    <h3 className="text-[18px] font-black text-(--color-text)">You blocked this user</h3>
-                    <p className="text-[14px] font-medium text-(--color-text-muted) max-w-[260px] leading-relaxed">
-                      You can't send or receive messages from <strong className="text-(--color-text)">{activeConvo.first_name}</strong>.
+                    <h3 className="text-[18px] font-black text-text">You blocked this user</h3>
+                    <p className="text-[14px] font-medium text-text-muted max-w-[260px] leading-relaxed">
+                      You can't send or receive messages from <strong className="text-text">{activeConvo.first_name}</strong>.
                     </p>
                     <button
                       onClick={() => setConfirmAction('unblock')}
-                      className="mt-2 px-5 py-2.5 bg-white border-2 border-(--color-border) text-(--color-text) font-bold rounded-full hover:border-(--color-primary) hover:text-(--color-primary) transition-all text-[14px]"
+                      className="mt-2 px-5 py-2.5 bg-surface border-2 border-border text-text font-bold rounded-full hover:border-primary hover:text-primary transition-all text-[14px]"
                     >
                       Unblock user
                     </button>
                   </div>
                 ) : chatForbidden ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
-                    <div className="w-16 h-16 rounded-full bg-(--color-background) flex items-center justify-center border border-(--color-border)">
-                      <UserX size={28} className="text-(--color-error)" />
+                    <div className="w-16 h-16 rounded-full bg-background flex items-center justify-center border border-border">
+                      <UserX size={28} className="text-error" />
                     </div>
-                    <h3 className="text-[18px] font-black text-(--color-text)">Chat unavailable</h3>
-                    <p className="text-[14px] font-medium text-(--color-text-muted) max-w-[280px] leading-relaxed">
-                      <strong className="text-(--color-text)">{activeConvo.first_name}</strong> may have unmatched or blocked you.
+                    <h3 className="text-[18px] font-black text-text">Chat unavailable</h3>
+                    <p className="text-[14px] font-medium text-text-muted max-w-[280px] leading-relaxed">
+                      <strong className="text-text">{activeConvo.first_name}</strong> may have unmatched or blocked you.
                     </p>
                   </div>
                 ) : loadingMsgs ? (
                   <div className="flex-1 flex justify-center items-center">
-                    <Loader2 size={30} className="text-(--color-primary) animate-spin" />
+                    <Loader2 size={30} className="text-primary animate-spin" />
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
                     <div className="text-5xl">💞</div>
-                    <p className="text-[15px] font-bold text-(--color-text-muted)">
-                      You matched with <strong className="text-(--color-text)">{activeConvo.first_name}</strong>!<br />
+                    <p className="text-[15px] font-bold text-text-muted">
+                      You matched with <strong className="text-text">{activeConvo.first_name}</strong>!<br />
                       <span className="font-medium">Be the first to say hi.</span>
                     </p>
                   </div>
@@ -998,7 +994,7 @@ export default function ChatPage() {
                         <button
                           onClick={loadOlder}
                           disabled={loadingOlder}
-                          className="px-5 py-2 rounded-full bg-(--color-background) border border-(--color-border) text-[12px] font-bold text-(--color-text-muted) hover:text-(--color-primary) hover:border-(--color-primary) transition-colors disabled:opacity-50 flex items-center gap-2 mx-auto"
+                          className="px-5 py-2 rounded-full bg-background border border-border text-[12px] font-bold text-text-muted hover:text-primary hover:border-primary transition-colors disabled:opacity-50 flex items-center gap-2 mx-auto"
                         >
                           {loadingOlder && <Loader2 size={13} className="animate-spin" />}
                           {loadingOlder ? 'Loading…' : 'Load older messages'}
@@ -1008,13 +1004,13 @@ export default function ChatPage() {
                     {groups.map((group) => (
                       <div key={group.date} className="flex flex-col gap-1.5">
                         <div className="flex items-center justify-center my-3">
-                          <span className="text-[10px] bg-(--color-background) text-(--color-text-muted) font-black uppercase tracking-[0.12em] px-4 py-1.5 rounded-full border border-(--color-border)">
+                          <span className="text-[10px] bg-background text-text-muted font-black uppercase tracking-[0.12em] px-4 py-1.5 rounded-full border border-border">
                             {group.date}
                           </span>
                         </div>
                         {group.messages.map((msg) => (
                           <div key={msg.id} className="msg-appear">
-                            <Bubble msg={msg} mine={me ? msg.from === me.id : false} />
+                            <Bubble msg={msg} mine={me ? msg.from === me.id.toString() : false} />
                           </div>
                         ))}
                       </div>
@@ -1025,12 +1021,12 @@ export default function ChatPage() {
               </div>
 
               {/* Input Area */}
-              <div className="px-5 py-4 bg-white border-t border-(--color-border) shrink-0">
+              <div className="px-5 py-4 bg-surface border-t border-border shrink-0">
                 <div
-                  className={`flex items-end gap-3 bg-(--color-background) border-2 rounded-[22px] px-4 py-2.5 transition-all ${
+                  className={`flex items-end gap-3 bg-background border-2 rounded-[22px] px-4 py-2.5 transition-all ${
                     chatForbidden || iBlockedThem
-                      ? 'opacity-50 cursor-not-allowed border-(--color-border)'
-                      : 'border-(--color-border) focus-within:border-(--color-primary) focus-within:bg-white focus-within:shadow-[0_0_0_4px_rgba(233,64,87,0.06)]'
+                      ? 'opacity-50 cursor-not-allowed border-border'
+                      : 'border-border focus-within:border-primary focus-within:bg-surface'
                   }`}
                 >
                   <textarea
@@ -1050,17 +1046,17 @@ export default function ChatPage() {
                     }
                     rows={1}
                     maxLength={1000}
-                    className="flex-1 bg-transparent text-[15px] font-medium text-(--color-text) placeholder-[var(--color-text-muted)] resize-none outline-none leading-relaxed py-1 disabled:cursor-not-allowed"
+                    className="flex-1 bg-transparent text-[15px] font-medium text-text placeholder-text-muted resize-none outline-none leading-relaxed py-1 disabled:cursor-not-allowed"
                     style={{ height: '32px' }}
                   />
                   <div className="flex items-center gap-2 shrink-0 pb-0.5">
                     {input.length > 900 && (
-                      <span className="text-[11px] font-black text-(--color-error)">{1000 - input.length}</span>
+                      <span className="text-[11px] font-black text-error">{1000 - input.length}</span>
                     )}
                     <button
                       onClick={sendMessage}
                       disabled={!input.trim() || sending || chatForbidden || iBlockedThem}
-                      className="w-9 h-9 rounded-full bg-(--color-primary) text-white flex items-center justify-center hover:shadow-[0_4px_16px_rgba(233,64,87,0.35)] transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+                      className="w-9 h-9 rounded-full bg-primary text-surface flex items-center justify-center shadow-md shadow-primary/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                     >
                       {sending
                         ? <Loader2 size={16} className="animate-spin" />

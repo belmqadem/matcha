@@ -1,11 +1,10 @@
-// src/App.tsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 // Global Context Providers
 import { AuthProvider } from '@/context/AuthContext';
 import { SocketProvider } from '@/context/SocketContext';
 
-// Auth pages (Notice: all .js/.jsx extensions removed)
+// Auth pages
 import LandingPage from './pages/auth/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
@@ -27,16 +26,15 @@ import VisitorsPage from './pages/VisitorsPage';
 import DatesPage from './pages/DatesPage';
 
 // Setup page
-import ProfileSetupPage from './pages/Profilesetuppage'; // Consider renaming the file to ProfileSetupPage.tsx for consistency
+import ProfileSetupPage from './pages/Profilesetuppage';
 
-// Layout & guards
+// Layout & guards (Updated Import!)
 import AppLayout from './layout/AppLayout';
-import { RequireAuth, RequireProfile } from './guards';
+import { RequireAuth, RequireProfile } from './components/routing/ProtectedRoute';
 
 const App = () => {
   return (
     <BrowserRouter>
-      {/* Providers wrap the entire routing logic */}
       <AuthProvider>
         <SocketProvider>
           <Routes>

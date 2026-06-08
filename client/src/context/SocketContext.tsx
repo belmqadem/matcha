@@ -1,7 +1,8 @@
-// src/context/SocketContext.tsx
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/context/AuthContext';
+import { chatService } from '@/services/chatService';
+import { notificationService } from '@/services/notificationService';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -26,22 +27,16 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     const newSocket = io('/', { withCredentials: true, path: '/socket.io' });
     setSocket(newSocket);
 
-    // Fetch initial counts on mount
+    // Fetch initial counts on mount using our services
     const fetchInitialCounts = async () => {
       try {
-        const [msgRes, notifRes] = await Promise.all([
-          fetch('/api/chat/unread/count', { credentials: 'include' }),
-          fetch('/api/notifications', { credentials: 'include' })
+        const [msgData, notifData] = await Promise.all([
+          chatService.getUnreadCount(),
+          notificationService.getNotifications()
         ]);
 
-        if (msgRes.ok) {
-          const msgData = await msgRes.json();
-          setUnreadMessages(msgData.unread || 0);
-        }
-        if (notifRes.ok) {
-          const notifData = await notifRes.json();
-          setUnreadNotifications(notifData.unread_count || 0);
-        }
+        setUnreadMessages(msgData.unread || 0);
+        setUnreadNotifications(notifData.unread_count || 0);
       } catch (error) {
         console.error("Failed to fetch notification counts", error);
       }

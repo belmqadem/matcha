@@ -1,9 +1,7 @@
-// src/pages/Profilesetuppage.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 
-// FIXED: Added the 'type' keyword here to satisfy verbatimModuleSyntax
 import type { ProfileFormData } from '@/types/profileSetup';
 
 import { saveCompleteProfile } from '@/services/profileService';
@@ -38,6 +36,13 @@ export default function ProfileSetupPage() {
     photos: [],
   });
 
+  // Prevent users who already finished setup from accessing this page
+  useEffect(() => {
+    if (user?.gender) {
+      navigate('/browse', { replace: true });
+    }
+  }, [user, navigate]);
+
   const currentStep = STEPS[step];
   const isLast = step === STEPS.length - 1;
   const progress = (step / (STEPS.length - 1)) * 100;
@@ -69,14 +74,19 @@ export default function ProfileSetupPage() {
     goToStep(step + 1, 'forward');
   };
 
+  const handleCompletion = async () => {
+    // Note: To make this a true SPA without a hard reload, you should
+    // add a refreshUser() function to AuthContext and call it here before navigating.
+    window.location.href = '/browse';
+  };
+
   const handleSkipAll = async () => {
     try {
       await saveCompleteProfile(form);
+      handleCompletion();
     } catch (err) {
       console.error('Failed to save profile:', err);
     }
-    // Hard refresh to reload the AuthContext with the new gender/profile data
-    window.location.href = '/browse';
   };
 
   const handleSubmit = async () => {
@@ -89,20 +99,13 @@ export default function ProfileSetupPage() {
     setLoading(true);
     try {
       await saveCompleteProfile(form);
-      // Hard refresh to reload the AuthContext with the new gender/profile data
-      window.location.href = '/browse';
+      handleCompletion();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
-  // Prevent users who already finished setup from being here
-  if (user?.gender) {
-    navigate('/browse');
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-5 relative overflow-hidden font-primary">
@@ -112,8 +115,8 @@ export default function ProfileSetupPage() {
       <div className="fixed top-[-7.5rem] right-[-6.25rem] w-[21.25rem] h-[21.25rem] rounded-full pointer-events-none z-0 bg-primary/10 blur-3xl" />
       <div className="fixed bottom-[-7.5rem] left-[-5rem] w-[18.75rem] h-[18.75rem] rounded-full pointer-events-none z-0 bg-primary/10 blur-3xl" />
 
-      {/* Main card */}
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 relative z-10 border border-border">
+      {/* Main card - Replaced bg-white with bg-surface to enforce token rules */}
+      <div className="w-full max-w-md bg-surface rounded-3xl shadow-xl p-8 relative z-10 border border-border">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2">
             <Heart size={14} fill="currentColor" className="text-primary" />

@@ -1,13 +1,12 @@
-// src/context/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
 import type { User, LoginCredentials } from '@/types/auth';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  // login returns the User so the calling component can decide where to route
+  login: (credentials: LoginCredentials) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -15,30 +14,20 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check auth on initial load
+    // Check auth on initial load. No routing logic here!
     authService.me()
-      .then(({ user }) => {
-        setUser(user);
-        // Centralized routing logic
-        if (!user.gender) navigate('/profile/setup');
-      })
+      .then(({ user }) => setUser(user))
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
-  }, [navigate]);
+  }, []);
 
   const login = async (credentials: LoginCredentials) => {
     await authService.login(credentials);
     const { user } = await authService.me();
     setUser(user);
-
-    if (!user.gender) {
-      navigate('/profile/setup');
-    } else {
-      navigate('/browse');
-    }
+    return user; // Return user so the UI can navigate based on profile status
   };
 
   return (
