@@ -188,6 +188,188 @@ const recordVisit = async (viewerId, targetId) => {
   return fameRes.rows[0]?.fame_rating ?? null;
 };
 
+export const reorderPhotos = async (userId, order) => {
+  const { rows: owned } = await query(
+    "SELECT id FROM photos WHERE user_id = $1 AND id = ANY($2::int[])",
+    [userId, order],
+  );
+
+  if (owned.length !== order.length) {
+    throw new AppError("Invalid photo IDs", HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const client = await getClient();
+
+  try {
+    await client.query("BEGIN");
+
+    await client.query(
+      `UPDATE photos AS p
+       SET order_index = v.idx
+       FROM (
+         SELECT
+           unnest($1::int[]) AS id,
+           generate_series(0, array_length($1::int[], 1) - 1) AS idx
+       ) AS v
+       WHERE p.id = v.id AND p.user_id = $2`,
+      [order, userId],
+    );
+
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
+
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
+
+  const { rows } = await query(
+    "SELECT id, url, order_index, created_at FROM photos WHERE user_id = $1 ORDER BY order_index",
+    [userId],
+  );
+
+  return { photos: rows };
+};
+
+export const editPhoto = async (userId, photoId, { rotate, crop }) => {
+  const { rows } = await query(
+    "SELECT id, filename, url FROM photos WHERE id = $1 AND user_id = $2",
+    [photoId, userId],
+  );
+
+  if (!rows.length) {
+    throw new AppError("Photo not found", HTTP_STATUS.NOT_FOUND);
+  }
+
+  const photo = rows[0];
+  const filename = path.basename(photo.url);
+  const filePath = path.join(UPLOADS_DIR, filename);
+  const tmpPath = filePath + ".edit.tmp";
+
+  try {
+    let image = sharp(filePath);
+
+    // Step 1 — rotate first
+    if (rotate) {
+      image = image.rotate(rotate);
+    }
+
+    // Step 2 — validate crop bounds against post-rotation dimensions
+    if (crop) {
+      const metadata = await image.metadata();
+      const imgWidth = metadata.width ?? 0;
+      const imgHeight = metadata.height ?? 0;
+
+      if (
+        crop.left < 0 ||
+        crop.top < 0 ||
+        crop.left + crop.width > imgWidth ||
+        crop.top + crop.height > imgHeight
+      ) {
+        throw new AppError(
+          `Crop region exceeds image bounds (${imgWidth}x${imgHeight})`,
+          HTTP_STATUS.BAD_REQUEST,
+        );
+      }
+
+      image = image.extract({
+        left: crop.left,
+        top: crop.top,
+        width: crop.width,
+        height: crop.height,
+      });
+    }
+
+    const ext = path.extname(filename).toLowerCase();
+    if (ext === ".jpg" || ext === ".jpeg") {
+      await image.jpeg({ quality: 85 }).toFile(tmpPath);
+    } else if (ext === ".png") {
+      await image.png({ compressionLevel: 6 }).toFile(tmpPath);
+    } else {
+      await image.webp({ quality: 85 }).toFile(tmpPath);
+    }
+
+    await fs.rename(tmpPath, filePath);
+  } catch (err) {
+    await fs.unlink(tmpPath).catch(() => {});
+    if (err instanceof AppError) throw err;
+    throw new AppError("Failed to process image", HTTP_STATUS.BAD_REQUEST);
+  }
+
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
+
+  const { rows: updated } = await query(
+    "SELECT id, url, order_index, created_at FROM photos WHERE id = $1",
+    [photoId],
+  );
+
+  return { photo: updated[0] };
+};
+
+export const applyFilter = async (userId, photoId, { filter, intensity }) => {
+  const { rows } = await query(
+    "SELECT id, filename, url FROM photos WHERE id = $1 AND user_id = $2",
+    [photoId, userId],
+  );
+
+  if (!rows.length) {
+    throw new AppError("Photo not found", HTTP_STATUS.NOT_FOUND);
+  }
+
+  const photo = rows[0];
+  const filename = path.basename(photo.url);
+  const filePath = path.join(UPLOADS_DIR, filename);
+  const tmpPath = filePath + ".filter.tmp";
+
+  try {
+    let image = sharp(filePath);
+
+    if (filter === "grayscale") {
+      image = image.grayscale();
+    } else if (filter === "sepia") {
+      image = image.tint({ r: 112, g: 66, b: 20 });
+    } else if (filter === "blur") {
+      const sigma = 0.3 + (intensity / 100) * 9.7;
+      image = image.blur(sigma);
+    } else if (filter === "brighten") {
+      const multiplier = 1.0 + intensity / 100;
+      image = image.modulate({ brightness: multiplier });
+    } else if (filter === "darken") {
+      const multiplier = Math.max(0.1, 1.0 - (intensity / 100) * 0.9);
+      image = image.modulate({ brightness: multiplier });
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === ".jpg" || ext === ".jpeg") {
+      await image.jpeg({ quality: 85 }).toFile(tmpPath);
+    } else if (ext === ".png") {
+      await image.png({ compressionLevel: 6 }).toFile(tmpPath);
+    } else {
+      await image.webp({ quality: 85 }).toFile(tmpPath);
+    }
+
+    await fs.rename(tmpPath, filePath);
+  } catch (err) {
+    await fs.unlink(tmpPath).catch(() => {});
+    if (err instanceof AppError) throw err;
+    throw new AppError("Failed to process image", HTTP_STATUS.BAD_REQUEST);
+  }
+
+  await invalidateUserCaches(userId);
+  await invalidateProfileCache(userId);
+
+  const { rows: updated } = await query(
+    "SELECT id, url, order_index, created_at FROM photos WHERE id = $1",
+    [photoId],
+  );
+
+  return { photo: updated[0] };
+};
+
 export const updateProfile = async (userId, updates) => {
   const sanitizedUpdates = sanitizeObject(updates);
   const setClauses = [];
@@ -332,7 +514,7 @@ export const uploadPhoto = async (userId, file) => {
     if (format.format === "jpeg") {
       image = image.jpeg({ quality: 80 });
     } else if (format.format === "png") {
-      image = image.png({ quality: 80 });
+      image = image.png({ compressionLevel: 6 });
     } else {
       image = image.webp({ quality: 80 });
     }
@@ -791,6 +973,9 @@ export const reportUser = async (reporterId, reportedId, reason) => {
 };
 
 export default {
+  reorderPhotos,
+  editPhoto,
+  applyFilter,
   updateProfile,
   updateTags,
   uploadPhoto,

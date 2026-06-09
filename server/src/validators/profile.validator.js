@@ -107,3 +107,36 @@ export const tagsSchema = z
       .max(TAGS_MAX),
   })
   .strict();
+
+export const reorderPhotosSchema = z
+  .object({
+    order: z.array(z.number().int().positive()).min(1).max(5),
+  })
+  .strict()
+  .refine((data) => new Set(data.order).size === data.order.length, {
+    message: "Photo IDs must be unique",
+  });
+
+export const editPhotoSchema = z
+  .object({
+    rotate: z.number().int().multipleOf(90).min(-270).max(270).optional(),
+    crop: z
+      .object({
+        left: z.number().int().min(0),
+        top: z.number().int().min(0),
+        width: z.number().int().min(10),
+        height: z.number().int().min(10),
+      })
+      .optional(),
+  })
+  .strict()
+  .refine((data) => data.rotate !== undefined || data.crop !== undefined, {
+    message: "At least one of rotate or crop must be provided",
+  });
+
+export const filterPhotoSchema = z
+  .object({
+    filter: z.enum(["grayscale", "sepia", "blur", "brighten", "darken"]),
+    intensity: z.number().min(0).max(100).optional().default(50),
+  })
+  .strict();
