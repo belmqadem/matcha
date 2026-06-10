@@ -1,5 +1,28 @@
 import * as profileService from "../services/profile.service.js";
 
+export const reorderPhotos = async (req, res) => {
+  const result = await profileService.reorderPhotos(req.user.id, req.body.order);
+  res.status(200).json(result);
+};
+
+export const editPhoto = async (req, res) => {
+  const result = await profileService.editPhoto(
+    req.user.id,
+    Number(req.params.photoId),
+    req.body,
+  );
+  res.status(200).json(result);
+};
+
+export const applyFilter = async (req, res) => {
+  const result = await profileService.applyFilter(
+    req.user.id,
+    Number(req.params.photoId),
+    req.body,
+  );
+  res.status(200).json(result);
+};
+
 export const updateProfile = async (req, res) => {
   const user = await profileService.updateProfile(req.user.id, req.body);
   return res.status(200).json({ user });
@@ -78,6 +101,9 @@ export const reportUser = async (req, res) => {
 };
 
 export default {
+  reorderPhotos,
+  editPhoto,
+  applyFilter,
   updateProfile,
   updateTags,
   uploadPhoto,
