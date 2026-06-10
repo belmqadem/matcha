@@ -18,35 +18,47 @@ export function useConversations(activeConvoId: string | null): UseConversations
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Keep a ref so socket handler always reads the latest activeConvoId without re-subscribing
   const activeConvoIdRef = useRef(activeConvoId);
   useEffect(() => { activeConvoIdRef.current = activeConvoId; }, [activeConvoId]);
 
-  // Initial fetch
   useEffect(() => {
     Promise.all([
       chatService.blocked().catch(() => ({ blocked: [] as BlockedUser[] })),
       chatService.conversations().catch(() => ({ conversations: [] as Conversation[] })),
     ]).then(([blockedData, convosData]) => {
-      setBlockedUsers(blockedData.blocked);
-      setConvos(convosData.conversations);
-    }).finally(() => setLoading(false));
+      // Normalize all IDs to strings so URL params always match
+      const normalizedConvos = convosData.conversations.map((c) => ({
+        ...c,
+        id: String(c.id),
+      }));
+      const normalizedBlocked = blockedData.blocked.map((b) => ({
+        ...b,
+        id: String(b.id),
+      }));
+      setBlockedUsers(normalizedBlocked);
+      setConvos(normalizedConvos);
+      // Set loading AFTER state is staged in the same microtask flush
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
+    // No .finally() — loading is set inside .then() so it's batched with the data
   }, []);
 
-  // Socket: update conversation list when a message arrives
   useEffect(() => {
     if (!socket) return;
 
     const onReceive = (msg: { id: number; from: string; content: string; sentAt: string }) => {
       setConvos((prev) =>
         prev.map((c) =>
-          c.id === msg.from
+          // String() coercion — msg.from is string, c.id is now always string
+          String(c.id) === String(msg.from)
             ? {
                 ...c,
                 last_message: msg.content,
                 last_message_at: msg.sentAt,
                 last_message_sender_id: msg.from,
-                unread_count: c.id === activeConvoIdRef.current ? 0 : c.unread_count + 1,
+                unread_count: String(c.id) === String(activeConvoIdRef.current) ? 0 : c.unread_count + 1,
               }
             : c,
         ),

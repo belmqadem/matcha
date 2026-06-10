@@ -1,3 +1,4 @@
+// src/context/SocketContext.tsx
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/context/AuthContext';
@@ -10,6 +11,7 @@ interface SocketContextType {
   unreadNotifications: number;
   markMessagesRead: () => void;
   markNotificationsRead: () => void;
+  decrementNotifications: () => void; // <-- ADD THIS
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -21,32 +23,30 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
-    // Only connect if the user is fully authenticated and has set up their profile
-    if (!user || !user.gender) return;
-
+    if (!user) return;
     const newSocket = io('/', { withCredentials: true, path: '/socket.io' });
     setSocket(newSocket);
 
-    // Fetch initial counts on mount using our services
     const fetchInitialCounts = async () => {
       try {
         const [msgData, notifData] = await Promise.all([
           chatService.getUnreadCount(),
-          notificationService.getNotifications()
+          notificationService.getNotifications(),
         ]);
-
         setUnreadMessages(msgData.unread || 0);
         setUnreadNotifications(notifData.unread_count || 0);
       } catch (error) {
-        console.error("Failed to fetch notification counts", error);
+        console.error('Failed to fetch notification counts', error);
       }
     };
 
-    newSocket.on('connect', fetchInitialCounts);
+    const onConnect = () => {
+      fetchInitialCounts();
+    };
 
-    // Real-time listeners
-    newSocket.on('chat:receive', () => setUnreadMessages(prev => prev + 1));
-    newSocket.on('notification:new', () => setUnreadNotifications(prev => prev + 1));
+    newSocket.on('connect', onConnect);
+    newSocket.on('chat:receive', () => setUnreadMessages((prev) => prev + 1));
+    newSocket.on('notification:new', () => setUnreadNotifications((prev) => prev + 1));
 
     return () => {
       newSocket.disconnect();
@@ -56,14 +56,20 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const markMessagesRead = () => setUnreadMessages(0);
   const markNotificationsRead = () => setUnreadNotifications(0);
 
+  // <-- ADD THIS FUNCTION
+  const decrementNotifications = () => setUnreadNotifications((prev) => Math.max(0, prev - 1));
+
   return (
-    <SocketContext.Provider value={{
-      socket,
-      unreadMessages,
-      unreadNotifications,
-      markMessagesRead,
-      markNotificationsRead
-    }}>
+    <SocketContext.Provider
+      value={{
+        socket,
+        unreadMessages,
+        unreadNotifications,
+        markMessagesRead,
+        markNotificationsRead,
+        decrementNotifications, // <-- EXPORT IT
+      }}
+    >
       {children}
     </SocketContext.Provider>
   );

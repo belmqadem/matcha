@@ -62,3 +62,21 @@
 .scrollbar-thin {
   scrollbar-width: thin;
 }
+
+@keyframes authDrift {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.9; }
+  33%  { transform: translateY(-18px) translateX(7px) rotate(14deg); opacity: 0.7; }
+  66%  { transform: translateY(-34px) translateX(-5px) rotate(-10deg); opacity: 0.35; }
+  100% { transform: translateY(-55px) translateX(3px) rotate(18deg); opacity: 0; }
+}
+
+@keyframes authTwinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50%      { opacity: 1;    transform: scale(1.25); }
+}
+
+@keyframes authPopIn {
+  0%   { transform: scale(0.92) translateY(12px); opacity: 0; }
+  60%  { transform: scale(1.02) translateY(-2px); }
+  100% { transform: scale(1)    translateY(0);    opacity: 1; }
+}

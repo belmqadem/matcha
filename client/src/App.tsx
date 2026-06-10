@@ -19,7 +19,7 @@ import ChatPage from './pages/ChatPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MapPage from './pages/MapPage';
 import MyProfilePage from './pages/MyProfilePage';
-import EditProfilePage from './pages/EditProfilePage';
+// import EditProfilePage from './pages/EditProfilePage';
 import ProfilePage from './pages/ProfilePage';
 import LikesPage from './pages/LikesPage';
 import VisitorsPage from './pages/VisitorsPage';
@@ -64,7 +64,7 @@ const App = () => {
                   <Route path="/map" element={<MapPage />} />
                   <Route path="/dates" element={<DatesPage />} />
                   <Route path="/profile/me" element={<MyProfilePage />} />
-                  <Route path="/profile/edit" element={<EditProfilePage />} />
+                  {/* <Route path="/profile/edit" element={<EditProfilePage />} /> */}
                   <Route path="/profile/:id" element={<ProfilePage />} />
                 </Route>
               </Route>

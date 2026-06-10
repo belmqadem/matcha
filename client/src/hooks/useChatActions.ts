@@ -1,5 +1,5 @@
 // src/hooks/useChatActions.ts
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useSocket } from '@/context/SocketContext';
 import { useAuth } from '@/context/AuthContext';
 import { chatService } from '@/services/chatService';
@@ -44,9 +44,37 @@ export function useChatActions({
 
   const clearError = useCallback(() => setError(''), []);
 
+  // Listen for socket errors and clear "sending" state
+  useEffect(() => {
+    if (!socket) return;
+
+    const onSocketError = (data: { message: string }) => {
+      setError(data.message || 'Failed to send message');
+      setSending(false);
+    };
+
+    const onMessageSent = () => {
+      setSending(false);
+      setError('');
+    };
+
+    socket.on('chat:error', onSocketError);
+    socket.on('chat:sent', onMessageSent);
+    return () => {
+      socket.off('chat:error', onSocketError);
+      socket.off('chat:sent', onMessageSent);
+    };
+  }, [socket]);
+
   const sendMessage = useCallback(
     (content: string) => {
       if (!content.trim() || !activeConvo || !me || sending || isForbidden || isBlocked) return;
+
+      // Check socket connection
+      if (!socket || !socket.connected) {
+        setError('Connection lost. Please refresh the page.');
+        return;
+      }
 
       const optimistic: Message = {
         id: -1,
@@ -57,7 +85,7 @@ export function useChatActions({
       };
       appendOptimistic(optimistic);
       setSending(true);
-      socket?.emit('chat:send', { to: activeConvo.id, content });
+      socket.emit('chat:send', { to: activeConvo.id, content });
 
       setConvos((prev) => {
         const updated = prev.map((c) =>

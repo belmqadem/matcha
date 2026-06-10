@@ -1,4 +1,5 @@
 // src/services/notificationService.ts
+import type { NotificationsResponse } from '@/types/notification';
 
 const BASE_URL = '/api/notifications';
 
@@ -11,9 +12,22 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 export const notificationService = {
   getNotifications: () =>
-    fetch(BASE_URL, {
-      credentials: 'include',
-    }).then((res) => handleResponse<{ unread_count: number; notifications: any[] }>(res)),
+    fetch(BASE_URL, { credentials: 'include' }).then((res) =>
+      handleResponse<NotificationsResponse>(res),
+    ),
 
-  // Future notification methods (read-all, delete, etc.) will go here
+  markRead: (id: number) =>
+    fetch(`${BASE_URL}/${id}/read`, { method: 'PATCH', credentials: 'include' }).then((res) =>
+      handleResponse<{ id: number }>(res),
+    ),
+
+  deleteNotification: (id: number) =>
+    fetch(`${BASE_URL}/${id}`, { method: 'DELETE', credentials: 'include' }).then((res) =>
+      handleResponse<{ deleted: boolean }>(res),
+    ),
+
+  markAllRead: () =>
+    fetch(`${BASE_URL}/read-all`, { method: 'PATCH', credentials: 'include' }).then((res) =>
+      handleResponse<{ updated: number }>(res),
+    ),
 };

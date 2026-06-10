@@ -8,6 +8,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
 import { authService } from '@/services/authService';
+import MatchaLogo from '@/components/Logo'; // <-- Added Import
 
 const NAV_ITEMS = [
   { to: '/browse',        label: 'Browse',        Icon: Compass,       badge: undefined },
@@ -43,7 +44,6 @@ export default function AppHeader() {
   const [loggingOut, setLoggingOut] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close menus on click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
@@ -52,7 +52,6 @@ export default function AppHeader() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Close menus on route change and clear badges if appropriate
   useEffect(() => {
     setMenuOpen(false);
     if (location.pathname === '/notifications') markNotificationsRead();
@@ -63,7 +62,7 @@ export default function AppHeader() {
     setLoggingOut(true);
     try {
       await authService.logout();
-      window.location.href = '/login'; // Force full refresh to clear contexts
+      window.location.href = '/login';
     } catch {
       setLoggingOut(false);
     }
@@ -75,11 +74,12 @@ export default function AppHeader() {
     return 0;
   };
 
-  // ─── Desktop Header ───
   const DesktopNav = () => (
     <header className="hidden md:flex sticky top-0 z-50 w-full bg-surface border-b border-border shadow-sm h-16 px-6 items-center">
-      <NavLink to="/browse" className="text-2xl font-black italic text-primary mr-8 tracking-tight">
-        Matcha
+      {/* Replaced Text with Logo */}
+      <NavLink to="/browse" className="flex items-center gap-2 mr-8 group">
+        <MatchaLogo to="" size="sm" className="group-hover:scale-105 transition-transform" />
+        <span className="text-2xl font-black italic text-primary tracking-tight">Matcha</span>
       </NavLink>
 
       <nav className="flex items-center gap-1 flex-1">
@@ -116,12 +116,13 @@ export default function AppHeader() {
     </header>
   );
 
-  // ─── Mobile Header & Bottom Tabs ───
   const MobileNav = () => (
     <>
       <header className="md:hidden sticky top-0 z-50 w-full bg-surface border-b border-border shadow-sm h-14 px-4 flex items-center justify-between">
-        <NavLink to="/browse" className="text-xl font-black italic text-primary tracking-tight">
-          Matcha
+        {/* Replaced Text with Logo */}
+        <NavLink to="/browse" className="flex items-center gap-2">
+          <MatchaLogo to="" size="sm" />
+          <span className="text-xl font-black italic text-primary tracking-tight">Matcha</span>
         </NavLink>
         {(unreadMessages + unreadNotifications) > 0 && (
           <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
@@ -146,7 +147,7 @@ export default function AppHeader() {
         <div ref={menuRef} className="flex-1 relative flex">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className={`flex-1 flex flex-col items-center justify-center gap-1 ${menuOpen ? 'text-primary' : 'text-text-muted'}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${menuOpen ? 'text-primary' : 'text-text-muted'}`}
           >
             {menuOpen ? <X size={22} strokeWidth={2} /> : <Menu size={22} strokeWidth={1.8} />}
             <span className="text-[10px] font-semibold">More</span>
@@ -158,7 +159,7 @@ export default function AppHeader() {
                 const isActive = location.pathname === to;
                 const count = getBadge(badge);
                 return (
-                  <NavLink key={to} to={to} className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isActive ? 'text-primary bg-primary/10' : 'text-text hover:bg-gray-50'}`}>
+                  <NavLink key={to} to={to} className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${isActive ? 'text-primary bg-primary/10' : 'text-text hover:bg-border/50'}`}>
                     <div className="relative flex">
                       <Icon size={18} />
                       <BadgeCounter count={count} />
@@ -171,7 +172,7 @@ export default function AppHeader() {
               <button
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-primary hover:bg-primary/5 transition-colors disabled:opacity-50 text-left"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-error hover:bg-error/5 transition-colors disabled:opacity-50 text-left"
               >
                 <LogOut size={18} />
                 {loggingOut ? 'Signing out…' : 'Sign out'}

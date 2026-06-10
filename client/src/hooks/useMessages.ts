@@ -53,17 +53,14 @@ export function useMessages(
       })
       .catch((e: Error) => {
         const msg = e.message.toLowerCase();
-        if (
-          msg.includes('403') ||
-          msg.includes('not connected') ||
-          msg.includes('forbidden') ||
-          msg.includes('404')
-        ) {
+        // Only mark as forbidden if it's an explicit connection/permission error,
+        // not a 404 (which means no messages yet) or temporary failure
+        if (msg.includes('not connected') || msg.includes('blocked') || msg.includes('unmatched')) {
           setForbidden(true);
         }
       })
       .finally(() => setLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConvo?.id, isBlocked]);
 
   // Scroll to bottom when new messages arrive

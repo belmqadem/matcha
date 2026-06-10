@@ -1,4 +1,5 @@
 // src/services/mapService.ts
+import type { MapResponse } from '@/types/map';
 
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -8,14 +9,26 @@ async function handleResponse<T>(res: Response): Promise<T> {
 }
 
 export const mapService = {
-  getMapUsers: (maxKm: number) =>
-    fetch(`/api/browse/map?max_km=${maxKm}`, { credentials: 'include' }).then((res) => handleResponse<any>(res)),
+  getBrowseMap: (maxKm: number) =>
+    fetch(`/api/browse/map?max_km=${maxKm}`, { credentials: 'include' }).then((res) =>
+      handleResponse<MapResponse>(res),
+    ),
 
-  updateLocationGps: (latitude: number, longitude: number) =>
+  updateGpsLocation: (latitude: number, longitude: number) =>
     fetch('/api/profile/me/location/gps', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ latitude, longitude }),
-    }).then((res) => handleResponse<any>(res)),
+    }).then((res) => handleResponse<{ latitude: number; longitude: number; location_city: string }>(res)),
+
+  likeUser: (id: string) =>
+    fetch(`/api/likes/${id}`, { method: 'POST', credentials: 'include' }).then((res) =>
+      handleResponse<{ liked: boolean; connected: boolean }>(res),
+    ),
+
+  unlikeUser: (id: string) =>
+    fetch(`/api/likes/${id}`, { method: 'DELETE', credentials: 'include' }).then((res) =>
+      handleResponse<{ liked: false; connected: false }>(res),
+    ),
 };

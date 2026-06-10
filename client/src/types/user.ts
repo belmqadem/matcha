@@ -1,44 +1,3 @@
-// // src/types/user.ts
-
-// export interface Photo {
-//   id: number;
-//   url: string;
-//   order_index?: number;
-//   created_at?: string;
-// }
-
-// export interface BrowseUser {
-//   id: number;
-//   username: string;
-//   first_name: string;
-//   last_name?: string;
-//   birth_date?: string;
-//   photos?: Photo[];
-//   profile_picture_id?: number;
-//   is_online: boolean;
-//   last_seen?: string;
-//   distance_km?: number;
-//   location_city?: string;
-//   fame_rating: number;
-//   tags?: string[];
-//   liked_by_me: boolean;
-//   liked_me: boolean;
-//   is_connected: boolean;
-// }
-
-// export interface BrowseResponse {
-//   users: BrowseUser[];
-//   total: number;
-//   page?: number;
-//   limit?: number;
-// }
-
-// export interface LikeResponse {
-//   liked: boolean;
-//   connected: boolean;
-// }
-// src/types/user.ts
-
 export interface Photo {
   id: number;
   url: string;
@@ -47,7 +6,7 @@ export interface Photo {
 }
 
 export interface UserProfile {
-  id: number;
+  id: string;
   username: string;
   email: string;
   first_name: string;
@@ -69,7 +28,7 @@ export interface UserProfile {
 }
 
 export interface Visitor {
-  id: number;
+  id: string;
   username: string;
   first_name: string;
   last_name: string;
@@ -78,7 +37,7 @@ export interface Visitor {
 }
 
 export interface Liker {
-  id: number;
+  id: string;
   username: string;
   first_name: string;
   last_name: string;
@@ -87,7 +46,7 @@ export interface Liker {
 }
 
 export interface BrowseUser {
-  id: number;
+  id: string;
   username: string;
   first_name: string;
   last_name?: string;
@@ -118,7 +77,7 @@ export interface LikeResponse {
 }
 
 export interface PublicProfile {
-  id: number;
+  id: string;
   username: string;
   first_name: string;
   last_name: string;
