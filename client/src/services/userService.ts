@@ -1,5 +1,4 @@
 import type {
-  BrowseUser,
   BrowseResponse,
   LikeResponse,
   UserProfile,
@@ -8,6 +7,7 @@ import type {
   Liker,
 } from '@/types/user';
 import type { PublicProfile } from '@/types/user';
+import { photoBuster } from '@/utils/photoBuster';
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   const body = text ? JSON.parse(text) : {};
@@ -23,9 +23,12 @@ export const userService = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== '' && v !== null && v !== undefined) q.set(k, String(v));
     });
-    return fetch(`/api/search?${q}`, { credentials: 'include' }).then((res) =>
-      handleResponse<BrowseResponse>(res),
-    );
+    return fetch(`/api/search?${q}`, { credentials: 'include' })
+      .then((res) => handleResponse<BrowseResponse>(res))
+      .then((data) => ({
+        ...data,
+        users: data.users.map(photoBuster.bustBrowseUser),
+      }));
   },
 
   browseUsers: (params: Record<string, string | number>): Promise<BrowseResponse> => {
@@ -33,9 +36,12 @@ export const userService = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== '' && v !== null && v !== undefined) q.set(k, String(v));
     });
-    return fetch(`/api/browse?${q}`, { credentials: 'include' }).then((res) =>
-      handleResponse<BrowseResponse>(res),
-    );
+    return fetch(`/api/browse?${q}`, { credentials: 'include' })
+      .then((res) => handleResponse<BrowseResponse>(res))
+      .then((data) => ({
+        ...data,
+        users: data.users.map(photoBuster.bustBrowseUser),
+      }));
   },
 
   like: (id: string): Promise<LikeResponse> =>
@@ -53,7 +59,7 @@ export const userService = {
   getMe: (): Promise<UserProfile> =>
     fetch('/api/users/me', { credentials: 'include' }).then(async (res) => {
       const body = await handleResponse<{ user: UserProfile }>(res);
-      return body.user;
+      return photoBuster.bustUser(body.user);
     }),
 
   patchUser: (
@@ -66,7 +72,7 @@ export const userService = {
       body: JSON.stringify(body),
     }).then(async (res) => {
       const d = await handleResponse<{ user: UserProfile }>(res);
-      return d.user;
+      return photoBuster.bustUser(d.user);
     }),
 
   patchProfile: (body: Partial<UserProfile>): Promise<UserProfile> =>
@@ -77,7 +83,7 @@ export const userService = {
       body: JSON.stringify(body),
     }).then(async (res) => {
       const d = await handleResponse<{ user: UserProfile }>(res);
-      return d.user;
+      return photoBuster.bustUser(d.user);
     }),
 
   updateTags: (tags: string[]): Promise<string[]> =>
@@ -116,16 +122,38 @@ export const userService = {
       credentials: 'include',
     }).then((res) => handleResponse<void>(res)),
 
+  rotatePhoto: (photoId: number, rotate: number): Promise<Photo> =>
+    fetch(`/api/profile/me/photos/${photoId}/edit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ rotate }),
+    }).then(async (res) => {
+      const d = await handleResponse<{ photo: Photo }>(res);
+      return d.photo;
+    }),
+
+  applyFilter: (photoId: number, filter: string, intensity: number): Promise<Photo> =>
+    fetch(`/api/profile/me/photos/${photoId}/filter`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ filter, intensity }),
+    }).then(async (res) => {
+      const d = await handleResponse<{ photo: Photo }>(res);
+      return d.photo;
+    }),
+
   getVisitors: (): Promise<Visitor[]> =>
     fetch('/api/profile/me/visitors', { credentials: 'include' }).then(async (res) => {
       const d = await handleResponse<{ visitors: Visitor[] }>(res);
-      return d.visitors;
+      return d.visitors.map(photoBuster.bustVisitor);
     }),
 
   getLikedBy: (): Promise<Liker[]> =>
     fetch('/api/profile/me/liked-by', { credentials: 'include' }).then(async (res) => {
       const d = await handleResponse<{ likers: Liker[] }>(res);
-      return d.likers;
+      return d.likers.map(photoBuster.bustLiker);
     }),
 
   updateLocation: (body: {
@@ -155,7 +183,7 @@ export const userService = {
           (Date.now() - new Date(userData.birth_date).getTime()) / (365.25 * 24 * 3600 * 1000),
         );
       }
-      return userData;
+      return photoBuster.bustUser(userData);
     }),
 
   block: (id: string): Promise<void> =>

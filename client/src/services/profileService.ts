@@ -4,12 +4,10 @@ import type {
   TagsResponse,
   PhotoResponse,
 } from '../types/profileSetup';
+import type { Photo } from '../types/user';
 
 const API_BASE = '/api';
 
-/**
- * Update profile fields (birthdate, gender, sexual_preference, biography, location, coordinates)
- */
 export const updateProfile = async (
   data: Partial<{
     birth_date: string;
@@ -27,17 +25,11 @@ export const updateProfile = async (
     credentials: 'include',
     body: JSON.stringify(data),
   });
-
   const json = await res.json();
-  if (!res.ok) {
-    throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
-  }
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
   return json;
 };
 
-/**
- * Update user tags
- */
 export const updateTags = async (tags: string[]): Promise<TagsResponse> => {
   const res = await fetch(`${API_BASE}/profile/me/tags`, {
     method: 'POST',
@@ -45,18 +37,12 @@ export const updateTags = async (tags: string[]): Promise<TagsResponse> => {
     credentials: 'include',
     body: JSON.stringify({ tags }),
   });
-
   const json = await res.json();
-  if (!res.ok) {
-    throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
-  }
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
   return json;
 };
 
-/**
- * Upload a single photo
- */
-export const uploadPhoto = async (file: File): Promise<PhotoResponse> => {
+export const uploadPhoto = async (file: File): Promise<Photo> => {
   const formData = new FormData();
   formData.append('photo', file);
 
@@ -65,27 +51,76 @@ export const uploadPhoto = async (file: File): Promise<PhotoResponse> => {
     credentials: 'include',
     body: formData,
   });
-
   const json = await res.json();
-  if (!res.ok) {
-    throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
-  }
-  return json;
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
+  return json.photo;
 };
 
-/**
- * Save all profile data at once (birthdate, gender, preference, bio, location, photos, tags)
- * Used when completing the setup or skipping
- */
-export const saveCompleteProfile = async (
-  form: ProfileFormData
-): Promise<void> => {
-  // Update basic profile fields
+export const reorderPhotos = async (order: number[]): Promise<Photo[]> => {
+  const res = await fetch(`${API_BASE}/profile/me/photos/reorder`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ order }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
+  return json.photos;
+};
+
+export const setMainPhoto = async (photoId: number): Promise<void> => {
+  const res = await fetch(`${API_BASE}/profile/me/photos/${photoId}/set-main`, {
+    method: 'PATCH',
+    credentials: 'include',
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
+};
+
+export const deletePhoto = async (photoId: number): Promise<void> => {
+  const res = await fetch(`${API_BASE}/profile/me/photos/${photoId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
+};
+
+export const editPhoto = async (
+  photoId: number,
+  data: { rotate?: number; crop?: { left: number; top: number; width: number; height: number } }
+): Promise<Photo> => {
+  const res = await fetch(`${API_BASE}/profile/me/photos/${photoId}/edit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
+  return json.photo;
+};
+
+export const filterPhoto = async (
+  photoId: number,
+  data: { filter: string; intensity?: number }
+): Promise<Photo> => {
+  const res = await fetch(`${API_BASE}/profile/me/photos/${photoId}/filter`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error ?? json.message ?? `Error (${res.status})`);
+  return json.photo;
+};
+
+export const saveCompleteProfile = async (form: ProfileFormData): Promise<void> => {
   const profileBody: Record<string, unknown> = {};
   if (form.birthdate) profileBody.birth_date = form.birthdate;
   if (form.gender) profileBody.gender = form.gender;
-  if (form.sexual_preference)
-    profileBody.sexual_preference = form.sexual_preference;
+  if (form.sexual_preference) profileBody.sexual_preference = form.sexual_preference;
   if (form.biography?.trim()) profileBody.biography = form.biography;
   if (form.location_city) profileBody.location_city = form.location_city;
   if (form.latitude !== null) profileBody.latitude = form.latitude;
@@ -94,13 +129,9 @@ export const saveCompleteProfile = async (
   if (Object.keys(profileBody).length > 0) {
     await updateProfile(profileBody);
   }
-
-  // Update tags
   if (form.tags.length > 0) {
     await updateTags(form.tags);
   }
-
-  // Upload photos
   for (const file of form.photos) {
     await uploadPhoto(file);
   }

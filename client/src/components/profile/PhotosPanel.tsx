@@ -1,8 +1,9 @@
 // src/components/profile/PhotosPanel.tsx
 import { useRef, useState } from 'react';
-import { Camera, Star, X, Loader2, AlertTriangle } from 'lucide-react';
+import { Camera, Star, X, Loader2, AlertTriangle, Wand2 } from 'lucide-react';
 import { userService } from '@/services/userService';
 import type { UserProfile, Photo } from '@/types/user';
+import { PhotoEditorModal } from './PhotoEditorModal';
 
 interface Props {
   user: UserProfile;
@@ -10,19 +11,28 @@ interface Props {
 }
 
 export function PhotosPanel({ user, onUpdate }: Props) {
-  const fileRef  = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
   const photos = user.photos ?? [];
   const sorted = photos.slice().sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
   const slots: (Photo | null)[] = [...sorted, ...Array(5 - sorted.length).fill(null)].slice(0, 5);
 
+  const handleSavePhoto = (updatedPhoto: Photo) => {
+    const updatedPhotos = photos.map((item) => (item.id === updatedPhoto.id ? updatedPhoto : item));
+    onUpdate({ ...user, photos: updatedPhotos });
+  };
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
     e.target.value = '';
     if (!files.length) return;
-    if (photos.length + files.length > 5) { setError('Max 5 photos.'); return; }
+    if (photos.length + files.length > 5) {
+      setError('Max 5 photos.');
+      return;
+    }
 
     setUploading(true);
     setError('');
@@ -45,8 +55,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
   const handleDelete = async (id: number) => {
     try {
       await userService.deletePhoto(id);
-      const remaining = photos.filter(p => p.id !== id);
-      const newPicId  = id === user.profile_picture_id ? (remaining[0]?.id ?? null) : user.profile_picture_id;
+      const remaining = photos.filter((p) => p.id !== id);
+      const newPicId =
+        id === user.profile_picture_id ? (remaining[0]?.id ?? null) : user.profile_picture_id;
       onUpdate({ ...user, photos: remaining, profile_picture_id: newPicId });
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Delete failed.');
@@ -92,7 +103,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
               <>
                 <img src={photo.url} alt="Gallery" className="w-full h-full object-cover" />
                 {photo.id === user.profile_picture_id && (
-                  <span className="absolute top-2 left-2 bg-primary text-surface text-[0.65rem] sm:text-[10px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-widest shadow-md">MAIN</span>
+                  <span className="absolute top-2 left-2 bg-primary text-surface text-[0.65rem] sm:text-[10px] font-black px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full tracking-widest shadow-md">
+                    MAIN
+                  </span>
                 )}
 
                 <div className="absolute inset-0 bg-text/0 group-hover:bg-text/30 transition-all duration-300">
@@ -100,7 +113,10 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                     {photo.id !== user.profile_picture_id && (
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); handleSetMain(photo.id); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSetMain(photo.id);
+                        }}
                         title="Set as main"
                         className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface flex items-center justify-center text-primary cursor-pointer shadow-sm hover:scale-110 transition-transform"
                       >
@@ -109,7 +125,21 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                     )}
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); handleDelete(photo.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPhoto(photo);
+                      }}
+                      title="Edit photo"
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-primary transition-transform"
+                    >
+                      <Wand2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(photo.id);
+                      }}
                       className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-error transition-transform"
                     >
                       <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -119,23 +149,41 @@ export function PhotosPanel({ user, onUpdate }: Props) {
               </>
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-text-muted opacity-60">
-                {uploading && i === photos.length
-                  ? <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary" />
-                  : <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
-                }
-                <span className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider">Add</span>
+                {uploading && i === photos.length ? (
+                  <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin text-primary" />
+                ) : (
+                  <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
+                )}
+                <span className="text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider">
+                  Add
+                </span>
               </div>
             )}
           </div>
         ))}
       </div>
 
-      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={handleUpload} className="hidden" />
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        onChange={handleUpload}
+        className="hidden"
+      />
 
       {error && (
         <p className="text-xs sm:text-sm font-bold text-error mt-3 flex items-center gap-1.5 animate-fade-in-up">
           <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {error}
         </p>
+      )}
+
+      {selectedPhoto && (
+        <PhotoEditorModal
+          photo={selectedPhoto}
+          onClose={() => setSelectedPhoto(null)}
+          onSave={handleSavePhoto}
+        />
       )}
     </div>
   );

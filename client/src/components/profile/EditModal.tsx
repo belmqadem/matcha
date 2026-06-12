@@ -5,15 +5,16 @@ interface EditModalProps {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  maxWidth?: string;
 }
 
-export function EditModal({ title, onClose, children }: EditModalProps) {
+export function EditModal({ title, onClose, children, maxWidth = 'max-w-sm sm:max-w-md md:max-w-lg' }: EditModalProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-text/40 backdrop-blur-sm p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-surface rounded-3xl sm:rounded-[2rem] p-6 sm:p-8 w-full max-w-sm sm:max-w-md md:max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl animate-fade-in-up scrollbar-thin">
+      <div className={`bg-surface rounded-3xl sm:rounded-[2rem] p-6 sm:p-8 w-full ${maxWidth} max-h-[85vh] overflow-y-auto shadow-2xl animate-fade-in-up scrollbar-thin`}>
         <div className="flex items-center justify-between mb-5 sm:mb-6">
           <h3 className="text-xl sm:text-2xl font-black text-text">{title}</h3>
           <button

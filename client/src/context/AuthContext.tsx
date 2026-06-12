@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '@/services/authService';
 import type { User, LoginCredentials } from '@/types/auth';
+import { photoBuster } from '@/utils/photoBuster';
 
 interface AuthContextType {
   user: User | null;
@@ -20,7 +21,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Check auth on initial load. No routing logic here!
-    authService.me()
+    photoBuster.regenerate();
+    authService
+      .me()
       .then(({ user }) => setUser(user))
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
@@ -28,22 +31,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (credentials: LoginCredentials) => {
     await authService.login(credentials);
+    photoBuster.regenerate();
     const { user } = await authService.me();
     setUser(user);
     return user; // Return user so the UI can navigate based on profile status
   };
 
   const logout = () => {
+    photoBuster.regenerate();
     setUser(null); // Clear the local state so the UI updates immediately
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error('useAuth must be used within an AuthProvider');
