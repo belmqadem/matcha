@@ -9,18 +9,18 @@ import type { Notification, NotificationType } from '@/types/notification';
 const TYPE_META: Record<NotificationType, { icon: string; label: (n: string) => string; textCls: string; bgCls: string; borderCls: string }> = {
   like: { icon: '❤️', label: (n) => `${n} liked your profile`, textCls: 'text-primary', bgCls: 'bg-primary/10', borderCls: 'border-primary' },
   match: { icon: '✨', label: (n) => `You matched with ${n}!`, textCls: 'text-primary', bgCls: 'bg-primary/10', borderCls: 'border-primary' },
-  unlike: { icon: '💔', label: (n) => `${n} unliked you`, textCls: 'text-text-muted', bgCls: 'bg-text-muted/10', borderCls: 'border-text-muted' },
+  unlike: { icon: '💔', label: (n) => `${n} unliked you`, textCls: 'text-text-muted', bgCls: 'bg-border/50', borderCls: 'border-text-muted' },
   visit: { icon: '👀', label: (n) => `${n} visited your profile`, textCls: 'text-text', bgCls: 'bg-text/5', borderCls: 'border-text' },
   message: { icon: '💬', label: (n) => `${n} sent you a message`, textCls: 'text-primary', bgCls: 'bg-primary/10', borderCls: 'border-primary' },
   date_proposed: { icon: '📅', label: (n) => `${n} proposed a date`, textCls: 'text-text', bgCls: 'bg-text/5', borderCls: 'border-text' },
-  date_accepted: { icon: '✅', label: (n) => `${n} accepted your date`, textCls: 'text-success', bgCls: 'bg-success/10', borderCls: 'border-success' },
+  date_accepted: { icon: '✅', label: (n) => `${n} accepted your date`, textCls: 'text-success', bgCls: 'bg-green-500/10', borderCls: 'border-green-500' },
   date_declined: { icon: '❌', label: (n) => `${n} declined your date`, textCls: 'text-error', bgCls: 'bg-error/10', borderCls: 'border-error' },
-  date_cancelled: { icon: '🚫', label: (n) => `${n} cancelled your date`, textCls: 'text-text-muted', bgCls: 'bg-text-muted/10', borderCls: 'border-text-muted' },
+  date_cancelled: { icon: '🚫', label: (n) => `${n} cancelled your date`, textCls: 'text-text-muted', bgCls: 'bg-border/50', borderCls: 'border-text-muted' },
 };
 
 interface NotificationRowProps {
   notification: Notification;
-  onRead: (id: number) => Promise<void>; // Ensure this accepts a promise
+  onRead: (id: number) => Promise<void>;
   onDelete: (id: number) => void;
 }
 
@@ -29,12 +29,10 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
   const meta = TYPE_META[notification.type];
   const [deleting, setDeleting] = useState(false);
 
-  // FIX 3: Make this async and await the read request to prevent fetch cancellation!
   const handleClick = async () => {
     if (!notification.is_read) {
       await onRead(notification.id);
     }
-
     if (notification.type === 'message') {
       navigate(`/chat/${notification.from_id}`);
     } else if (
@@ -55,12 +53,12 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
   return (
     <div
       onClick={handleClick}
-      className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl cursor-pointer transition-all duration-300 ${
+      className={`group relative flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-3.5 sm:py-4 rounded-2xl sm:rounded-3xl cursor-pointer transition-all duration-300 active:scale-[0.98] ${
         deleting ? 'opacity-0 translate-x-8' : 'opacity-100 translate-x-0'
-      } ${notification.is_read ? 'bg-surface border border-border shadow-sm hover:border-primary/30' : `${meta.bgCls} border border-transparent shadow-md`}`}
+      } ${notification.is_read ? 'bg-surface border border-border shadow-sm hover:border-primary/50' : `${meta.bgCls} border border-transparent shadow-md`}`}
     >
       {!notification.is_read && (
-        <div className={`absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-current ${meta.textCls}`} />
+        <div className={`absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current ${meta.textCls}`} />
       )}
 
       <div className="relative shrink-0">
@@ -72,26 +70,26 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
             size="md"
           />
         </div>
-        <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] shadow-sm bg-surface ${meta.borderCls} border-2`}>
+        <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[0.6rem] sm:text-[10px] shadow-sm bg-surface ${meta.borderCls} border-2`}>
           {meta.icon}
         </div>
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className={`text-[14px] leading-snug truncate ${notification.is_read ? 'font-medium text-text' : 'font-black text-text'}`}>
+        <p className={`text-xs sm:text-sm leading-snug truncate ${notification.is_read ? 'font-bold text-text' : 'font-black text-text'}`}>
           {meta.label(notification.from_first_name)}
         </p>
-        <p className="text-[12px] mt-0.5 text-text-muted truncate">
-          @{notification.from_username} · {timeAgo(notification.created_at)}
+        <p className="text-[0.65rem] sm:text-xs mt-0.5 sm:mt-1 text-text-muted truncate font-medium">
+          @{notification.from_username} • {timeAgo(notification.created_at)}
         </p>
       </div>
 
       <button
         onClick={handleDelete}
-        className="opacity-0 group-hover:opacity-100 transition-opacity duration-150 w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-text-muted hover:bg-background hover:text-error"
+        className="opacity-0 lg:group-hover:opacity-100 transition-opacity duration-150 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 text-text-muted hover:bg-background hover:text-error active:scale-95"
         aria-label="Dismiss"
       >
-        <X size={16} />
+        <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
       </button>
     </div>
   );

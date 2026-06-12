@@ -1,54 +1,27 @@
-import { type CSSProperties } from 'react';
+// src/components/FloatingHearts.tsx
 
-const Heart = ({ size, style }: { size: number; style: CSSProperties }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={style}>
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+const heartPath = 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
+
+const Heart = ({ size, className }: { size: number; className: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={`absolute z-0 ${className}`}>
+    <path d={heartPath} />
   </svg>
 );
 
-type FloatingHeart = {
-  size: number;
-  color: string;
-  delay: string;
-  top?: string;
-  right?: string;
-  bottom?: string;
-  left?: string;
-};
-
-const floatingHearts: readonly FloatingHeart[] = [
-  { size: 16, color: '#E8899A', top: '10%', right: '15%', delay: '0s' },
-  { size: 12, color: '#C4364A', top: '25%', left: '10%', delay: '0.5s' },
-  { size: 14, color: '#F4A4B2', bottom: '30%', right: '10%', delay: '1s' },
-  { size: 10, color: '#D4537E', bottom: '15%', left: '15%', delay: '1.5s' },
+// Arbitrary tailwind animation definitions to avoid inline styles
+const HEARTS = [
+  { size: 16, classes: 'top-[10%] right-[15%] text-[#E8899A] animate-[floatHeart_6s_ease-in-out_0s_infinite_alternate]' },
+  { size: 12, classes: 'top-[25%] left-[10%] text-[#C4364A] animate-[floatHeart_6s_ease-in-out_0.5s_infinite_alternate]' },
+  { size: 14, classes: 'bottom-[30%] right-[10%] text-[#F4A4B2] animate-[floatHeart_6s_ease-in-out_1s_infinite_alternate]' },
+  { size: 10, classes: 'bottom-[15%] left-[15%] text-[#D4537E] animate-[floatHeart_6s_ease-in-out_1.5s_infinite_alternate]' },
 ];
 
 const FloatingHearts = () => (
-  <>
-    {floatingHearts.map((heart, index) => (
-      <Heart
-        key={index}
-        size={heart.size}
-        style={{
-          position: 'absolute',
-          color: heart.color,
-          top: heart.top,
-          bottom: heart.bottom,
-          left: heart.left,
-          right: heart.right,
-          zIndex: 1,
-          animation: `float 6s ease-in-out ${heart.delay} infinite alternate`,
-        }}
-      />
+  <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    {HEARTS.map((heart, index) => (
+      <Heart key={index} size={heart.size} className={heart.classes} />
     ))}
-    <style>{`
-      @keyframes float {
-        0% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-10px) rotate(6deg); }
-        100% { transform: translateY(0) rotate(0deg); }
-      }
-    `}</style>
-  </>
+  </div>
 );
 
 export default FloatingHearts;

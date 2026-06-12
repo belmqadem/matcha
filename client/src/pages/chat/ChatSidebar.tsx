@@ -1,5 +1,6 @@
 // src/pages/chat/ChatSidebar.tsx
 import { Heart, Search, Ban, Loader2 } from 'lucide-react';
+
 import ConvoItem from '@/components/chat/ConvoItem';
 import BlockedItem from '@/components/chat/BlockedItem';
 import type { Conversation, BlockedUser, SidebarTab } from '@/types/chat';
@@ -42,22 +43,22 @@ export default function ChatSidebar({
   return (
     <>
       {/* Header */}
-      <div className="px-5 pt-5 pb-4 border-b border-border shrink-0">
-        <div className="flex items-center gap-2 mb-4">
-          <Heart size={20} className="text-primary fill-primary" />
-          <h1 className="text-[22px] font-black text-text">Messages</h1>
+      <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border shrink-0 z-10">
+        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary" />
+          <h1 className="text-xl sm:text-[22px] font-black text-text">Messages</h1>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-background border border-border rounded-full p-1 mb-4">
+        <div className="flex bg-background border border-border rounded-full p-1 mb-3 sm:mb-4 shadow-sm">
           {(['messages', 'blocked'] as SidebarTab[]).map((t) => (
             <button
               key={t}
               onClick={() => onTabChange(t)}
-              className={`flex-1 py-2 rounded-full text-[13px] font-black transition-all duration-200 capitalize ${
+              className={`flex-1 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-black transition-all duration-200 capitalize active:scale-95 ${
                 tab === t
-                  ? 'bg-surface shadow-sm text-text'
-                  : 'text-text-muted hover:text-text'
+                  ? 'bg-surface shadow-md text-text'
+                  : 'text-text-muted hover:text-text hover:bg-surface/50'
               }`}
             >
               {t}
@@ -68,29 +69,29 @@ export default function ChatSidebar({
         {/* Search (messages tab only) */}
         {tab === 'messages' && (
           <div className="relative">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted" />
             <input
               type="text"
               placeholder="Search…"
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full bg-background border border-border rounded-full pl-10 pr-4 py-2.5 text-[13px] font-bold text-text placeholder-text-muted focus:border-primary focus:bg-surface transition-all outline-none"
+              className="w-full bg-background border-2 border-border rounded-full pl-9 pr-4 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-text placeholder-text-muted focus:border-primary focus:bg-surface transition-all outline-none"
             />
           </div>
         )}
       </div>
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto py-3 px-2 flex flex-col gap-0.5">
+      <div className="flex-1 overflow-y-auto py-2 sm:py-3 px-2 flex flex-col gap-1 scrollbar-thin">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 size={26} className="text-primary animate-spin" />
+          <div className="flex justify-center py-10 sm:py-12">
+            <Loader2 className="w-6 h-6 sm:w-7 sm:h-7 text-primary animate-spin" />
           </div>
         ) : tab === 'messages' ? (
           filtered.length === 0 ? (
-            <div className="text-center py-12 px-6">
-              <div className="text-4xl mb-3">💌</div>
-              <p className="text-[14px] font-bold text-text-muted">
+            <div className="text-center py-10 sm:py-12 px-4 sm:px-6 animate-fade-in-up">
+              <div className="text-3xl sm:text-4xl mb-3 opacity-60">📭</div>
+              <p className="text-xs sm:text-sm font-bold text-text-muted">
                 {search ? 'No conversations match.' : 'Match with someone to start chatting!'}
               </p>
             </div>
@@ -106,9 +107,9 @@ export default function ChatSidebar({
             ))
           )
         ) : blockedUsers.length === 0 ? (
-          <div className="text-center py-12 px-6">
-            <Ban size={36} className="text-border mx-auto mb-3" />
-            <p className="text-[14px] font-bold text-text-muted">You haven't blocked anyone.</p>
+          <div className="text-center py-10 sm:py-12 px-4 sm:px-6 animate-fade-in-up">
+            <Ban className="w-8 h-8 sm:w-10 sm:h-10 text-border mx-auto mb-3" />
+            <p className="text-xs sm:text-sm font-bold text-text-muted">You haven't blocked anyone.</p>
           </div>
         ) : (
           blockedUsers.map((u) => (

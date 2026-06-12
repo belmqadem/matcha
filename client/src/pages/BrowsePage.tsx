@@ -2,10 +2,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, MapPin, Star, Sparkles, Circle } from 'lucide-react';
+
 import { userService } from '@/services/userService';
 import type { BrowseUser } from '@/types/user';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+/* --- Helpers --- */
 function timeAgo(iso?: string): string {
   if (!iso) return 'Offline';
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -26,12 +27,14 @@ function getPhoto(user: BrowseUser): string | null {
   return (main ?? user.photos[0])?.url ?? null;
 }
 
-// ─── Cute UI Components ───────────────────────────────────────────────────────
+/* --- UI Components --- */
 function FameBadge({ rating }: { rating: number }) {
   const isHigh = rating >= 80;
   return (
     <span
-      className={`flex items-center gap-1 text-[11px] font-bold border rounded-full px-2.5 py-1 whitespace-nowrap shadow-sm backdrop-blur-sm ${isHigh ? 'text-primary border-primary bg-primary/10' : 'text-text-muted border-border bg-white/80'}`}
+      className={`flex items-center gap-1 text-[0.65rem] sm:text-xs font-bold border rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 whitespace-nowrap shadow-sm backdrop-blur-sm ${
+        isHigh ? 'text-primary border-primary bg-primary/10' : 'text-text-muted border-border bg-surface/80'
+      }`}
     >
       <Star className="w-3 h-3 fill-current" /> {rating}
     </span>
@@ -49,9 +52,9 @@ function Spinner({ size = 16 }: { size?: number }) {
 
 function SkeletonCard() {
   return (
-    <div className="bg-white rounded-3xl border border-border overflow-hidden shadow-sm relative z-10">
+    <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm relative z-10">
       <div className="relative w-full pb-[133%] bg-background">
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-white to-background bg-[length:200%_100%] animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background via-surface to-background bg-[length:200%_100%] animate-pulse" />
       </div>
       <div className="p-4">
         <div className="h-4 bg-background rounded-full w-[60%] mb-3" />
@@ -61,7 +64,6 @@ function SkeletonCard() {
   );
 }
 
-// ─── Avatar ───────────────────────────────────────────────────────────────────
 function Avatar({ user }: { user: BrowseUser }) {
   const [err, setErr] = useState(false);
   const photo = getPhoto(user);
@@ -77,14 +79,13 @@ function Avatar({ user }: { user: BrowseUser }) {
     );
   }
   return (
-    <div className="w-full h-full flex items-center justify-center text-5xl font-extrabold text-text-muted bg-background tracking-tight transition-transform duration-700 group-hover:scale-110">
+    <div className="w-full h-full flex items-center justify-center text-4xl sm:text-5xl font-extrabold text-text-muted bg-background tracking-tight transition-transform duration-700 group-hover:scale-110">
       {user.first_name?.[0] ?? '?'}
       {user.last_name?.[0] ?? ''}
     </div>
   );
 }
 
-// ─── UserCard ─────────────────────────────────────────────────────────────────
 function UserCard({
   user,
   onLike,
@@ -126,12 +127,11 @@ function UserCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            console.log('Say Hi clicked. user.id:', user.id, 'type:', typeof user.id);
             navigate(`/chat/${user.id}`);
           }}
-          className="flex-1 py-2.5 rounded-full bg-primary text-white text-[13px] font-bold flex items-center justify-center gap-2 transition-all hover:shadow-[0_8px_20px_var(--color-primary)] hover:opacity-90 active:scale-95"
+          className="flex-1 py-2 sm:py-2.5 rounded-full bg-primary text-surface text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95"
         >
-          <MessageCircle className="w-4 h-4 fill-current" /> Say Hi
+          <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Say Hi
         </button>
       );
     }
@@ -140,13 +140,13 @@ function UserCard({
         <button
           onClick={handleUnlikeClick}
           disabled={busy}
-          className="flex-1 py-2.5 rounded-full bg-background text-primary border border-primary text-[13px] font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:opacity-80 active:scale-95"
+          className="flex-1 py-2 sm:py-2.5 rounded-full bg-background text-primary border border-primary text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:opacity-80 active:scale-95"
         >
           {busy ? (
             <Spinner size={14} />
           ) : (
             <>
-              <Heart className="w-4 h-4 fill-current" /> Liked
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Liked
             </>
           )}
         </button>
@@ -157,13 +157,13 @@ function UserCard({
         <button
           onClick={handleLikeClick}
           disabled={busy}
-          className="flex-1 py-2.5 rounded-full border-2 border-primary bg-white text-primary text-[13px] font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:bg-primary hover:text-white active:scale-95 shadow-sm hover:shadow-md"
+          className="flex-1 py-2 sm:py-2.5 rounded-full border-2 border-primary bg-surface text-primary text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:bg-primary hover:text-surface active:scale-95 shadow-sm"
         >
           {busy ? (
             <Spinner size={14} />
           ) : (
             <>
-              <Heart className="w-4 h-4" /> Match
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Match
             </>
           )}
         </button>
@@ -173,13 +173,13 @@ function UserCard({
       <button
         onClick={handleLikeClick}
         disabled={busy}
-        className="flex-1 py-2.5 rounded-full border-2 border-border bg-white text-text-muted text-[13px] font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:border-primary hover:text-primary active:scale-95"
+        className="flex-1 py-2 sm:py-2.5 rounded-full border-2 border-border bg-surface text-text-muted text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:border-primary hover:text-primary active:scale-95"
       >
         {busy ? (
           <Spinner size={14} />
         ) : (
           <>
-            <Heart className="w-4 h-4 transition-colors" /> Like
+            <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors" /> Like
           </>
         )}
       </button>
@@ -189,44 +189,44 @@ function UserCard({
   return (
     <div
       onClick={() => navigate(`/profile/${user.id}`)}
-      className="relative z-10 group bg-white rounded-3xl overflow-hidden border border-border flex flex-col cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+      className="relative z-10 group bg-surface rounded-3xl overflow-hidden border border-border flex flex-col cursor-pointer transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-xl"
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-background rounded-t-3xl">
         <Avatar user={user} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-text/80 via-text/10 to-transparent pointer-events-none" />
 
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/30 shadow-sm">
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-surface/20 backdrop-blur-md px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-surface/30 shadow-sm">
           <Circle
-            className={`w-2 h-2 fill-current ${user.is_online ? 'text-primary' : 'text-white'}`}
+            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-primary' : 'text-surface'}`}
           />
-          <span className="text-[10px] text-white font-bold uppercase tracking-wider drop-shadow-md">
+          <span className="text-[0.6rem] sm:text-[0.65rem] text-surface font-bold uppercase tracking-wider drop-shadow-md">
             {user.is_online ? 'Online' : timeAgo(user.last_seen)}
           </span>
         </div>
 
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
           {user.is_connected && (
-            <span className="flex items-center gap-1 text-[10px] font-bold tracking-wide bg-primary text-white rounded-full px-3 py-1 shadow-md animate-pulse">
+            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] font-bold tracking-wide bg-primary text-surface rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-md animate-pulse">
               <Sparkles className="w-3 h-3" /> MATCH
             </span>
           )}
           {!user.is_connected && user.liked_me && (
-            <span className="text-[10px] font-bold tracking-wide bg-white/95 backdrop-blur-sm text-primary rounded-full px-3 py-1 shadow-sm">
+            <span className="text-[0.6rem] sm:text-[0.65rem] font-bold tracking-wide bg-surface/95 backdrop-blur-sm text-primary rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-sm">
               Likes you
             </span>
           )}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
           <div className="flex items-end justify-between gap-2">
             <div className="min-w-0">
-              <p className="m-0 text-white text-xl font-extrabold leading-tight truncate drop-shadow-lg">
+              <p className="m-0 text-surface text-lg sm:text-xl font-extrabold leading-tight truncate drop-shadow-lg">
                 {user.first_name}
                 {age !== null ? <span className="font-normal opacity-90">, {age}</span> : ''}
               </p>
               {(user.distance_km != null || user.location_city) && (
-                <p className="mt-1.5 text-white/80 text-xs flex items-center gap-1.5 font-medium drop-shadow-md">
-                  <MapPin className="w-3.5 h-3.5 text-primary" />
+                <p className="mt-1 sm:mt-1.5 text-surface/80 text-[0.65rem] sm:text-xs flex items-center gap-1 sm:gap-1.5 font-medium drop-shadow-md">
+                  <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
                   {user.distance_km != null && (
                     <span>
                       {user.distance_km < 1
@@ -246,12 +246,12 @@ function UserCard({
         </div>
       </div>
 
-      <div className="p-4 flex-1 flex flex-col justify-between gap-4">
-        <div className="flex flex-wrap gap-1.5 min-h-[24px]">
+      <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between gap-3 sm:gap-4">
+        <div className="flex flex-wrap gap-1 sm:gap-1.5 min-h-[24px]">
           {(user.tags ?? []).slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-[11px] font-bold text-text-muted bg-background border border-border rounded-full px-2.5 py-1 transition-colors group-hover:border-primary group-hover:text-primary"
+              className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-muted bg-background border border-border rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors group-hover:border-primary group-hover:text-primary"
             >
               {tag.startsWith('#') ? tag : `#${tag}`}
             </span>
@@ -263,7 +263,6 @@ function UserCard({
   );
 }
 
-// ─── BrowsePage ───────────────────────────────────────────────────────────────
 type TabValue = 'all' | 'liked' | 'matches';
 
 export default function BrowsePage() {
@@ -284,6 +283,7 @@ export default function BrowsePage() {
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
     abortRef.current = ctrl;
+
     setLoading(true);
     setError(null);
     setPage(1);
@@ -383,19 +383,19 @@ export default function BrowsePage() {
 
   return (
     <div className="relative bg-background font-primary min-h-screen pb-10">
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <h1 className="text-3xl font-black text-text tracking-tight mb-2 flex items-center gap-2">
-            Discover People <Sparkles className="w-6 h-6 text-primary" />
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
+          <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight mb-2 flex items-center gap-2">
+            Discover People <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
           </h1>
-          <p className="text-sm font-medium text-text-muted">
+          <p className="text-xs sm:text-sm font-medium text-text-muted">
             {loading ? 'Looking for your perfect match...' : `${total} profiles waiting for you`}
           </p>
         </div>
 
         {error && (
-          <div className="bg-white border-2 border-error rounded-2xl px-5 py-4 mb-6 flex items-center justify-between gap-3 shadow-sm">
-            <span className="text-sm font-bold text-error">⚠ {error}</span>
+          <div className="bg-surface border-2 border-error rounded-2xl px-4 sm:px-5 py-3 sm:py-4 mb-6 flex items-center justify-between gap-3 shadow-sm animate-fade-in-up">
+            <span className="text-xs sm:text-sm font-bold text-error">{error}</span>
             <button
               onClick={() => setError(null)}
               className="text-error opacity-70 hover:opacity-100 transition-opacity"
@@ -405,8 +405,8 @@ export default function BrowsePage() {
           </div>
         )}
 
-        <div className="mb-10 flex justify-center">
-          <div className="flex gap-1 bg-white backdrop-blur-md border border-border rounded-full p-1.5 w-fit shadow-sm">
+        <div className="mb-8 sm:mb-10 flex justify-center">
+          <div className="flex gap-1 bg-surface backdrop-blur-md border border-border rounded-full p-1 sm:p-1.5 w-full sm:w-fit shadow-sm">
             {(
               [
                 ['all', 'All'],
@@ -417,9 +417,9 @@ export default function BrowsePage() {
               <button
                 key={val}
                 onClick={() => setActiveTab(val)}
-                className={`px-6 py-2 rounded-full border-none text-sm font-bold cursor-pointer transition-all duration-300 ${
+                className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full border-none text-xs sm:text-sm font-bold cursor-pointer transition-all duration-300 ${
                   activeTab === val
-                    ? 'bg-primary text-white shadow-md'
+                    ? 'bg-primary text-surface shadow-md'
                     : 'bg-transparent text-text-muted hover:bg-background hover:text-text'
                 }`}
               >
@@ -430,31 +430,27 @@ export default function BrowsePage() {
         </div>
 
         {loading ? (
-          <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : displayed.length > 0 ? (
           <>
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {displayed.map((user, index) => (
-                <div
-                  key={user.id}
-                  className="animate-fade-up"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
+            <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {displayed.map((user) => (
+                <div key={user.id} className="animate-fade-in-up">
                   <UserCard user={user} onLike={handleLike} onUnlike={handleUnlike} />
                 </div>
               ))}
             </div>
 
             {hasMore && activeTab === 'all' && (
-              <div className="text-center mt-12">
+              <div className="text-center mt-8 sm:mt-12">
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="px-8 py-3.5 rounded-full border-2 border-border bg-white text-text text-[15px] font-black shadow-sm cursor-pointer inline-flex items-center gap-2 transition-all disabled:opacity-70 hover:border-primary hover:text-primary hover:shadow-md active:scale-95"
+                  className="px-6 sm:px-8 py-3 sm:py-3.5 rounded-full border-2 border-border bg-surface text-text text-sm sm:text-base font-black shadow-sm cursor-pointer inline-flex items-center gap-2 transition-all disabled:opacity-70 hover:border-primary hover:text-primary hover:shadow-md active:scale-95"
                 >
                   {loadingMore ? (
                     <>
@@ -468,18 +464,18 @@ export default function BrowsePage() {
             )}
           </>
         ) : (
-          <div className="text-center py-20 px-5 bg-white backdrop-blur-sm border border-border rounded-[32px] shadow-sm relative z-10">
-            <div className="flex justify-center mb-6 text-primary opacity-40 animate-pulse">
-              <Heart className="w-20 h-20 fill-current" />
+          <div className="text-center py-16 sm:py-20 px-4 sm:px-5 bg-surface backdrop-blur-sm border border-border rounded-3xl shadow-sm relative z-10 animate-fade-in-up">
+            <div className="flex justify-center mb-5 sm:mb-6 text-primary opacity-40 animate-pulse">
+              <Heart className="w-16 h-16 sm:w-20 sm:h-20 fill-current" />
             </div>
-            <h3 className="text-2xl font-black text-text mb-3">
+            <h3 className="text-xl sm:text-2xl font-black text-text mb-2 sm:mb-3">
               {activeTab === 'matches'
                 ? 'No matches yet'
                 : activeTab === 'liked'
                   ? "You haven't liked anyone yet"
                   : 'No profiles found'}
             </h3>
-            <p className="text-[15px] font-medium text-text-muted max-w-sm mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base font-medium text-text-muted max-w-sm mx-auto leading-relaxed">
               Check back soon — new cuties join every day, or try adjusting your filters.
             </p>
           </div>

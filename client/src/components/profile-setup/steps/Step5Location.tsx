@@ -1,3 +1,4 @@
+// src/components/profile-setup/steps/Step5Location.tsx
 import { useState } from 'react';
 import { MapPin } from 'lucide-react';
 import type { ProfileFormData } from '../../../types/profileSetup';
@@ -37,63 +38,57 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
   };
 
   return (
-    <div>
-      <p className="text-xs text-text-muted mb-4 italic">
+    <div className="w-full">
+      <p className="text-xs sm:text-sm text-text-muted mb-5 italic">
         Your location helps us show you relevant matches nearby.
       </p>
 
-      {/* GPS button */}
       <button
         type="button"
         onClick={useGPS}
         disabled={gpsLoading}
         className={`
-          w-full flex items-center justify-center gap-2 px-3 py-3.25 rounded-[14px]
-          border-[1.5px] font-medium text-sm mb-3 transition-all duration-200
+          w-full flex items-center justify-center gap-2 sm:gap-3 px-4 py-3 sm:py-4 rounded-xl
+          border-2 font-semibold text-sm sm:text-base mb-4 transition-all duration-200 active:scale-95
           ${
             form.latitude
-              ? 'border-primary bg-primary/7 text-primary shadow-md shadow-primary/16'
-              : 'border-border bg-white text-text'
+              ? 'border-primary bg-primary/10 text-primary shadow-md shadow-primary/20'
+              : 'border-border bg-surface text-text hover:bg-border/50'
           }
-          disabled:opacity-60 disabled:cursor-not-allowed
+          disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100
         `}
       >
-        <MapPin size={15} />
+        <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
         <span>
           {gpsLoading
             ? 'Detecting…'
             : form.latitude
-              ? '📍 Location detected ✓'
+              ? 'Location detected ✓'
               : 'Use my current location'}
         </span>
       </button>
 
-      {/* GPS error */}
       {gpsError && (
-        <p className="text-xs text-error mb-2.5">{gpsError}</p>
+        <p className="text-xs sm:text-sm font-medium text-error mb-4 animate-fade-in-up">{gpsError}</p>
       )}
 
-      {/* Divider */}
-      <div className="flex items-center gap-2.5 my-3">
-        <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-text-muted opacity-60">or enter manually</span>
-        <div className="flex-1 h-px bg-border" />
+      <div className="flex items-center gap-3 sm:gap-4 my-5 sm:my-6">
+        <div className="flex-1 h-[2px] bg-border" />
+        <span className="text-xs sm:text-sm font-medium text-text-muted opacity-80 uppercase tracking-wider">or enter manually</span>
+        <div className="flex-1 h-[2px] bg-border" />
       </div>
 
-      {/* Manual input */}
       <input
         value={form.location_city}
-        onChange={(e) =>
-          setForm((p) => ({ ...p, location_city: e.target.value }))
-        }
+        onChange={(e) => setForm((p) => ({ ...p, location_city: e.target.value }))}
         placeholder="City or neighborhood (e.g. Paris, Montmartre)"
         className={`
-          w-full px-4 py-3 rounded-[14px] border-[1.5px] text-sm
+          w-full px-4 py-3 sm:py-4 rounded-xl border-2 text-text text-sm sm:text-base outline-none
           transition-all duration-200
           ${
             form.location_city
-              ? 'border-primary bg-white shadow-md shadow-primary/14'
-              : 'border-border bg-white'
+              ? 'border-primary bg-surface shadow-md shadow-primary/20'
+              : 'border-border bg-surface focus:border-primary/50'
           }
         `}
       />

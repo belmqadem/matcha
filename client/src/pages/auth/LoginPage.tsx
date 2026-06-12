@@ -1,3 +1,4 @@
+// src/pages/auth/LoginPage.tsx
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
@@ -42,10 +43,7 @@ const LoginPage = () => {
 
     setIsSubmitting(true);
     try {
-      // 1. Call the context action
       const loggedInUser = await login(form);
-
-      // 2. Handle component-level routing logic
       if (!loggedInUser.gender) {
         navigate('/profile/setup');
       } else {
@@ -53,71 +51,76 @@ const LoginPage = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
     <AuthLayout header="Log in to find your match">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          id="username"
-          type="text"
-          label="Username"
-          value={form.username}
-          onChange={handleChange('username')}
-          required
-          icon={User}
-        />
+      <div className="w-full max-w-sm md:max-w-md mx-auto px-4 sm:px-0">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          <Input
+            id="username"
+            type="text"
+            label="Username"
+            value={form.username}
+            onChange={handleChange('username')}
+            required
+            icon={User}
+          />
 
-        <Input
-          id="password"
-          type={passwordVisibility.inputType}
-          label="Password"
-          value={form.password}
-          onChange={handleChange('password')}
-          required
-          icon={Lock}
-          showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
-        />
+          <Input
+            id="password"
+            type={passwordVisibility.inputType}
+            label="Password"
+            value={form.password}
+            onChange={handleChange('password')}
+            required
+            icon={Lock}
+            showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
+          />
 
-        {error && (
-          <p className="text-sm font-medium text-error text-center mt-2">
-            {error}
+          {error && (
+            <p className="text-xs sm:text-sm font-medium text-error text-center mt-2 animate-fade-in-up">
+              {error}
+            </p>
+          )}
+
+          <div className="pt-2 sm:pt-4">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in…' : 'Log In'}
+            </Button>
+          </div>
+        </form>
+
+        <div className="text-center mt-6 sm:mt-8 space-y-3 sm:space-y-4">
+          <Link
+            to="/forgot-password"
+            className="block text-sm sm:text-base text-text font-medium hover:text-primary transition-colors underline hover:underline-offset-2"
+          >
+            Forgot your password?
+          </Link>
+          <p className="text-sm sm:text-base text-text-muted">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-primary font-bold hover:underline">
+              Register
+            </Link>
           </p>
-        )}
+        </div>
 
-        <div className="pt-2">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Logging in…' : 'Log In'}
+        <div className="my-6 sm:my-8">
+          <Divider />
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <Button variant="google" onClick={authService.googleLogin} type="button" withArrow={false}>
+            Continue with Google
+          </Button>
+          <Button variant="42" onClick={authService.login42} type="button" withArrow={false}>
+            Continue with 42
           </Button>
         </div>
-      </form>
-
-      <div className="text-center mt-6 space-y-3">
-        <Link
-          to="/forgot-password"
-          className="block text-sm text-text font-medium hover:text-primary transition-colors underline hover:underline-offset-2"
-        >
-          Forgot your password?
-        </Link>
-        <p className="text-sm text-text-muted">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-primary font-bold hover:underline">
-            Register
-          </Link>
-        </p>
-      </div>
-
-      <Divider />
-
-      <div className="flex gap-4">
-        <Button variant="google" onClick={authService.googleLogin} type="button">
-          Continue with Google
-        </Button>
-        <Button variant="42" onClick={authService.login42} type="button">
-          Continue with 42
-        </Button>
       </div>
     </AuthLayout>
   );

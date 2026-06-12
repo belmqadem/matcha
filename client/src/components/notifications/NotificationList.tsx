@@ -13,18 +13,22 @@ export default function NotificationList({ notifications, onRead, onDelete }: No
   const groups = groupByDate(notifications);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 sm:gap-8">
       {groups.map(({ label, items }) => (
         <div key={label}>
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-[11px] font-black uppercase tracking-widest text-text-muted">
+          <div className="flex items-center gap-3 mb-3 sm:mb-4">
+            <span className="text-[0.65rem] sm:text-xs font-black uppercase tracking-widest text-text-muted">
               {label}
             </span>
-            <div className="flex-1 h-px bg-border" />
+            <div className="flex-1 h-[2px] bg-border" />
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 sm:gap-3">
             {items.map((n, i) => (
-              <div key={n.id} className="animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${i * 40}ms`, animationFillMode: 'both' }}>
+              <div
+                key={n.id}
+                className="animate-fade-in-up [animation-delay:var(--delay)] [animation-fill-mode:both]"
+                style={{ '--delay': `${i * 40}ms` } as React.CSSProperties}
+              >
                 <NotificationRow notification={n} onRead={onRead} onDelete={onDelete} />
               </div>
             ))}

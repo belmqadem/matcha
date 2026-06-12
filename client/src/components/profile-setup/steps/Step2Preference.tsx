@@ -1,3 +1,4 @@
+// src/components/profile-setup/steps/Step2Preference.tsx
 import type { ProfileFormData } from '../../../types/profileSetup';
 import { PREFERENCES } from '../profileSetupConstants';
 import { OptionButton } from '../../ui/OptionButton';
@@ -9,8 +10,8 @@ interface Step2PreferenceProps {
 
 export const Step2Preference = ({ form, setForm }: Step2PreferenceProps) => {
   return (
-    <div className="flex flex-col gap-2.25">
-      <p className="text-xs text-text-muted mb-1 italic">
+    <div className="flex flex-col gap-3 sm:gap-4 w-full">
+      <p className="text-xs sm:text-sm text-text-muted mb-2 italic">
         Who are you interested in meeting?
       </p>
 
@@ -19,9 +20,7 @@ export const Step2Preference = ({ form, setForm }: Step2PreferenceProps) => {
           key={value}
           label={`${emoji}  ${label}`}
           selected={form.sexual_preference === value}
-          onClick={() =>
-            setForm((p) => ({ ...p, sexual_preference: value }))
-          }
+          onClick={() => setForm((p) => ({ ...p, sexual_preference: value }))}
         />
       ))}
     </div>

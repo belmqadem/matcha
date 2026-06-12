@@ -1,3 +1,4 @@
+// src/components/Logo.tsx
 import { NavLink } from "react-router-dom";
 import logo from "@/assets/logo.png";
 
@@ -8,9 +9,9 @@ interface MatchaLogoProps {
 }
 
 const SIZE_CLASSES = {
-  sm: "w-8 h-8",
-  md: "w-12 h-12 md:w-16 md:h-16", // Responsive scaling
-  lg: "w-20 h-20",
+  sm: "w-8 h-8 sm:w-10 sm:h-10",
+  md: "w-12 h-12 sm:w-16 sm:h-16",
+  lg: "w-16 h-16 sm:w-20 sm:h-20",
 };
 
 export default function MatchaLogo({

@@ -1,3 +1,4 @@
+// src/components/profile-setup/steps/Step1Gender.tsx
 import type { ProfileFormData } from '../../../types/profileSetup';
 import { GENDERS } from '../profileSetupConstants';
 import { OptionButton } from '../../ui/OptionButton';
@@ -9,8 +10,8 @@ interface Step1GenderProps {
 
 export const Step1Gender = ({ form, setForm }: Step1GenderProps) => {
   return (
-    <div className="flex flex-col gap-2.25">
-      <p className="text-xs text-text-muted mb-1 italic">
+    <div className="flex flex-col gap-3 sm:gap-4 w-full">
+      <p className="text-xs sm:text-sm text-text-muted mb-2 italic">
         Select the option that best describes you.
       </p>
 

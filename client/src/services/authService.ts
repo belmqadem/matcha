@@ -6,62 +6,78 @@ const BASE_URL = '/api/auth';
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   const body = text ? JSON.parse(text) : {};
-  if (!res.ok) throw new Error(body.error ?? body.message ?? body.detail ?? body.msg ?? `Request failed (${res.status})`);
+  if (!res.ok) {
+    throw new Error(body.error ?? body.message ?? body.detail ?? body.msg ?? `Request failed (${res.status})`);
+  }
   return body as T;
 }
 
 export const authService = {
-  register: (payload: RegisterPayload) =>
-    fetch(`${BASE_URL}/register`, {
+  register: async (payload: RegisterPayload) => {
+    const res = await fetch(`${BASE_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    }).then((res) => handleResponse<{ message: string }>(res)),
+    });
+    return handleResponse<{ message: string }>(res);
+  },
 
-  login: (payload: LoginPayload) =>
-    fetch(`${BASE_URL}/login`, {
+  login: async (payload: LoginPayload) => {
+    const res = await fetch(`${BASE_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify(payload),
-    }).then((res) => handleResponse<{ user: AuthUser }>(res)),
+    });
+    return handleResponse<{ user: AuthUser }>(res);
+  },
 
-  me: () =>
-    fetch('/api/users/me', {
+  me: async () => {
+    const res = await fetch('/api/users/me', {
       credentials: 'include',
-    }).then((res) => handleResponse<{ user: FullUser }>(res)),
+    });
+    return handleResponse<{ user: FullUser }>(res);
+  },
 
-  verifyEmail: (token: string) =>
-    fetch(`${BASE_URL}/verify/${token}`).then((res) =>
-      handleResponse<{ message: string }>(res),
-    ),
+  verifyEmail: async (token: string) => {
+    const res = await fetch(`${BASE_URL}/verify/${token}`);
+    return handleResponse<{ message: string }>(res);
+  },
 
-  logout: () =>
-    fetch(`${BASE_URL}/logout`, {
+  logout: async () => {
+    const res = await fetch(`${BASE_URL}/logout`, {
       method: 'POST',
       credentials: 'include',
-    }).then((res) => handleResponse<{ message: string }>(res)),
+    });
+    return handleResponse<{ message: string }>(res);
+  },
 
-  forgotPassword: (email: string) =>
-    fetch(`${BASE_URL}/forgot-password`, {
+  forgotPassword: async (email: string) => {
+    const res = await fetch(`${BASE_URL}/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
-    }).then((res) => handleResponse<{ message: string }>(res)),
+    });
+    return handleResponse<{ message: string }>(res);
+  },
 
-  resetPassword: (token: string, password: string) =>
-    fetch(`${BASE_URL}/reset-password`, {
+  resetPassword: async (token: string, password: string) => {
+    const res = await fetch(`${BASE_URL}/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password }),
-    }).then((res) => handleResponse<{ message: string }>(res)),
+    });
+    return handleResponse<{ message: string }>(res);
+  },
 
-  resendVerification: (email: string) =>
-    fetch(`${BASE_URL}/resend-verification`, {
+  resendVerification: async (email: string) => {
+    const res = await fetch(`${BASE_URL}/resend-verification`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
-    }).then((res) => handleResponse<{ message: string }>(res)),
+    });
+    return handleResponse<{ message: string }>(res);
+  },
 
   googleLogin: () => {
     window.location.href = '/api/auth/google';

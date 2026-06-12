@@ -1,3 +1,4 @@
+// src/pages/auth/RegisterPage.tsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
@@ -29,7 +30,7 @@ const RegisterPage = () => {
 
   const handleChange = (field: keyof RegisterPayload) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (error) setError(''); // Clear error on typing
+    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,30 +43,29 @@ const RegisterPage = () => {
 
     setIsSubmitting(true);
     try {
-      // API call delegated to the service layer
       const res = await authService.register(form);
       setSuccessMessage(res.message || 'Verification email sent. Please check your inbox.');
       setIsSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed.');
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ── Success State View ──────────────────────────────────────────────────────
   if (isSuccess) {
     return (
       <AuthLayout header="Check your inbox">
-        <div className="text-center space-y-6">
-          <div className="bg-primary/10 text-primary p-4 rounded-xl flex justify-center">
-            <Mail className="h-10 w-10" />
+        <div className="w-full max-w-sm md:max-w-md mx-auto px-4 sm:px-0 text-center space-y-5 sm:space-y-6">
+          <div className="bg-primary/10 text-primary p-4 sm:p-5 rounded-2xl flex justify-center w-max mx-auto animate-fade-in-up">
+            <Mail className="h-8 w-8 sm:h-10 sm:w-10" />
           </div>
-          <p className="text-text font-medium">{successMessage}</p>
-          <p className="text-sm text-text-muted">
-            We've sent a verification link to <span className="font-bold text-text">{form.email}</span>.
+          <p className="text-text text-base sm:text-lg font-medium">{successMessage}</p>
+          <p className="text-sm sm:text-base text-text-muted">
+            We've sent a verification link to <span className="font-bold text-text break-all">{form.email}</span>.
           </p>
-          <div className="pt-4">
-            <Link to="/login">
+          <div className="pt-4 sm:pt-6">
+            <Link to="/login" className="block">
               <Button type="button">Go to Login</Button>
             </Link>
           </div>
@@ -74,93 +74,96 @@ const RegisterPage = () => {
     );
   }
 
-  // ── Registration Form View ──────────────────────────────────────────────────
   return (
     <AuthLayout header="Create your account">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex gap-3">
+      <div className="w-full max-w-sm md:max-w-md mx-auto px-4 sm:px-0">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-3">
+            <Input
+              id="first_name"
+              type="text"
+              label="First Name"
+              value={form.first_name}
+              onChange={handleChange('first_name')}
+              required
+              icon={Type}
+            />
+            <Input
+              id="last_name"
+              type="text"
+              label="Last Name"
+              value={form.last_name}
+              onChange={handleChange('last_name')}
+              required
+              icon={Type}
+            />
+          </div>
+
           <Input
-            id="first_name"
+            id="username"
             type="text"
-            label="First Name"
-            value={form.first_name}
-            onChange={handleChange('first_name')}
+            label="Username"
+            value={form.username}
+            onChange={handleChange('username')}
             required
-            icon={Type}
+            icon={User}
           />
+
           <Input
-            id="last_name"
-            type="text"
-            label="Last Name"
-            value={form.last_name}
-            onChange={handleChange('last_name')}
+            id="email"
+            type="email"
+            label="Email"
+            value={form.email}
+            onChange={handleChange('email')}
             required
-            icon={Type}
+            icon={Mail}
           />
+
+          <Input
+            id="password"
+            type={passwordVisibility.inputType}
+            label="Password"
+            value={form.password}
+            onChange={handleChange('password')}
+            required
+            icon={Lock}
+            showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
+          />
+
+          {error && (
+            <p className="text-xs sm:text-sm font-medium text-error text-center mt-2 animate-fade-in-up">
+              {error}
+            </p>
+          )}
+
+          <div className="pt-2 sm:pt-4">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating account…' : 'Register'}
+            </Button>
+          </div>
+        </form>
+
+        <div className="text-center mt-6 sm:mt-8 space-y-3 sm:space-y-4">
+          <p className="text-sm sm:text-base text-text-muted">
+            Already have an account?{' '}
+            <Link to="/login" className="text-primary font-bold hover:underline">
+              Log In
+            </Link>
+          </p>
         </div>
 
-        <Input
-          id="username"
-          type="text"
-          label="Username"
-          value={form.username}
-          onChange={handleChange('username')}
-          required
-          icon={User}
-        />
+        <div className="my-6 sm:my-8">
+          <Divider />
+        </div>
 
-        <Input
-          id="email"
-          type="email"
-          label="Email"
-          value={form.email}
-          onChange={handleChange('email')}
-          required
-          icon={Mail}
-        />
-
-        <Input
-          id="password"
-          type={passwordVisibility.inputType}
-          label="Password"
-          value={form.password}
-          onChange={handleChange('password')}
-          required
-          icon={Lock}
-          showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
-        />
-
-        {error && (
-          <p className="text-sm font-medium text-error text-center mt-2">
-            {error}
-          </p>
-        )}
-
-        <div className="pt-2">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating account…' : 'Register'}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <Button variant="google" onClick={authService.googleLogin} type="button" withArrow={false}>
+            Continue with Google
+          </Button>
+          <Button variant="42" onClick={authService.login42} type="button" withArrow={false}>
+            Continue with 42
           </Button>
         </div>
-      </form>
-
-      <div className="text-center mt-6 space-y-3">
-        <p className="text-sm text-text-muted">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary font-bold hover:underline">
-            Log In
-          </Link>
-        </p>
-      </div>
-
-      <Divider />
-
-      <div className="flex gap-4">
-        <Button variant="google" onClick={authService.googleLogin} type="button">
-          Continue with Google
-        </Button>
-        <Button variant="42" onClick={authService.login42} type="button">
-          Continue with 42
-        </Button>
       </div>
     </AuthLayout>
   );

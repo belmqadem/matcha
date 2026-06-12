@@ -1,3 +1,4 @@
+// src/components/visitors/VisitorStats.tsx
 import type { Visitor } from '@/types/user';
 
 interface VisitorStatsProps {
@@ -6,7 +7,6 @@ interface VisitorStatsProps {
 
 export function VisitorStats({ visitors }: VisitorStatsProps) {
   const DAY_MS = 86_400_000;
-
   const today = visitors.filter(
     (v) => Date.now() - new Date(v.visited_at).getTime() < DAY_MS,
   ).length;
@@ -22,11 +22,11 @@ export function VisitorStats({ visitors }: VisitorStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-3 mb-7">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
       {stats.map(({ label, value }) => (
-        <div key={label} className="bg-white rounded-2xl border border-border px-5 py-4">
-          <p className="text-[11px] text-text-muted font-medium tracking-wide mb-1">{label}</p>
-          <p className="text-2xl font-black text-primary leading-none">{value}</p>
+        <div key={label} className="bg-surface rounded-2xl sm:rounded-3xl border border-border px-5 sm:px-6 py-4 sm:py-5 shadow-sm">
+          <p className="text-xs sm:text-sm text-text-muted font-bold tracking-wide uppercase mb-1 sm:mb-2">{label}</p>
+          <p className="text-2xl sm:text-3xl font-black text-primary leading-none">{value}</p>
         </div>
       ))}
     </div>

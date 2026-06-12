@@ -22,24 +22,25 @@ export default function DatesPage() {
   const inboundPending = dates.filter((d) => d.status === 'pending' && d.my_role === 'receiver').length;
 
   return (
-    <div className="min-h-screen bg-background font-primary">
+    <div className="min-h-[100dvh] bg-background font-primary pb-10">
+
       {/* Header */}
-      <header className="bg-surface border-b border-border px-6 py-4 flex items-center justify-between flex-wrap gap-3 sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center gap-2.5">
-          <CalendarHeart size={24} className="text-primary" />
-          <h1 className="text-[20px] font-black text-text">Dates</h1>
+      <header className="bg-surface border-b border-border px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between flex-wrap gap-3 sticky top-0 z-10 shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <CalendarHeart className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-black text-text">Dates</h1>
           {upcoming > 0 && (
-            <span className="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[12px] font-bold">
+            <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-primary/10 text-primary text-[0.65rem] sm:text-xs font-bold uppercase tracking-wider">
               {upcoming} upcoming
             </span>
           )}
         </div>
-
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-surface text-[13px] font-bold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20"
+          className="flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-primary text-surface text-xs sm:text-sm font-bold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20"
         >
-          <Plus size={16} /> Propose a date
+          <Plus className="w-4 h-4 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Propose a date</span>
+          <span className="inline sm:hidden">Propose</span>
         </button>
       </header>
 
@@ -47,13 +48,12 @@ export default function DatesPage() {
       {inboundPending > 0 && (
         <div
           onClick={() => setTab('pending')}
-          className="mx-6 mt-4 p-3 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-2.5 cursor-pointer hover:bg-primary/15 transition-colors"
+          className="mx-4 sm:mx-6 mt-4 p-3 sm:p-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center gap-2.5 sm:gap-3 cursor-pointer hover:bg-primary/15 transition-colors animate-fade-in-up"
         >
-          <Mail size={18} className="text-primary" />
-          <span className="text-[13px] text-primary font-bold">
+          <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+          <span className="text-xs sm:text-sm text-primary font-bold">
             You have {inboundPending} proposal{inboundPending > 1 ? 's' : ''} waiting for a response
           </span>
-          <span className="ml-auto text-primary text-[16px]">→</span>
         </div>
       )}
 
@@ -61,23 +61,23 @@ export default function DatesPage() {
       <DateTabs tab={tab} setTab={setTab} dates={dates} upcomingCount={upcoming} />
 
       {/* Content Area */}
-      <main className="p-6 max-w-2xl mx-auto">
+      <main className="p-4 sm:p-6 w-full max-w-3xl mx-auto">
         {error && (
-          <div className="p-3 rounded-xl bg-error/10 text-error text-[13px] font-medium mb-4">
+          <div className="p-3 sm:p-4 rounded-xl bg-error/10 text-error border border-error/20 text-xs sm:text-sm font-bold mb-4 animate-fade-in-up">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <Loader2 size={32} className="text-primary animate-spin" />
+          <div className="flex justify-center py-16 sm:py-20">
+            <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 px-5">
-            <div className="text-[48px] mb-3 opacity-80">
-              {tab === 'upcoming' ? '📆' : tab === 'pending' ? '💌' : '🗓️'}
+          <div className="text-center py-16 sm:py-20 px-4 sm:px-5 bg-surface border border-border rounded-3xl shadow-sm animate-fade-in-up">
+            <div className="text-4xl sm:text-5xl mb-3 sm:mb-4 opacity-40 grayscale">
+              {tab === 'upcoming' ? '📅' : tab === 'pending' ? '⏳' : '🕰️'}
             </div>
-            <p className="text-text-muted text-[14px] font-medium">
+            <p className="text-text-muted text-sm sm:text-base font-bold">
               {tab === 'upcoming' && 'No upcoming dates — propose one!'}
               {tab === 'pending' && 'No pending proposals'}
               {tab === 'past' && 'No past dates yet'}
@@ -85,9 +85,11 @@ export default function DatesPage() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {filtered.map((d) => (
-              <DateCard key={d.id} date={d} onUpdate={fetchDates} />
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {filtered.map((d, i) => (
+              <div key={d.id} className="animate-fade-in-up" style={{ '--delay': `${i * 40}ms` } as React.CSSProperties}>
+                 <DateCard date={d} onUpdate={fetchDates} />
+              </div>
             ))}
           </div>
         )}

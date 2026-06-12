@@ -2,11 +2,13 @@
 import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AlertCircle, X } from 'lucide-react';
+
 import { useAuth } from '@/context/AuthContext';
 import { useConversations } from '@/hooks/useConversations';
 import { useMessages } from '@/hooks/useMessages';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useChatDeepLink } from '@/hooks/useChatDeepLink';
+
 import FloatingHearts from '@/components/FloatingHearts';
 import ConfirmModal from '@/components/chat/ConfirmModal';
 import ProposeModal from '@/components/chat/ProposeModal';
@@ -18,11 +20,6 @@ export default function ChatPage() {
   const { user: me } = useAuth();
   const { id: urlUserId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-
-  // Debug: Log location
-  console.log('ChatPage URL:', window.location.href);
-  console.log('ChatPage pathname:', window.location.pathname);
-  console.log('ChatPage urlUserId from params:', urlUserId);
 
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
@@ -81,7 +78,6 @@ export default function ChatPage() {
     setMobileView,
   });
 
-  // Replaces the broken raw useEffect
   useChatDeepLink({
     urlUserId,
     convos,
@@ -92,13 +88,6 @@ export default function ChatPage() {
     onError: setDeepLinkError,
   });
 
-  console.log('deeplink debug', {
-    urlUserId,
-    loading,
-    convosLength: convos.length,
-    convoIds: convos.map((c) => c.id),
-    activeConvo: activeConvo?.id ?? null,
-  });
   const selectConvo = (convo: Conversation) => {
     setActiveConvo(convo);
     setMobileView('chat');
@@ -115,21 +104,21 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="relative h-screen flex flex-col bg-background font-primary overflow-hidden">
+    <div className="relative flex-1 flex flex-col bg-background font-primary min-h-0 overflow-hidden">
       <FloatingHearts />
 
       {(error || deepLinkError) && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-[13px] font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 max-w-sm">
-          <AlertCircle size={16} />
-          <span>{error ?? deepLinkError}</span>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-xs sm:text-sm font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl flex items-center gap-2 sm:gap-3 max-w-[90%] sm:max-w-sm animate-fade-in-up">
+          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+          <span className="truncate">{error ?? deepLinkError}</span>
           <button
             onClick={() => {
               clearError();
               setDeepLinkError(null);
             }}
-            className="hover:opacity-70 transition-opacity ml-1"
+            className="hover:opacity-70 transition-opacity ml-1 shrink-0 active:scale-95"
           >
-            <X size={15} />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
@@ -148,6 +137,7 @@ export default function ChatPage() {
           onCancel={() => setConfirmAction(null)}
         />
       )}
+
       {confirmAction === 'unblock' && activeConvo && (
         <ConfirmModal
           title={`Unblock ${activeConvo.first_name}?`}
@@ -161,6 +151,7 @@ export default function ChatPage() {
           onCancel={() => setConfirmAction(null)}
         />
       )}
+
       {confirmAction === 'unmatch' && activeConvo && (
         <ConfirmModal
           title={`Unmatch ${activeConvo.first_name}?`}
@@ -184,9 +175,14 @@ export default function ChatPage() {
         />
       )}
 
-      <div className="relative z-10 flex flex-1 overflow-hidden max-w-[1280px] w-full mx-auto py-5 px-4 sm:px-6 gap-5">
+      {/* Main Flex Layout */}
+      <div className="relative z-10 flex flex-1 overflow-hidden w-full max-w-7xl mx-auto p-2 sm:p-4 lg:p-6 gap-3 sm:gap-5">
+
+        {/* Sidebar */}
         <aside
-          className={`w-full md:w-80 lg:w-96 shrink-0 flex flex-col bg-surface/90 backdrop-blur-md rounded-[28px] border border-border shadow-sm overflow-hidden ${mobileView === 'chat' ? 'hidden md:flex' : 'flex'}`}
+          className={`w-full md:w-80 lg:w-96 shrink-0 flex flex-col bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
+            mobileView === 'chat' ? 'hidden md:flex' : 'flex'
+          }`}
         >
           <ChatSidebar
             tab={sidebarTab}
@@ -203,8 +199,11 @@ export default function ChatPage() {
           />
         </aside>
 
+        {/* Thread Area */}
         <main
-          className={`flex-1 flex flex-col bg-surface/95 backdrop-blur-md rounded-[28px] border border-border shadow-sm overflow-hidden min-w-0 ${mobileView === 'list' ? 'hidden md:flex' : 'flex'}`}
+          className={`flex-1 flex flex-col bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden min-w-0 ${
+            mobileView === 'list' ? 'hidden md:flex' : 'flex'
+          }`}
         >
           {activeConvo ? (
             <ChatThread
@@ -229,6 +228,7 @@ export default function ChatPage() {
             <NoConvoState />
           )}
         </main>
+
       </div>
     </div>
   );

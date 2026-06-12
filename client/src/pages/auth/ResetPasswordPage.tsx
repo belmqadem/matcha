@@ -53,43 +53,49 @@ const ResetPasswordPage = () => {
 
   return (
     <AuthLayout header="Reset your Password">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          id="password"
-          type={passwordVisibility.inputType}
-          label="New Password"
-          value={form.password}
-          onChange={handleChange('password')}
-          required
-          icon={Lock}
-          showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
-        />
-        <Input
-          id="confirm"
-          type={confirmVisibility.inputType}
-          label="Confirm Password"
-          value={form.confirm}
-          onChange={handleChange('confirm')}
-          required
-          icon={Lock}
-          showPasswordIcon={<ShowPasswordButton password={confirmVisibility} />}
-        />
+      <div className="w-full max-w-sm md:max-w-md mx-auto px-4 sm:px-0">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          <Input
+            id="password"
+            type={passwordVisibility.inputType}
+            label="New Password"
+            value={form.password}
+            onChange={handleChange('password')}
+            required
+            icon={Lock}
+            showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
+          />
+          <Input
+            id="confirm"
+            type={confirmVisibility.inputType}
+            label="Confirm Password"
+            value={form.confirm}
+            onChange={handleChange('confirm')}
+            required
+            icon={Lock}
+            showPasswordIcon={<ShowPasswordButton password={confirmVisibility} />}
+          />
 
-        {error && <p className="text-sm font-medium text-error mb-3 text-center">{error}</p>}
+          {error && (
+            <p className="text-xs sm:text-sm font-medium text-error mb-3 text-center animate-fade-in-up">
+              {error}
+            </p>
+          )}
 
-        <div className="pt-4">
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Resetting…' : 'Reset'}
-          </Button>
-        </div>
-      </form>
+          <div className="pt-2 sm:pt-4">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Resetting…' : 'Reset'}
+            </Button>
+          </div>
+        </form>
 
-      <p className="text-center text-sm text-text-muted mt-6">
-        Back to{' '}
-        <Link to="/login" className="text-primary font-bold hover:underline">
-          Login
-        </Link>
-      </p>
+        <p className="text-center text-sm sm:text-base text-text-muted mt-6 sm:mt-8">
+          Back to{' '}
+          <Link to="/login" className="text-primary font-bold hover:underline">
+            Login
+          </Link>
+        </p>
+      </div>
     </AuthLayout>
   );
 };

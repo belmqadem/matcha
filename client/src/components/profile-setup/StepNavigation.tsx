@@ -1,3 +1,4 @@
+// src/components/profile-setup/StepNavigation.tsx
 import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 
 interface StepNavigationProps {
@@ -28,57 +29,51 @@ export const StepNavigation = ({
 
   return (
     <>
-      {/* Error message */}
       {error && (
-        <div className="mt-2.5 p-2.5 bg-error/6 rounded-2.5 border border-error/15 animate-fadeIn">
-          <p className="text-xs text-error">{error}</p>
+        <div className="mt-3 p-3 bg-error/10 rounded-lg border border-error/20 animate-fade-in-up">
+          <p className="text-xs sm:text-sm font-medium text-error">{error}</p>
         </div>
       )}
 
-      {/* Navigation buttons */}
       <div
         className={`
-          flex items-center gap-2.5 mt-5.5
+          flex items-center gap-3 mt-6
           ${isFirst ? 'justify-end' : 'justify-between'}
         `}
       >
-        {/* Back button */}
         {step > 0 && (
           <button
             type="button"
             onClick={onBack}
-            className="w-10.5 h-10.5 rounded-3 border-[1.5px] border-border bg-white flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-primary hover:text-primary hover:bg-primary/5"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 border-border bg-surface flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-primary hover:text-primary hover:bg-primary/5 active:scale-95"
             aria-label="Go back"
           >
-            <ChevronLeft size={17} />
+            <ChevronLeft className="w-5 h-5" />
           </button>
         )}
 
-        {/* Right side actions */}
-        <div className="flex items-center gap-2.5 ml-auto">
-          {/* Skip step */}
+        <div className="flex items-center gap-3 ml-auto">
           {isSkippable && !isLast && (
             <button
               type="button"
               onClick={onSkip}
-              className="text-xs text-border font-medium transition-colors duration-150 hover:text-text-muted px-1"
+              className="text-xs sm:text-sm text-border font-medium transition-colors duration-150 hover:text-text-muted px-2 py-1"
             >
               Skip
             </button>
           )}
 
-          {/* Continue / Complete button */}
           <button
             type="button"
             disabled={loading}
             onClick={onNext}
             className={`
-              flex items-center gap-1.5 px-5.5 py-2.75 rounded-3.25 text-xs
-              font-semibold transition-all duration-200
+              flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-xs sm:text-sm
+              font-semibold transition-all duration-200 active:scale-95
               ${
                 loading
                   ? 'bg-border text-text-muted cursor-not-allowed'
-                  : 'bg-primary text-white shadow-lg shadow-primary/35 hover:-translate-y-0.5'
+                  : 'bg-primary text-surface shadow-lg shadow-primary/30 hover:-translate-y-0.5 hover:bg-primary-hover'
               }
             `}
           >
@@ -86,29 +81,28 @@ export const StepNavigation = ({
               'Saving…'
             ) : isLast ? (
               <>
-                <Heart size={13} fill="white" />
-                Complete setup
+                <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current text-surface" />
+                Complete
               </>
             ) : (
               <>
                 Continue
-                <ChevronRight size={13} />
+                <ChevronRight className="w-4 h-4 sm:w-4 sm:h-4" />
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Skip all button */}
-      <p className="text-center mt-3.5 mb-0">
+      <div className="text-center mt-5 sm:mt-6">
         <button
           type="button"
           onClick={onSkipAll}
-          className="text-xs text-border font-medium transition-colors duration-150 hover:text-text-muted"
+          className="text-xs sm:text-sm text-border font-medium transition-colors duration-150 hover:text-text-muted"
         >
           Skip setup for now
         </button>
-      </p>
+      </div>
     </>
   );
 };

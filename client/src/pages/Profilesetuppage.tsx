@@ -1,3 +1,4 @@
+// src/pages/Profilesetuppage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -22,7 +23,6 @@ export default function ProfileSetupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [animating, setAnimating] = useState(false);
-  const [animDir, setAnimDir] = useState<'forward' | 'back'>('forward');
 
   const [form, setForm] = useState<ProfileFormData>({
     birthdate: '',
@@ -36,7 +36,6 @@ export default function ProfileSetupPage() {
     photos: [],
   });
 
-  // Prevent users who already finished setup from accessing this page
   useEffect(() => {
     if (user?.gender) {
       navigate('/browse', { replace: true });
@@ -47,8 +46,7 @@ export default function ProfileSetupPage() {
   const isLast = step === STEPS.length - 1;
   const progress = (step / (STEPS.length - 1)) * 100;
 
-  const goToStep = (nextStep: number, direction: 'forward' | 'back') => {
-    setAnimDir(direction);
+  const goToStep = (nextStep: number) => {
     setAnimating(true);
     setTimeout(() => {
       setStep(nextStep);
@@ -63,7 +61,7 @@ export default function ProfileSetupPage() {
       setError(message);
       return;
     }
-    goToStep(nextStep, step < nextStep ? 'forward' : 'back');
+    goToStep(nextStep);
   };
 
   const handleNext = () => handleValidateAndGo(step + 1);
@@ -71,12 +69,10 @@ export default function ProfileSetupPage() {
 
   const handleSkipStep = () => {
     setError('');
-    goToStep(step + 1, 'forward');
+    goToStep(step + 1);
   };
 
   const handleCompletion = async () => {
-    // Note: To make this a true SPA without a hard reload, you should
-    // add a refreshUser() function to AuthContext and call it here before navigating.
     window.location.href = '/browse';
   };
 
@@ -108,25 +104,25 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-5 relative overflow-hidden font-primary">
+    <div className="min-h-[100dvh] bg-background flex items-center justify-center p-4 sm:p-5 relative overflow-hidden font-primary">
       <FloatingHearts />
 
       {/* Decorative blobs */}
-      <div className="fixed top-[-7.5rem] right-[-6.25rem] w-[21.25rem] h-[21.25rem] rounded-full pointer-events-none z-0 bg-primary/10 blur-3xl" />
-      <div className="fixed bottom-[-7.5rem] left-[-5rem] w-[18.75rem] h-[18.75rem] rounded-full pointer-events-none z-0 bg-primary/10 blur-3xl" />
+      <div className="fixed top-[-7.5rem] right-[-6.25rem] w-[18rem] h-[18rem] sm:w-[21.25rem] sm:h-[21.25rem] rounded-full pointer-events-none z-0 bg-primary/10 blur-3xl" />
+      <div className="fixed bottom-[-7.5rem] left-[-5rem] w-[15rem] h-[15rem] sm:w-[18.75rem] sm:h-[18.75rem] rounded-full pointer-events-none z-0 bg-primary/10 blur-3xl" />
 
-      {/* Main card - Replaced bg-white with bg-surface to enforce token rules */}
-      <div className="w-full max-w-md bg-surface rounded-3xl shadow-xl p-8 relative z-10 border border-border">
-        <div className="text-center mb-6">
+      {/* Main card */}
+      <div className="w-full max-w-[95%] sm:max-w-md bg-surface rounded-3xl shadow-xl p-6 sm:p-8 relative z-10 border border-border">
+        <div className="text-center mb-5 sm:mb-6">
           <div className="flex items-center justify-center gap-2">
-            <Heart size={14} fill="currentColor" className="text-primary" />
-            <span className="text-2xl font-black italic text-primary tracking-tight">Matcha</span>
-            <Heart size={14} fill="currentColor" className="text-primary" />
+            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-primary fill-current" />
+            <span className="text-xl sm:text-2xl font-black italic text-primary tracking-tight">Matcha</span>
+            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-primary fill-current" />
           </div>
           <div className="w-6 h-0.5 bg-primary rounded-full mx-auto mt-2 opacity-30" />
         </div>
 
-        <div className="h-1 rounded-full bg-border mb-6 overflow-hidden">
+        <div className="h-1 rounded-full bg-border mb-5 sm:mb-6 overflow-hidden">
           <div
             className="h-full rounded-full bg-primary opacity-90 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
@@ -137,7 +133,7 @@ export default function ProfileSetupPage() {
 
         <div className={`transition-all duration-200 ${animating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
           <StepHeader step={step} totalSteps={STEPS.length} config={currentStep} />
-          <div className="min-h-48">
+          <div className="min-h-[12rem] sm:min-h-[14rem]">
             <StepRenderer step={step} form={form} setForm={setForm} isAnimating={animating} />
           </div>
         </div>

@@ -32,22 +32,22 @@ export default function ActionsMenu({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-full mt-2 w-52 bg-surface rounded-2xl shadow-xl border border-border z-50 py-2 overflow-hidden"
+      className="absolute right-0 top-full mt-2 w-48 sm:w-56 bg-surface rounded-2xl shadow-xl border border-border z-50 py-2 overflow-hidden animate-fade-in-up origin-top-right"
     >
       {iBlocked ? (
         <button
           onClick={() => { onUnblock(); onClose(); }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-text hover:bg-background transition-colors text-left"
+          className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-text hover:bg-background transition-colors text-left active:bg-border/50"
         >
-          <ShieldOff size={16} className="text-text-muted" />
+          <ShieldOff className="w-4 h-4 sm:w-4 sm:h-4 text-text-muted" />
           Unblock {firstName}
         </button>
       ) : (
         <button
           onClick={() => { onBlock(); onClose(); }}
-          className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-error hover:bg-error/10 transition-colors text-left"
+          className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-error hover:bg-error/10 transition-colors text-left active:bg-error/20"
         >
-          <Ban size={16} />
+          <Ban className="w-4 h-4 sm:w-4 sm:h-4" />
           Block {firstName}
         </button>
       )}
@@ -56,9 +56,9 @@ export default function ActionsMenu({
 
       <button
         onClick={() => { onUnmatch(); onClose(); }}
-        className="w-full flex items-center gap-3 px-4 py-3 text-[14px] font-bold text-error hover:bg-error/10 transition-colors text-left"
+        className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-error hover:bg-error/10 transition-colors text-left active:bg-error/20"
       >
-        <UserMinus size={16} />
+        <UserMinus className="w-4 h-4 sm:w-4 sm:h-4" />
         Unmatch {firstName}
       </button>
     </div>

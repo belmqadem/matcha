@@ -1,6 +1,7 @@
 // src/pages/NotificationsPage.tsx
 import { useState } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
+
 import FloatingHearts from '@/components/FloatingHearts';
 import NotificationTabs, { NOTIFICATION_FILTERS } from '@/components/notifications/NotificationTabs';
 import NotificationList from '@/components/notifications/NotificationList';
@@ -10,37 +11,35 @@ export default function NotificationsPage() {
   const { notifications, loading, unreadCount, markRead, deleteOne, markAllRead } = useNotifications();
   const [activeFilter, setActiveFilter] = useState('all');
 
-  // Filter derivation based on active tab
   const filterDef = NOTIFICATION_FILTERS.find((f) => f.key === activeFilter)!;
   const filtered = filterDef.types
     ? notifications.filter((n) => filterDef.types!.includes(n.type))
     : notifications;
 
   return (
-    <div className="relative min-h-screen bg-background font-primary overflow-x-hidden">
+    <div className="relative min-h-[100dvh] bg-background font-primary overflow-x-hidden pb-10">
       <FloatingHearts />
 
-      <div className="relative z-10 max-w-2xl mx-auto px-4 py-8">
-
+      <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {/* Header */}
-        <div className="flex items-end justify-between mb-6">
+        <div className="flex items-end justify-between mb-6 sm:mb-8">
           <div>
-            <h1 className="text-3xl font-black leading-tight text-text">Notifications</h1>
+            <h1 className="text-2xl sm:text-3xl font-black leading-tight text-text tracking-tight">Notifications</h1>
             {unreadCount > 0 && (
-              <p className="text-[13px] mt-0.5 font-medium text-text-muted">{unreadCount} unread</p>
+              <p className="text-xs sm:text-sm mt-1 font-medium text-text-muted">{unreadCount} unread</p>
             )}
           </div>
+
           {unreadCount > 0 && (
             <button
               onClick={markAllRead}
-              className="text-[12px] font-black px-4 py-2 rounded-2xl transition-all duration-150 active:scale-95 text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20"
+              className="text-[0.65rem] sm:text-xs font-black px-3 sm:px-4 py-1.5 sm:py-2 rounded-full transition-all duration-150 active:scale-95 text-primary bg-primary/10 hover:bg-primary/20 border border-primary/20 uppercase tracking-wider"
             >
               Mark all read
             </button>
           )}
         </div>
 
-        {/* Separated Tabs Component */}
         <NotificationTabs
           activeFilter={activeFilter}
           setActiveFilter={setActiveFilter}
@@ -48,19 +47,20 @@ export default function NotificationsPage() {
           unreadCount={unreadCount}
         />
 
-        {/* Content Rendering */}
         {loading ? (
-          <div className="flex flex-col gap-3">
-            {[...Array(5)].map((_, i) => (
+          <div className="flex flex-col gap-3 sm:gap-4">
+            {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="h-[76px] rounded-2xl bg-border animate-pulse"
-                style={{ animationDelay: `${i * 60}ms` }}
+                className="h-[72px] sm:h-[84px] rounded-2xl sm:rounded-3xl bg-surface border border-border animate-pulse"
+                style={{ '--delay': `${i * 60}ms` } as React.CSSProperties}
               />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <EmptyNotifications filter={activeFilter} />
+          <div className="animate-fade-in-up">
+            <EmptyNotifications filter={activeFilter} />
+          </div>
         ) : (
           <NotificationList
             notifications={filtered}

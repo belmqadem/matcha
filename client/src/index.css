@@ -15,6 +15,46 @@
 
   /* Typography Tokens */
   --font-primary: 'Fraunces', serif;
+
+  /* Tailwind v4 Animation Registrations */
+  --animate-float-heart: floatHeart 3s ease-in-out infinite;
+  --animate-fade-in-up: fadeInUp 0.18s ease-out both;
+  --animate-auth-drift: authDrift 10s linear infinite;
+  --animate-auth-twinkle: authTwinkle 4s ease-in-out infinite;
+  --animate-auth-pop-in: authPopIn 0.5s ease-out forwards;
+
+  @keyframes floatHeart {
+    0%   { transform: translateY(0) translateX(0) rotate(-12deg) scale(0.7); opacity: 0; }
+    8%   { opacity: 1; }
+    30%  { transform: translateY(-30vh) translateX(var(--wobble)) rotate(8deg) scale(1.1); }
+    55%  { transform: translateY(-60vh) translateX(calc(var(--wobble) * -0.6)) rotate(-6deg) scale(0.9); }
+    80%  { transform: translateY(-88vh) translateX(var(--wobble)) rotate(10deg) scale(1.05); }
+    92%  { opacity: 0.5; }
+    100% { transform: translateY(-110vh) translateX(0) rotate(-8deg) scale(0.7); opacity: 0; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes authDrift {
+    0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.9; }
+    33%  { transform: translateY(-18px) translateX(7px) rotate(14deg); opacity: 0.7; }
+    66%  { transform: translateY(-34px) translateX(-5px) rotate(-10deg); opacity: 0.35; }
+    100% { transform: translateY(-55px) translateX(3px) rotate(18deg); opacity: 0; }
+  }
+
+  @keyframes authTwinkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.8); }
+    50%      { opacity: 1;    transform: scale(1.25); }
+  }
+
+  @keyframes authPopIn {
+    0%   { transform: scale(0.92) translateY(12px); opacity: 0; }
+    60%  { transform: scale(1.02) translateY(-2px); }
+    100% { transform: scale(1)    translateY(0);    opacity: 1; }
+  }
 }
 
 @layer base {
@@ -33,50 +73,21 @@
   }
 
   ::selection {
-    /* Safe color mixing using CSS natively */
     background-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
-    color: white;
+    color: var(--color-surface);
   }
 }
 
-@keyframes floatHeart {
-  0%   { transform: translateY(0) translateX(0) rotate(-12deg) scale(0.7); opacity: 0; }
-  8%   { opacity: 1; }
-  30%  { transform: translateY(-30vh) translateX(var(--wobble)) rotate(8deg) scale(1.1); }
-  55%  { transform: translateY(-60vh) translateX(calc(var(--wobble) * -0.6)) rotate(-6deg) scale(0.9); }
-  80%  { transform: translateY(-88vh) translateX(var(--wobble)) rotate(10deg) scale(1.05); }
-  92%  { opacity: 0.5; }
-  100% { transform: translateY(-110vh) translateX(0) rotate(-8deg) scale(0.7); opacity: 0; }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.msg-appear {
-  animation: fadeInUp 0.18s ease-out both;
-}
-
-/* Thin scrollbar for the message thread area */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
-
-@keyframes authDrift {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.9; }
-  33%  { transform: translateY(-18px) translateX(7px) rotate(14deg); opacity: 0.7; }
-  66%  { transform: translateY(-34px) translateX(-5px) rotate(-10deg); opacity: 0.35; }
-  100% { transform: translateY(-55px) translateX(3px) rotate(18deg); opacity: 0; }
-}
-
-@keyframes authTwinkle {
-  0%, 100% { opacity: 0.15; transform: scale(0.8); }
-  50%      { opacity: 1;    transform: scale(1.25); }
-}
-
-@keyframes authPopIn {
-  0%   { transform: scale(0.92) translateY(12px); opacity: 0; }
-  60%  { transform: scale(1.02) translateY(-2px); }
-  100% { transform: scale(1)    translateY(0);    opacity: 1; }
+@layer utilities {
+  /* Replaced plain CSS with standard Tailwind utilities pattern */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 9999px;
+  }
 }
