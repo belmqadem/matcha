@@ -59,7 +59,9 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-3xl sm:text-4xl font-black text-text-muted select-none">{initials}</span>
+            <span className="text-3xl sm:text-4xl font-black text-text-muted select-none">
+              {initials}
+            </span>
           </div>
         )}
 

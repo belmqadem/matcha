@@ -10,13 +10,22 @@ export function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function groupByDate(notifications: Notification[]): { label: string; items: Notification[] }[] {
+export function groupByDate(
+  notifications: Notification[],
+): { label: string; items: Notification[] }[] {
   const groups: Record<string, Notification[]> = {};
   const now = new Date();
 
   for (const n of notifications) {
     const diffDays = Math.floor((now.getTime() - new Date(n.created_at).getTime()) / 86400000);
-    const label = diffDays === 0 ? 'Today' : diffDays === 1 ? 'Yesterday' : diffDays < 7 ? 'This week' : 'Earlier';
+    const label =
+      diffDays === 0
+        ? 'Today'
+        : diffDays === 1
+          ? 'Yesterday'
+          : diffDays < 7
+            ? 'This week'
+            : 'Earlier';
     if (!groups[label]) groups[label] = [];
     groups[label].push(n);
   }

@@ -1,14 +1,23 @@
 // src/pages/MyProfilePage.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, MapPin, Edit2, CheckCircle2, Loader2, LogOut } from 'lucide-react';
+import {
+  Camera,
+  MapPin,
+  Edit2,
+  CheckCircle2,
+  Loader2,
+  LogOut,
+  Image,
+  User,
+  Activity,
+} from 'lucide-react';
 
 import { userService } from '@/services/userService';
 import { authService } from '@/services/authService';
 import { useAuth } from '@/context/AuthContext';
 import type { UserProfile } from '@/types/user';
 
-import FloatingHearts from '@/components/FloatingHearts';
 import { CityName } from '@/components/ui/CityName';
 import { PhotosPanel } from '@/components/profile/PhotosPanel';
 import { AboutPanel } from '@/components/profile/AboutPanel';
@@ -19,6 +28,7 @@ import { EditTagsModal } from '@/components/profile/EditTagsModal';
 import { EditLocationModal } from '@/components/profile/EditLocationModal';
 
 type ModalType = 'identity' | 'about' | 'tags' | 'location' | null;
+type TabType = 'photos' | 'about' | 'activity';
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
@@ -29,168 +39,261 @@ const MyProfilePage = () => {
   const [fetchError, setFetchError] = useState('');
   const [editModal, setEditModal] = useState<ModalType>(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('photos');
+
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if ((user?.photos ?? []).length >= 5) {
+      alert('Maximum 5 photos allowed. Please delete a photo from the gallery tab first.');
+      return;
+    }
+
+    setAvatarUploading(true);
+    try {
+      const p = await userService.uploadPhoto(file);
+      await userService.setMainPhoto(p.id);
+      setUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          photos: [...(prev.photos ?? []), p],
+          profile_picture_id: p.id,
+        };
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to change avatar.');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   useEffect(() => {
-    userService.getMe()
+    userService
+      .getMe()
       .then(setUser)
-      .catch(e => setFetchError(e instanceof Error ? e.message : 'Failed to load profile.'))
+      .catch((e) => setFetchError(e instanceof Error ? e.message : 'Failed to load profile.'))
       .finally(() => setLoading(false));
   }, []);
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    try { await authService.logout(); } catch { /* ignore */ }
+    try {
+      await authService.logout();
+    } catch {
+      /* ignore */
+    }
     ctxLogout();
     navigate('/login');
   };
 
-  if (loading) return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-background">
-      <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin" />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin" />
+      </div>
+    );
 
-  if (fetchError || !user) return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 bg-background">
-      <p className="text-sm sm:text-base font-medium text-text-muted">{fetchError || 'Profile not found.'}</p>
-      <button onClick={() => navigate('/login')} className="text-sm sm:text-base font-bold text-primary bg-surface px-6 py-2.5 rounded-full shadow-sm active:scale-95 transition-transform">
-        Back to login
-      </button>
-    </div>
-  );
+  if (fetchError || !user)
+    return (
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 bg-background">
+        <p className="text-sm sm:text-base font-medium text-text-muted">
+          {fetchError || 'Profile not found.'}
+        </p>
+        <button
+          onClick={() => navigate('/login')}
+          className="text-sm sm:text-base font-bold text-primary bg-surface px-6 py-2.5 rounded-full shadow-sm active:scale-95 transition-transform"
+        >
+          Back to login
+        </button>
+      </div>
+    );
 
-  const mainPhoto = user.photos?.find(p => p.id === user.profile_picture_id) ?? user.photos?.[0];
+  const mainPhoto = user.photos?.find((p) => p.id === user.profile_picture_id) ?? user.photos?.[0];
+  const age = user.birth_date
+    ? new Date().getFullYear() - new Date(user.birth_date).getFullYear()
+    : null;
 
   return (
-    <div className="relative min-h-[100dvh] bg-background font-primary pb-20">
-      <FloatingHearts />
+    <div className="min-h-[calc(100dvh-4rem)] md:h-[calc(100dvh-4rem)] flex flex-col bg-transparent font-primary overflow-y-auto md:overflow-hidden">
+      {editModal === 'identity' && (
+        <EditIdentityModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />
+      )}
+      {editModal === 'about' && (
+        <EditAboutModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />
+      )}
+      {editModal === 'tags' && (
+        <EditTagsModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />
+      )}
+      {editModal === 'location' && (
+        <EditLocationModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />
+      )}
 
-      {editModal === 'identity' && <EditIdentityModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
-      {editModal === 'about'    && <EditAboutModal    user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
-      {editModal === 'tags'     && <EditTagsModal     user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
-      {editModal === 'location' && <EditLocationModal user={user} onUpdate={setUser} onClose={() => setEditModal(null)} />}
-
-      <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex flex-col gap-6 sm:gap-8">
-
-        {/* Hero card */}
-        <div className="bg-surface rounded-3xl sm:rounded-[2rem] border border-border shadow-sm overflow-hidden animate-fade-in-up">
-          <div className="flex flex-col md:flex-row min-h-[16rem] sm:min-h-[18rem]">
-            {/* Photo */}
-            <div className="relative w-full md:w-72 bg-background shrink-0 aspect-square md:aspect-auto">
-              {mainPhoto ? (
-                <img src={mainPhoto.url} alt="Profile" className="w-full h-full object-cover block" />
+      <div className="w-full max-w-6xl mx-auto px-4 py-4 md:py-6 flex flex-col md:flex-row gap-6 md:h-full md:min-h-0">
+        {/* LEFT COLUMN: Sidebar Profile Summary */}
+        <div className="w-full md:w-80 shrink-0 flex flex-col gap-4 md:h-full md:min-h-0">
+          <div className="bg-surface/85 backdrop-blur-md rounded-3xl border border-border/70 shadow-premium p-6 flex flex-col items-center text-center animate-fade-in-up relative overflow-hidden group">
+            {/* Photo Avatar */}
+            <div className="relative w-36 h-36 rounded-full overflow-hidden bg-background/50 border-4 border-primary/20 shadow-md group/avatar">
+              {avatarUploading ? (
+                <div className="w-full h-full flex items-center justify-center bg-background/80">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              ) : mainPhoto ? (
+                <img
+                  src={mainPhoto.url}
+                  alt="Profile"
+                  className="w-full h-full object-cover block transition-transform duration-500 group-hover/avatar:scale-105"
+                />
               ) : (
                 <div
-                  className="w-full h-full min-h-[16rem] flex flex-col items-center justify-center gap-3 text-text-muted cursor-pointer hover:bg-border/50 transition-colors"
-                  onClick={() => setEditModal('identity')}
+                  className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-text-muted cursor-pointer hover:bg-border/30 transition-colors"
+                  onClick={() => avatarFileRef.current?.click()}
                 >
-                  <Camera className="w-8 h-8 sm:w-10 sm:h-10" />
-                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider">Add main photo</span>
+                  <Camera className="w-6 h-6" />
+                  <span className="text-[10px] font-black uppercase tracking-wider">Photo</span>
                 </div>
               )}
-              {user.is_online && (
-                <span className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 flex items-center gap-1.5 bg-primary text-surface text-[0.65rem] sm:text-xs font-black px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full tracking-widest shadow-lg">
-                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-surface rounded-full animate-pulse" /> ONLINE
-                </span>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="p-5 sm:p-6 md:p-8 flex flex-col justify-between flex-1">
-              <div>
-                <div className="flex items-start justify-between mb-3 sm:mb-4">
-                  <div className="flex items-center gap-2">
-                    <h1 className="text-2xl sm:text-3xl font-black text-text leading-tight tracking-tight">
-                      {user.first_name} {user.last_name}
-                      {user.birth_date && (
-                        <span className="font-medium opacity-80">
-                          , {new Date().getFullYear() - new Date(user.birth_date).getFullYear()}
-                        </span>
-                      )}
-                    </h1>
-                    <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-primary flex-shrink-0" />
-                  </div>
-                  <button
-                    onClick={() => setEditModal('identity')}
-                    className="flex items-center gap-1.5 text-[0.65rem] sm:text-xs font-bold text-primary bg-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full cursor-pointer hover:bg-primary/20 transition-colors shrink-0 active:scale-95"
-                  >
-                    <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Edit
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
-                  <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  <span className="text-sm sm:text-base font-bold text-text-muted">
-                    {user.location_city
-                      ? user.location_city
-                      : user.latitude
-                        ? <CityName lat={Number(user.latitude)} lng={Number(user.longitude)} fallback={null} />
-                        : 'Location not set'
-                    }
-                  </span>
-                  <button onClick={() => setEditModal('location')} className="text-primary hover:opacity-70 transition-opacity cursor-pointer p-1">
-                    <Edit2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                  </button>
-                </div>
-
-                <div className="mb-6 sm:mb-8">
-                  {user.biography ? (
-                    <p className="text-sm sm:text-base text-text leading-relaxed font-medium opacity-80">"{user.biography}"</p>
-                  ) : (
-                    <button
-                      onClick={() => setEditModal('about')}
-                      className="text-xs sm:text-sm font-bold text-text-muted border-2 border-dashed border-border rounded-xl px-4 sm:px-5 py-3 hover:border-primary hover:text-primary transition-all cursor-pointer w-full text-left"
-                    >
-                      + Add a bio about yourself
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 mt-4">
-                {(user.tags ?? []).length > 0
-                  ? user.tags.map(tag => (
-                      <span key={tag} className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-bold border border-primary/20">
-                        {tag}
-                      </span>
-                    ))
-                  : <span className="text-xs sm:text-sm font-bold text-text-muted italic">No interests added yet</span>
-                }
+              {!avatarUploading && (
                 <button
-                  onClick={() => setEditModal('tags')}
-                  className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-background text-text-muted text-xs sm:text-sm font-bold border-2 border-dashed border-border cursor-pointer hover:border-primary hover:text-primary transition-all active:scale-95"
+                  onClick={() => avatarFileRef.current?.click()}
+                  className="absolute inset-0 bg-text/50 opacity-0 group-hover/avatar:opacity-100 flex items-center justify-center text-surface text-xs font-black transition-opacity duration-300 cursor-pointer"
                 >
-                  + Edit
+                  Change Photo
                 </button>
-              </div>
+              )}
             </div>
+
+            {/* Online indicator */}
+            {user.is_online && (
+              <span className="mt-3.5 flex items-center gap-1.5 bg-primary text-surface text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest shadow-md shadow-primary/20 animate-pulse">
+                <div className="w-1 h-1 bg-surface rounded-full shadow-[0_0_6px_white]" /> ONLINE
+              </span>
+            )}
+
+            {/* Name and Age */}
+            <h1 className="text-xl sm:text-2xl font-black text-text leading-tight tracking-tight mt-3 flex items-center gap-1.5 justify-center">
+              {user.first_name} {user.last_name}
+              {age && <span className="font-medium opacity-80">, {age}</span>}
+              <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 animate-[floatSlow_6s_ease-in-out_infinite]" />
+            </h1>
+            <p className="text-xs font-medium text-text-muted mt-1">@{user.username}</p>
+
+            {/* Location */}
+            <div className="flex items-center gap-1 mt-2.5 bg-primary/5 border border-primary/10 rounded-full px-3 py-1.5 max-w-full">
+              <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="text-xs font-bold text-text-muted truncate">
+                {user.location_city ? (
+                  user.location_city
+                ) : user.latitude ? (
+                  <CityName
+                    lat={Number(user.latitude)}
+                    lng={Number(user.longitude)}
+                    fallback={null}
+                  />
+                ) : (
+                  'Location not set'
+                )}
+              </span>
+              <button
+                onClick={() => setEditModal('location')}
+                className="text-primary hover:opacity-75 transition-opacity cursor-pointer p-0.5"
+              >
+                <Edit2 className="w-2.5 h-2.5" />
+              </button>
+            </div>
+
+            {/* Bio summary */}
+            <div className="w-full mt-4 text-center border-t border-background/50 pt-4">
+              {user.biography ? (
+                <p className="text-xs sm:text-sm text-text leading-relaxed italic opacity-85 line-clamp-3">
+                  "{user.biography}"
+                </p>
+              ) : (
+                <p className="text-xs text-text-muted italic">No biography added yet.</p>
+              )}
+              <button
+                onClick={() => setEditModal('about')}
+                className="mt-2 text-[10px] font-bold text-primary hover:underline cursor-pointer"
+              >
+                Edit Bio
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Logout Card */}
+          <div className="bg-surface/85 backdrop-blur-md rounded-3xl border border-border/70 overflow-hidden shadow-premium animate-fade-in-up shrink-0">
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex justify-center items-center gap-2 py-3.5 text-xs font-black text-error hover:bg-error/5 cursor-pointer transition-colors disabled:opacity-50 active:scale-95"
+            >
+              {loggingOut ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <LogOut className="w-3.5 h-3.5" />
+              )}
+              {loggingOut ? 'Signing out...' : 'Sign out'}
+            </button>
           </div>
         </div>
 
-        <div className="animate-fade-in-up">
-          <PhotosPanel user={user} onUpdate={setUser} />
-        </div>
+        {/* RIGHT COLUMN: Tabbed Content Container */}
+        <div className="flex-1 flex flex-col min-w-0 md:h-full md:min-h-0">
+          {/* Custom Tabs Navigation */}
+          <div className="flex gap-1.5 bg-surface/80 backdrop-blur-md border border-border/70 rounded-2xl p-1.5 shadow-sm mb-4 shrink-0 animate-fade-in-up">
+            {(
+              [
+                ['photos', 'Photos & Gallery', Image],
+                ['about', 'Profile Details', User],
+                ['activity', 'Activity & Fame', Activity],
+              ] as [TabType, string, typeof Image][]
+            ).map(([tabKey, label, Icon]) => {
+              const active = activeTab === tabKey;
+              return (
+                <button
+                  key={tabKey}
+                  onClick={() => setActiveTab(tabKey)}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-none text-xs sm:text-sm font-black cursor-pointer transition-all duration-300 ${
+                    active
+                      ? 'bg-gradient-to-r from-primary to-[#ff758c] text-surface shadow-md hover:brightness-105'
+                      : 'bg-transparent text-text-muted hover:bg-primary/5 hover:text-text'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="inline sm:hidden">{label.split(' ')[0]}</span>
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="animate-fade-in-up">
-          <AboutPanel user={user} onEditAbout={() => setEditModal('about')} onEditLocation={() => setEditModal('location')} />
-        </div>
-
-        <div className="animate-fade-in-up">
-          <ActivityPanel user={user} />
-        </div>
-
-        {/* Logout */}
-        <div className="bg-surface rounded-2xl sm:rounded-3xl border border-border overflow-hidden shadow-sm animate-fade-in-up">
-          <button
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="w-full flex justify-center items-center gap-2 sm:gap-3 py-4 sm:py-5 text-sm sm:text-base font-black text-error hover:bg-error/5 cursor-pointer transition-colors disabled:opacity-50 active:scale-95"
-          >
-            {loggingOut ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />}
-            {loggingOut ? 'Signing out safely…' : 'Sign out of your account'}
-          </button>
+          {/* Scrollable Content Area */}
+          <div className="flex-1 bg-surface/85 backdrop-blur-md border border-border/70 rounded-3xl p-5 sm:p-6 shadow-premium md:overflow-y-auto scrollbar-thin md:min-h-0 animate-fade-in-up">
+            {activeTab === 'photos' && <PhotosPanel user={user} onUpdate={setUser} />}
+            {activeTab === 'about' && (
+              <AboutPanel
+                user={user}
+                onEditAbout={() => setEditModal('about')}
+                onEditLocation={() => setEditModal('location')}
+              />
+            )}
+            {activeTab === 'activity' && <ActivityPanel user={user} />}
+          </div>
         </div>
       </div>
+      <input
+        ref={avatarFileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={handleAvatarChange}
+        className="hidden"
+      />
     </div>
   );
 };

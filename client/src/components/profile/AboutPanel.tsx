@@ -39,7 +39,7 @@ export function AboutPanel({ user, onEditAbout, onEditLocation }: Props) {
   ];
 
   return (
-    <div className="bg-surface rounded-3xl sm:rounded-[2rem] p-5 sm:p-8 border border-border shadow-sm">
+    <div className="w-full">
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h3 className="text-lg sm:text-xl font-black text-text">About Me</h3>
         <button

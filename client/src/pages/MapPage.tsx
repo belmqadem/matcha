@@ -7,14 +7,12 @@ import { useMapLikes } from '@/hooks/useMapLikes';
 import MapHeader from '@/components/map/MapHeader';
 import MapSidebar from '@/components/map/MapSidebar';
 import MapPopup from '@/components/map/MapPopup';
-import type { MapUser, MapFilter } from '@/types/map';
+import type { MapUser, MapFilter, RadiusKm } from '@/types/map';
 
 export default function MapPage() {
   // Pure logic, managed completely by your separated custom hooks
-  const {
-    users, center, radiusKm, loading, gpsLoading, error,
-    fetchMapData, handleGps, handleRadiusChange
-  } = useMapData();
+  const { users, center, radiusKm, loading, gpsLoading, error, handleGps, handleRadiusChange } =
+    useMapData();
 
   const { likeStates, handleLike } = useMapLikes();
 
@@ -44,7 +42,7 @@ export default function MapPage() {
         radiusKm={radiusKm}
         filter={filter}
         gpsLoading={gpsLoading}
-        onRadiusChange={handleRadiusChange}
+        onRadiusChange={(km) => handleRadiusChange(km as RadiusKm)}
         onFilterChange={setFilter}
         onGps={handleGps}
       />

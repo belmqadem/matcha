@@ -33,7 +33,7 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
       () => {
         setGpsError('Could not get your location. Enter it manually.');
         setGpsLoading(false);
-      }
+      },
     );
   };
 
@@ -69,12 +69,16 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
       </button>
 
       {gpsError && (
-        <p className="text-xs sm:text-sm font-medium text-error mb-4 animate-fade-in-up">{gpsError}</p>
+        <p className="text-xs sm:text-sm font-medium text-error mb-4 animate-fade-in-up">
+          {gpsError}
+        </p>
       )}
 
       <div className="flex items-center gap-3 sm:gap-4 my-5 sm:my-6">
         <div className="flex-1 h-[2px] bg-border" />
-        <span className="text-xs sm:text-sm font-medium text-text-muted opacity-80 uppercase tracking-wider">or enter manually</span>
+        <span className="text-xs sm:text-sm font-medium text-text-muted opacity-80 uppercase tracking-wider">
+          or enter manually
+        </span>
         <div className="flex-1 h-[2px] bg-border" />
       </div>
 

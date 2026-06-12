@@ -1,6 +1,6 @@
 // src/components/profile/EditAboutModal.tsx
 import { useState } from 'react';
-import { ChevronDown, Info } from 'lucide-react';
+import { ChevronDown, Info, MapPin, Loader2, Shield } from 'lucide-react';
 import { userService } from '@/services/userService';
 import type { UserProfile } from '@/types/user';
 import { GENDERS, PREFERENCES } from './profileConstants';
@@ -9,7 +9,8 @@ import { SaveBar } from './SaveBar';
 
 const inputCls =
   'w-full bg-background border-2 border-transparent rounded-2xl px-4 py-3 sm:py-3.5 text-sm sm:text-base font-bold text-text placeholder-text-muted outline-none focus:border-primary transition-all';
-const labelCls = 'block text-[0.65rem] sm:text-xs font-bold tracking-widest uppercase text-text-muted mb-2';
+const labelCls =
+  'block text-[0.65rem] sm:text-xs font-bold tracking-widest uppercase text-text-muted mb-2';
 
 interface Props {
   user: UserProfile;
@@ -27,17 +28,70 @@ export function EditAboutModal({ user, onUpdate, onClose }: Props) {
       : '',
   });
 
+  const [cityInput, setCityInput] = useState(user.location_city ?? '');
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(
+    user.latitude && user.longitude
+      ? { lat: Number(user.latitude), lng: Number(user.longitude) }
+      : null,
+  );
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  const useGPS = () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation not supported.');
+      return;
+    }
+
+    setGpsLoading(true);
+    setError('');
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsLoading(false);
+      },
+      () => {
+        setError('Could not get GPS. Enter city manually.');
+        setGpsLoading(false);
+      },
+    );
+  };
 
   const handleSave = async () => {
     if (!form.age || parseInt(form.age) < 18) {
       setError('You must be at least 18.');
       return;
     }
+
     setSaving(true);
     setError('');
+
     try {
+      // 1. Save location changes if GPS or City Name changed
+      let finalLat = gpsCoords?.lat ?? user.latitude;
+      let finalLng = gpsCoords?.lng ?? user.longitude;
+
+      const cityChanged = cityInput.trim() !== (user.location_city ?? '');
+      const gpsChanged =
+        gpsCoords !== null && (gpsCoords.lat !== user.latitude || gpsCoords.lng !== user.longitude);
+
+      if (gpsChanged || cityChanged) {
+        if (finalLat == null || finalLng == null) {
+          setError('GPS location coordinates are required. Please detect your location.');
+          setSaving(false);
+          return;
+        }
+        await userService.updateLocation({
+          latitude: finalLat,
+          longitude: finalLng,
+          location_city: cityInput.trim() || undefined,
+        });
+      }
+
+      // 2. Save profile changes
       const birthDate = new Date(new Date().getFullYear() - parseInt(form.age), 0, 1)
         .toISOString()
         .split('T')[0];
@@ -49,7 +103,14 @@ export function EditAboutModal({ user, onUpdate, onClose }: Props) {
         birth_date: birthDate,
       } as Partial<UserProfile>);
 
-      onUpdate(updated);
+      // 3. Update callback with merged profile & location
+      onUpdate({
+        ...updated,
+        latitude: finalLat,
+        longitude: finalLng,
+        location_city: cityInput.trim() || updated.location_city || user.location_city,
+      });
+
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to save.');
@@ -59,8 +120,9 @@ export function EditAboutModal({ user, onUpdate, onClose }: Props) {
   };
 
   return (
-    <EditModal title="Edit About" onClose={onClose}>
-      <div className="flex flex-col gap-4 sm:gap-5">
+    <EditModal title="Edit About & Location" onClose={onClose}>
+      <div className="flex flex-col gap-4 sm:gap-5 max-h-[80vh] overflow-y-auto pr-1 scrollbar-thin">
+        {/* Core details: Age & Gender */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className={labelCls}>Age</label>
@@ -94,6 +156,7 @@ export function EditAboutModal({ user, onUpdate, onClose }: Props) {
           </div>
         </div>
 
+        {/* Orientation */}
         <div>
           <label className={labelCls}>Sexual orientation</label>
           <div className="relative">
@@ -118,19 +181,69 @@ export function EditAboutModal({ user, onUpdate, onClose }: Props) {
           )}
         </div>
 
+        {/* Biography */}
         <div>
           <label className={labelCls}>Biography</label>
           <textarea
             value={form.biography}
             onChange={(e) => setForm((p) => ({ ...p, biography: e.target.value }))}
             maxLength={500}
-            rows={4}
+            rows={3}
             placeholder="Tell others who you are…"
             className={`${inputCls} resize-none scrollbar-thin`}
           />
-          <p className="text-right text-[0.65rem] sm:text-xs font-bold text-text-muted mt-1.5">
+          <p className="text-right text-[0.65rem] sm:text-xs font-bold text-text-muted mt-1">
             {form.biography.length}/500
           </p>
+        </div>
+
+        {/* Location Section Divider */}
+        <div className="flex items-center gap-4 py-1.5">
+          <div className="flex-1 h-[1px] bg-border/60" />
+          <span className="text-[0.6rem] sm:text-[10px] font-black text-primary uppercase tracking-widest">
+            Location Settings
+          </span>
+          <div className="flex-1 h-[1px] bg-border/60" />
+        </div>
+
+        {/* Location GPS detect */}
+        <div>
+          <label className={labelCls}>GPS location</label>
+          <button
+            type="button"
+            onClick={useGPS}
+            disabled={gpsLoading}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 text-sm font-bold cursor-pointer transition-all active:scale-95 ${
+              gpsCoords
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border bg-background text-text-muted hover:text-text'
+            }`}
+          >
+            {gpsLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <MapPin className="w-4 h-4" />
+            )}
+            {gpsLoading
+              ? 'Detecting coordinates…'
+              : gpsCoords
+                ? 'GPS Coordinates detected ✓'
+                : 'Use my current GPS location'}
+          </button>
+          <p className="text-[0.65rem] sm:text-xs font-bold text-primary/80 mt-1.5 flex items-center gap-1.5">
+            <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Only used for distance calculation.
+          </p>
+        </div>
+
+        {/* City name input */}
+        <div>
+          <label className={labelCls}>City Name (Display only)</label>
+          <input
+            value={cityInput}
+            onChange={(e) => setCityInput(e.target.value)}
+            placeholder="e.g. Paris, Marais district"
+            className={inputCls}
+          />
         </div>
 
         <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />

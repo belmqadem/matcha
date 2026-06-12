@@ -43,7 +43,8 @@ const ForgotPasswordPage = () => {
             </div>
             <p className="text-sm sm:text-base text-text/80 mb-5 sm:mb-6">
               We sent a reset link to{' '}
-              <span className="font-semibold text-primary break-all">{email}</span>. Check your inbox.
+              <span className="font-semibold text-primary break-all">{email}</span>. Check your
+              inbox.
             </p>
             <Link
               to="/login"

@@ -7,11 +7,7 @@ interface ShowPasswordButtonProps {
   ariaLabel?: string;
 }
 
-const ShowPasswordButton = ({
-  password,
-  className = '',
-  ariaLabel,
-}: ShowPasswordButtonProps) => {
+const ShowPasswordButton = ({ password, className = '', ariaLabel }: ShowPasswordButtonProps) => {
   return (
     <button
       type="button"

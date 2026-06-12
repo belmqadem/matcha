@@ -1,7 +1,14 @@
 // src/types/notification.ts
 export type NotificationType =
-  | 'like' | 'visit' | 'message' | 'match' | 'unlike'
-  | 'date_proposed' | 'date_accepted' | 'date_declined' | 'date_cancelled';
+  | 'like'
+  | 'visit'
+  | 'message'
+  | 'match'
+  | 'unlike'
+  | 'date_proposed'
+  | 'date_accepted'
+  | 'date_declined'
+  | 'date_cancelled';
 
 export interface Notification {
   id: number;

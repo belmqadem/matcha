@@ -36,7 +36,10 @@ export default function ActionsMenu({
     >
       {iBlocked ? (
         <button
-          onClick={() => { onUnblock(); onClose(); }}
+          onClick={() => {
+            onUnblock();
+            onClose();
+          }}
           className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-text hover:bg-background transition-colors text-left active:bg-border/50"
         >
           <ShieldOff className="w-4 h-4 sm:w-4 sm:h-4 text-text-muted" />
@@ -44,7 +47,10 @@ export default function ActionsMenu({
         </button>
       ) : (
         <button
-          onClick={() => { onBlock(); onClose(); }}
+          onClick={() => {
+            onBlock();
+            onClose();
+          }}
           className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-error hover:bg-error/10 transition-colors text-left active:bg-error/20"
         >
           <Ban className="w-4 h-4 sm:w-4 sm:h-4" />
@@ -55,7 +61,10 @@ export default function ActionsMenu({
       <div className="mx-4 my-1 border-t border-border" />
 
       <button
-        onClick={() => { onUnmatch(); onClose(); }}
+        onClick={() => {
+          onUnmatch();
+          onClose();
+        }}
         className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-error hover:bg-error/10 transition-colors text-left active:bg-error/20"
       >
         <UserMinus className="w-4 h-4 sm:w-4 sm:h-4" />

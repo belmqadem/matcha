@@ -1,5 +1,5 @@
 // src/components/profile-setup/StepHeader.tsx
-import type { StepConfig } from '../../../types/profileSetup';
+import type { StepConfig } from '@/types/profileSetup';
 
 interface StepHeaderProps {
   step: number;
@@ -22,9 +22,7 @@ export const StepHeader = ({ step, totalSteps, config }: StepHeaderProps) => {
         <p className="text-[0.65rem] sm:text-xs font-semibold text-text-muted uppercase tracking-[0.08em] mb-0.5 sm:mb-1">
           Step {step + 1} of {totalSteps}
         </p>
-        <h2 className="text-sm sm:text-base font-bold text-text leading-tight">
-          {config.title}
-        </h2>
+        <h2 className="text-sm sm:text-base font-bold text-text leading-tight">{config.title}</h2>
       </div>
     </div>
   );

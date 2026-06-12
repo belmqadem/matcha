@@ -12,12 +12,7 @@ interface UseLeafletMapParams {
   onUserClick: (user: MapUser) => void;
 }
 
-export function useLeafletMap({
-  users,
-  center,
-  radiusKm,
-  onUserClick,
-}: UseLeafletMapParams) {
+export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafletMapParams) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const meMarkerRef = useRef<L.Marker | null>(null);

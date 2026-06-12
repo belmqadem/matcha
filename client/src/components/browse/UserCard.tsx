@@ -106,7 +106,13 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           disabled={busy}
           className="flex-1 py-2 sm:py-2.5 rounded-full bg-background text-primary border border-primary text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:opacity-80 active:scale-95"
         >
-          {busy ? <Spinner size="sm" /> : <><Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Liked</>}
+          {busy ? (
+            <Spinner size="sm" />
+          ) : (
+            <>
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Liked
+            </>
+          )}
         </button>
       );
     }
@@ -117,7 +123,13 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           disabled={busy}
           className="flex-1 py-2 sm:py-2.5 rounded-full border-2 border-primary bg-surface text-primary text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:bg-primary hover:text-surface active:scale-95 shadow-sm"
         >
-          {busy ? <Spinner size="sm" /> : <><Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Match</>}
+          {busy ? (
+            <Spinner size="sm" />
+          ) : (
+            <>
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Match
+            </>
+          )}
         </button>
       );
     }
@@ -127,7 +139,13 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
         disabled={busy}
         className="flex-1 py-2 sm:py-2.5 rounded-full border-2 border-border bg-surface text-text-muted text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:border-primary hover:text-primary active:scale-95"
       >
-        {busy ? <Spinner size="sm" /> : <><Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors" /> Like</>}
+        {busy ? (
+          <Spinner size="sm" />
+        ) : (
+          <>
+            <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-colors" /> Like
+          </>
+        )}
       </button>
     );
   };

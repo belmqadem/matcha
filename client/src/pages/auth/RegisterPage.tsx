@@ -28,10 +28,11 @@ const RegisterPage = () => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const handleChange = (field: keyof RegisterPayload) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (error) setError('');
-  };
+  const handleChange =
+    (field: keyof RegisterPayload) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+      if (error) setError('');
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +63,8 @@ const RegisterPage = () => {
           </div>
           <p className="text-text text-base sm:text-lg font-medium">{successMessage}</p>
           <p className="text-sm sm:text-base text-text-muted">
-            We've sent a verification link to <span className="font-bold text-text break-all">{form.email}</span>.
+            We've sent a verification link to{' '}
+            <span className="font-bold text-text break-all">{form.email}</span>.
           </p>
           <div className="pt-4 sm:pt-6">
             <Link to="/login" className="block">
@@ -157,7 +159,12 @@ const RegisterPage = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <Button variant="google" onClick={authService.googleLogin} type="button" withArrow={false}>
+          <Button
+            variant="google"
+            onClick={authService.googleLogin}
+            type="button"
+            withArrow={false}
+          >
             Continue with Google
           </Button>
           <Button variant="42" onClick={authService.login42} type="button" withArrow={false}>

@@ -67,7 +67,13 @@ function BearIllustration() {
         <circle cx="158" cy="112" r="14" fill="#e8b47a" />
         <ellipse cx="108" cy="174" rx="30" ry="22" fill="#e8b87a" />
         <ellipse cx="108" cy="164" rx="11" ry="7.5" fill="#5a3018" />
-        <path d="M98 178 Q108 188 118 178" fill="none" stroke="#5a3018" strokeWidth="2.5" strokeLinecap="round" />
+        <path
+          d="M98 178 Q108 188 118 178"
+          fill="none"
+          stroke="#5a3018"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
         <circle cx="90" cy="148" r="9" fill="#2a1a08" />
         <circle cx="126" cy="148" r="9" fill="#2a1a08" />
         <circle cx="92" cy="146" r="3" fill="white" />
@@ -85,7 +91,15 @@ function BearIllustration() {
           strokeWidth="1.5"
           strokeLinejoin="round"
         />
-        <ellipse cx="178" cy="204" rx="5" ry="8" fill="white" opacity="0.35" transform="rotate(-20 178 204)" />
+        <ellipse
+          cx="178"
+          cy="204"
+          rx="5"
+          ry="8"
+          fill="white"
+          opacity="0.35"
+          transform="rotate(-20 178 204)"
+        />
       </g>
 
       {/* ── White bear ── */}
@@ -112,10 +126,28 @@ function BearIllustration() {
         <circle cx="358" cy="112" r="14" fill="#e8d8d0" />
         <ellipse cx="308" cy="174" rx="30" ry="22" fill="#fff8f4" />
         <ellipse cx="308" cy="164" rx="11" ry="7.5" fill="#3a2818" />
-        <path d="M294 178 Q308 194 322 178" fill="none" stroke="#3a2818" strokeWidth="2.5" strokeLinecap="round" />
+        <path
+          d="M294 178 Q308 194 322 178"
+          fill="none"
+          stroke="#3a2818"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
         <ellipse cx="308" cy="187" rx="9" ry="6" fill="#D4537E" opacity="0.85" />
-        <path d="M292 144 Q300 136 308 144" fill="none" stroke="#2a1a08" strokeWidth="3" strokeLinecap="round" />
-        <path d="M318 144 Q326 136 334 144" fill="none" stroke="#2a1a08" strokeWidth="3" strokeLinecap="round" />
+        <path
+          d="M292 144 Q300 136 308 144"
+          fill="none"
+          stroke="#2a1a08"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        <path
+          d="M318 144 Q326 136 334 144"
+          fill="none"
+          stroke="#2a1a08"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
         <ellipse cx="276" cy="172" rx="14" ry="8" fill="#e8899a" opacity="0.5" />
         <ellipse cx="340" cy="172" rx="14" ry="8" fill="#e8899a" opacity="0.5" />
         <circle cx="272" cy="174" r="2.5" fill="#D4537E" opacity="0.4" />
@@ -132,7 +164,6 @@ function BearIllustration() {
 export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-background font-primary">
-
       {/* ── Navbar ── */}
       <nav className="relative z-20 flex items-center justify-between px-5 sm:px-10 lg:px-14 py-5 sm:py-6">
         <Logo />
@@ -154,20 +185,16 @@ export default function LandingPage() {
 
       {/* ── Hero ── */}
       <div className="flex flex-col lg:flex-row lg:items-center px-5 sm:px-10 lg:pl-14 pb-12 lg:pb-0 lg:min-h-[calc(100vh-80px)]">
-
         {/* Left — copy */}
         <div className="z-10 w-full lg:w-[44%] lg:shrink-0 pt-6 sm:pt-10 lg:pt-0 animate-[slideInLeft_0.7s_cubic-bezier(.22,1,.36,1)_both]">
-
           <h1 className="mb-5 text-[2.2rem] xs:text-[2.6rem] sm:text-[3.2rem] lg:text-[3.8rem] xl:text-[4.2rem] font-extrabold leading-[1.08] tracking-[-1px] sm:tracking-[-1.5px] lg:tracking-[-2px] text-text">
             Find your{' '}
-            <span className="inline-block text-primary font-display italic">
-              matchy matchy
-            </span>
+            <span className="inline-block text-primary font-display italic">matchy matchy</span>
           </h1>
 
           <p className="mb-8 sm:mb-10 max-w-[360px] text-sm sm:text-[0.96rem] leading-relaxed text-text-muted">
-            Matcha matches you with people who just get it — your humor, your pace, your vibe.
-            Real connections, no noise.
+            Matcha matches you with people who just get it — your humor, your pace, your vibe. Real
+            connections, no noise.
           </p>
 
           <Link
@@ -216,7 +243,6 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-
     </main>
   );
 }

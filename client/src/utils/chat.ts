@@ -20,9 +20,7 @@ export function formatMessageTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export function groupMessagesByDate(
-  messages: Message[],
-): { date: string; messages: Message[] }[] {
+export function groupMessagesByDate(messages: Message[]): { date: string; messages: Message[] }[] {
   const groups: { date: string; messages: Message[] }[] = [];
   for (const msg of messages) {
     const date = new Date(msg.sentAt).toLocaleDateString([], {

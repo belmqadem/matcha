@@ -20,7 +20,9 @@ export const mapService = {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ latitude, longitude }),
-    }).then((res) => handleResponse<{ latitude: number; longitude: number; location_city: string }>(res)),
+    }).then((res) =>
+      handleResponse<{ latitude: number; longitude: number; location_city: string }>(res),
+    ),
 
   likeUser: (id: string) =>
     fetch(`/api/likes/${id}`, { method: 'POST', credentials: 'include' }).then((res) =>

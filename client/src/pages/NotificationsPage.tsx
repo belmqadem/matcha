@@ -3,12 +3,15 @@ import { useState } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 
 import FloatingHearts from '@/components/FloatingHearts';
-import NotificationTabs, { NOTIFICATION_FILTERS } from '@/components/notifications/NotificationTabs';
+import NotificationTabs, {
+  NOTIFICATION_FILTERS,
+} from '@/components/notifications/NotificationTabs';
 import NotificationList from '@/components/notifications/NotificationList';
 import EmptyNotifications from '@/components/notifications/EmptyNotifications';
 
 export default function NotificationsPage() {
-  const { notifications, loading, unreadCount, markRead, deleteOne, markAllRead } = useNotifications();
+  const { notifications, loading, unreadCount, markRead, deleteOne, markAllRead } =
+    useNotifications();
   const [activeFilter, setActiveFilter] = useState('all');
 
   const filterDef = NOTIFICATION_FILTERS.find((f) => f.key === activeFilter)!;
@@ -24,9 +27,13 @@ export default function NotificationsPage() {
         {/* Header */}
         <div className="flex items-end justify-between mb-6 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black leading-tight text-text tracking-tight">Notifications</h1>
+            <h1 className="text-2xl sm:text-3xl font-black leading-tight text-text tracking-tight">
+              Notifications
+            </h1>
             {unreadCount > 0 && (
-              <p className="text-xs sm:text-sm mt-1 font-medium text-text-muted">{unreadCount} unread</p>
+              <p className="text-xs sm:text-sm mt-1 font-medium text-text-muted">
+                {unreadCount} unread
+              </p>
             )}
           </div>
 
@@ -62,11 +69,7 @@ export default function NotificationsPage() {
             <EmptyNotifications filter={activeFilter} />
           </div>
         ) : (
-          <NotificationList
-            notifications={filtered}
-            onRead={markRead}
-            onDelete={deleteOne}
-          />
+          <NotificationList notifications={filtered} onRead={markRead} onDelete={deleteOne} />
         )}
       </div>
     </div>

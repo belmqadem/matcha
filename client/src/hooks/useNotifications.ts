@@ -1,5 +1,5 @@
 // src/hooks/useNotifications.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { notificationService } from '@/services/notificationService';
 import { useSocket } from '@/context/SocketContext';
 import type { Notification } from '@/types/notification';
@@ -13,13 +13,36 @@ export function useNotifications() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+  const lastFetchTime = useRef(0);
+  const fetchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fetchNotificationsRef = useRef<() => Promise<void>>(null as unknown as () => Promise<void>);
+
   const fetchNotifications = useCallback(async () => {
+    const now = Date.now();
+    const timeSinceLast = now - lastFetchTime.current;
+
+    // Throttle requests: if called within 1.5s of the last request, schedule it
+    if (timeSinceLast < 1500) {
+      if (fetchTimeout.current) return;
+      fetchTimeout.current = setTimeout(() => {
+        fetchTimeout.current = null;
+        fetchNotificationsRef.current();
+      }, 1500 - timeSinceLast);
+      return;
+    }
+
+    lastFetchTime.current = now;
+    if (fetchTimeout.current) {
+      clearTimeout(fetchTimeout.current);
+      fetchTimeout.current = null;
+    }
+
     try {
       const data = await notificationService.getNotifications();
       // FIX 1: Deduplicate by ID to guarantee no repeated notifications
       const unique = Array.from(new Map(data.notifications.map((n) => [n.id, n])).values());
       setNotifications(unique);
-    } catch (_) {
+    } catch {
       // Silent fail
     } finally {
       setLoading(false);
@@ -27,7 +50,18 @@ export function useNotifications() {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    fetchNotificationsRef.current = fetchNotifications;
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchNotifications();
+    }, 0);
+    return () => {
+      if (fetchTimeout.current) {
+        clearTimeout(fetchTimeout.current);
+      }
+    };
   }, [fetchNotifications]);
 
   // FIX 2: Listen for new real-time notifications to update the list live!
@@ -37,27 +71,39 @@ export function useNotifications() {
       fetchNotifications();
     };
     socket.on('notification:new', handleNewNotif);
-    return () => { socket.off('notification:new', handleNewNotif); };
+    return () => {
+      socket.off('notification:new', handleNewNotif);
+    };
   }, [socket, fetchNotifications]);
 
-  const markRead = useCallback(async (id: number) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-    decrementNotifications(); // Sync the red dot in the AppHeader!
-    try {
-      await notificationService.markRead(id);
-    } catch (_) {}
-  }, [decrementNotifications]);
+  const markRead = useCallback(
+    async (id: number) => {
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+      decrementNotifications(); // Sync the red dot in the AppHeader!
+      try {
+        await notificationService.markRead(id);
+      } catch {
+        // ignore error
+      }
+    },
+    [decrementNotifications],
+  );
 
-  const deleteOne = useCallback(async (id: number) => {
-    const target = notifications.find(n => n.id === id);
-    if (target && !target.is_read) {
-      decrementNotifications(); // Remove badge if we delete an unread notification
-    }
-    setNotifications((prev) => prev.filter((x) => x.id !== id));
-    try {
-      await notificationService.deleteNotification(id);
-    } catch (_) {}
-  }, [notifications, decrementNotifications]);
+  const deleteOne = useCallback(
+    async (id: number) => {
+      const target = notifications.find((n) => n.id === id);
+      if (target && !target.is_read) {
+        decrementNotifications(); // Remove badge if we delete an unread notification
+      }
+      setNotifications((prev) => prev.filter((x) => x.id !== id));
+      try {
+        await notificationService.deleteNotification(id);
+      } catch {
+        // ignore error
+      }
+    },
+    [notifications, decrementNotifications],
+  );
 
   const markAllRead = useCallback(async () => {
     if (markingAll || unreadCount === 0) return;
@@ -67,9 +113,10 @@ export function useNotifications() {
     markNotificationsRead(); // Clear the AppHeader badge
     try {
       await notificationService.markAllRead();
-    } catch (_) {
+    } catch {
       await fetchNotifications();
     } finally {
+      setLoading(false);
       setMarkingAll(false);
     }
   }, [markingAll, unreadCount, fetchNotifications, markNotificationsRead]);
@@ -80,6 +127,6 @@ export function useNotifications() {
     unreadCount,
     markRead,
     deleteOne,
-    markAllRead
+    markAllRead,
   };
 }

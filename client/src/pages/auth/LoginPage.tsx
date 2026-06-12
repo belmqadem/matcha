@@ -28,10 +28,11 @@ const LoginPage = () => {
     }
   }, [searchParams]);
 
-  const handleChange = (field: 'username' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (error) setError('');
-  };
+  const handleChange =
+    (field: 'username' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
+      if (error) setError('');
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +115,12 @@ const LoginPage = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <Button variant="google" onClick={authService.googleLogin} type="button" withArrow={false}>
+          <Button
+            variant="google"
+            onClick={authService.googleLogin}
+            type="button"
+            withArrow={false}
+          >
             Continue with Google
           </Button>
           <Button variant="42" onClick={authService.login42} type="button" withArrow={false}>

@@ -9,7 +9,11 @@ interface NotificationListProps {
   onDelete: (id: number) => void;
 }
 
-export default function NotificationList({ notifications, onRead, onDelete }: NotificationListProps) {
+export default function NotificationList({
+  notifications,
+  onRead,
+  onDelete,
+}: NotificationListProps) {
   const groups = groupByDate(notifications);
 
   return (

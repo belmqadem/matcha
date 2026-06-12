@@ -14,7 +14,9 @@ export function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, 
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="bg-white rounded-3xl p-7 w-full max-w-[380px] shadow-2xl animate-[fadeUp_0.2s_ease-out]">
         <div className="flex items-center justify-between mb-3">

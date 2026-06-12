@@ -1,9 +1,4 @@
-import type {
-  ProfileFormData,
-  ProfileResponse,
-  TagsResponse,
-  PhotoResponse,
-} from '../types/profileSetup';
+import type { ProfileFormData, ProfileResponse, TagsResponse } from '../types/profileSetup';
 import type { Photo } from '../types/user';
 
 const API_BASE = '/api';
@@ -17,7 +12,7 @@ export const updateProfile = async (
     location_city: string;
     latitude: number;
     longitude: number;
-  }>
+  }>,
 ): Promise<ProfileResponse> => {
   const res = await fetch(`${API_BASE}/profile/me`, {
     method: 'PATCH',
@@ -88,7 +83,7 @@ export const deletePhoto = async (photoId: number): Promise<void> => {
 
 export const editPhoto = async (
   photoId: number,
-  data: { rotate?: number; crop?: { left: number; top: number; width: number; height: number } }
+  data: { rotate?: number; crop?: { left: number; top: number; width: number; height: number } },
 ): Promise<Photo> => {
   const res = await fetch(`${API_BASE}/profile/me/photos/${photoId}/edit`, {
     method: 'POST',
@@ -103,7 +98,7 @@ export const editPhoto = async (
 
 export const filterPhoto = async (
   photoId: number,
-  data: { filter: string; intensity?: number }
+  data: { filter: string; intensity?: number },
 ): Promise<Photo> => {
   const res = await fetch(`${API_BASE}/profile/me/photos/${photoId}/filter`, {
     method: 'POST',

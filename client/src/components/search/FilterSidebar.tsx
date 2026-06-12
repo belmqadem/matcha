@@ -23,7 +23,9 @@ export function FilterSidebar({
       className="bg-surface rounded-3xl border border-border p-5 sm:p-6 shadow-sm flex flex-col gap-5 sm:gap-6"
     >
       <div className="flex items-center justify-between">
-        <h2 className="text-sm sm:text-base font-black text-text tracking-tight uppercase">Filters</h2>
+        <h2 className="text-sm sm:text-base font-black text-text tracking-tight uppercase">
+          Filters
+        </h2>
         {activeCount > 0 && (
           <span className="bg-primary text-surface text-[0.65rem] sm:text-xs font-black w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-sm">
             {activeCount}
@@ -120,9 +122,7 @@ export function FilterSidebar({
               onChange={(e) => onChange('max_km', e.target.value)}
               className="w-full bg-background border border-border rounded-xl pl-9 pr-3 py-2.5 text-xs sm:text-sm outline-none focus:border-primary/50 transition-all text-text"
             />
-            <MapPin
-              className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-            />
+            <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
           </div>
         ) : (
           <input
@@ -147,7 +147,9 @@ export function FilterSidebar({
           onChange={(e) => onChange('tags', e.target.value)}
           className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-xs sm:text-sm outline-none focus:border-primary/50 transition-all text-text"
         />
-        <p className="text-[0.65rem] sm:text-xs text-text-muted mt-1.5 sm:mt-2">Comma-separated. # optional.</p>
+        <p className="text-[0.65rem] sm:text-xs text-text-muted mt-1.5 sm:mt-2">
+          Comma-separated. # optional.
+        </p>
       </div>
 
       {/* Actions */}

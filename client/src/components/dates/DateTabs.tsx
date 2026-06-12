@@ -1,6 +1,5 @@
 // src/components/dates/DateTabs.tsx
 import type { DateEntry } from '@/types/date';
-import { isPast } from '@/utils/dateUtils';
 
 export type TabFilter = 'upcoming' | 'pending' | 'past' | 'all';
 

@@ -20,7 +20,9 @@ export default function Bubble({ msg, mine }: BubbleProps) {
       >
         <p>{msg.content}</p>
         <div className={`flex items-center gap-1 mt-1 ${mine ? 'justify-end' : 'justify-start'}`}>
-          <span className={`text-[0.6rem] sm:text-[10px] font-bold ${mine ? 'text-surface/70' : 'text-text-muted'}`}>
+          <span
+            className={`text-[0.6rem] sm:text-[10px] font-bold ${mine ? 'text-surface/70' : 'text-text-muted'}`}
+          >
             {formatMessageTime(msg.sentAt)}
           </span>
           {mine &&

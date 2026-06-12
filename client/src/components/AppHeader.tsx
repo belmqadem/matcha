@@ -23,11 +23,11 @@ import { authService } from '@/services/authService';
 type BadgeKey = 'messages' | 'notifications';
 
 const MAIN_NAV = [
-  { to: '/browse',   label: 'Browse',   Icon: Compass,       badge: undefined },
-  { to: '/chat',     label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
-  { to: '/likes',    label: 'Likes',    Icon: Heart,         badge: undefined },
-  { to: '/map',      label: 'Map',      Icon: MapPin,        badge: undefined },
-  { to: '/dates',    label: 'Dates',    Icon: CalendarDays,  badge: undefined },
+  { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
+  { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
+  { to: '/likes', label: 'Likes', Icon: Heart, badge: undefined },
+  { to: '/map', label: 'Map', Icon: MapPin, badge: undefined },
+  { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: undefined },
 ];
 
 export default function AppHeader() {
@@ -36,7 +36,8 @@ export default function AppHeader() {
 
   // Separation of Concerns: Global state from Context instead of local fetches
   const { user: me, logout: ctxLogout } = useAuth();
-  const { unreadMessages, unreadNotifications, markNotificationsRead, markMessagesRead } = useSocket();
+  const { unreadMessages, unreadNotifications, markNotificationsRead, markMessagesRead } =
+    useSocket();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -63,8 +64,10 @@ export default function AppHeader() {
   // Handle click outside for dropdowns
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
-      if (mobileRef.current && !mobileRef.current.contains(e.target as Node)) setMobileMenuOpen(false);
+      if (profileRef.current && !profileRef.current.contains(e.target as Node))
+        setProfileOpen(false);
+      if (mobileRef.current && !mobileRef.current.contains(e.target as Node))
+        setMobileMenuOpen(false);
     };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
@@ -72,6 +75,7 @@ export default function AppHeader() {
 
   // Close dropdowns and clear badges on navigation
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfileOpen(false);
     setMobileMenuOpen(false);
 
@@ -98,9 +102,8 @@ export default function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-[100] w-full bg-surface border-b border-border shadow-sm">
+    <header className="sticky top-0 z-[100] w-full border-b border-border bg-surface/80 shadow-sm backdrop-blur-md">
       <div className="grid grid-cols-[auto_1fr_auto] lg:grid-cols-[180px_1fr_180px] items-center h-16 px-4 md:px-6 gap-2">
-
         {/* ── LEFT: Logo ── */}
         <div className="flex items-center">
           <NavLink
@@ -164,7 +167,6 @@ export default function AppHeader() {
 
         {/* ── RIGHT: Bell + Avatar ── */}
         <div className="flex items-center justify-end gap-2">
-
           {/* Desktop Right Side */}
           <div className="hidden lg:flex items-center gap-2">
             {/* Bell */}
@@ -172,7 +174,9 @@ export default function AppHeader() {
               <NavLink
                 to="/notifications"
                 className={`flex items-center justify-center w-10 h-10 rounded-full border bg-surface transition-colors ${
-                  notifCount > 0 ? 'text-primary border-primary/20' : 'text-text-muted border-border hover:bg-background'
+                  notifCount > 0
+                    ? 'text-primary border-primary/20'
+                    : 'text-text-muted border-border hover:bg-background'
                 }`}
               >
                 <Bell size={17} strokeWidth={1.8} />
@@ -190,7 +194,9 @@ export default function AppHeader() {
                 <button
                   onClick={() => setProfileOpen((o) => !o)}
                   className={`flex items-center gap-2 p-1 pr-3 rounded-full border cursor-pointer transition-colors ${
-                    profileOpen ? 'bg-background border-border shadow-inner' : 'bg-surface border-border hover:bg-background'
+                    profileOpen
+                      ? 'bg-background border-border shadow-inner'
+                      : 'bg-surface border-border hover:bg-background'
                   }`}
                 >
                   <div className="relative shrink-0">
@@ -344,7 +350,7 @@ export default function AppHeader() {
                   <Bell size={16} strokeWidth={1.8} />
                   <span className="flex-1">Notifications</span>
                   {notifCount > 0 && (
-                     <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-surface text-[10px] font-bold flex items-center justify-center">
+                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-surface text-[10px] font-bold flex items-center justify-center">
                       {notifCount > 99 ? '99+' : notifCount}
                     </span>
                   )}

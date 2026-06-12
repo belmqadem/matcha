@@ -62,6 +62,6 @@ export const chatService = {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }).then((res) => handleResponse<any>(res)),
 };

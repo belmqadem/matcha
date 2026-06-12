@@ -24,8 +24,7 @@ export function ActiveChips({ filters, onRemove }: ActiveChipsProps) {
     chips.push({ label: `≤ ${filters.max_km} km`, key: 'location' });
   if (filters.location_mode === 'city' && filters.city)
     chips.push({ label: `In ${filters.city}`, key: 'location' });
-  if (filters.tags)
-    chips.push({ label: `#${filters.tags.replace(/,\s*/g, ' #')}`, key: 'tags' });
+  if (filters.tags) chips.push({ label: `#${filters.tags.replace(/,\s*/g, ' #')}`, key: 'tags' });
 
   if (chips.length === 0) return null;
 

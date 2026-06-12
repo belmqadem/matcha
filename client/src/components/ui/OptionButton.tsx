@@ -7,11 +7,7 @@ interface OptionButtonProps {
   onClick: () => void;
 }
 
-export const OptionButton = ({
-  label,
-  selected,
-  onClick,
-}: OptionButtonProps) => {
+export const OptionButton = ({ label, selected, onClick }: OptionButtonProps) => {
   return (
     <button
       type="button"

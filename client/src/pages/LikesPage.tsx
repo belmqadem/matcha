@@ -11,7 +11,6 @@ export default function LikesPage() {
   return (
     <div className="min-h-[100dvh] bg-background font-primary pb-10">
       <div className="max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -22,10 +21,13 @@ export default function LikesPage() {
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-text leading-none">People who like you</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-text leading-none">
+                People who like you
+              </h1>
               {!loading && (
                 <p className="text-xs sm:text-sm text-text-muted mt-1 sm:mt-1.5">
-                  {likedBy.length} {likedBy.length === 1 ? 'person likes' : 'people like'} your profile
+                  {likedBy.length} {likedBy.length === 1 ? 'person likes' : 'people like'} your
+                  profile
                 </p>
               )}
             </div>
@@ -39,9 +41,7 @@ export default function LikesPage() {
                   key={s}
                   onClick={() => setSort(s)}
                   className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
-                    sort === s
-                      ? 'bg-primary text-surface'
-                      : 'text-text-muted hover:text-text'
+                    sort === s ? 'bg-primary text-surface' : 'text-text-muted hover:text-text'
                   }`}
                 >
                   {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -73,7 +73,11 @@ export default function LikesPage() {
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-5">
             {sorted.map((liker, i) => (
-              <div key={liker.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
+              <div
+                key={liker.id}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${i * 0.05}s` }}
+              >
                 <LikerCard liker={liker} index={i} />
               </div>
             ))}

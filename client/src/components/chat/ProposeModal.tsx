@@ -50,7 +50,9 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
           <div>
             <div className="text-2xl mb-1">💌</div>
             <h2 className="text-xl font-black text-text">Ask {receiverName} out</h2>
-            <p className="text-[13px] text-text-muted font-medium mt-0.5">Propose a time and place</p>
+            <p className="text-[13px] text-text-muted font-medium mt-0.5">
+              Propose a time and place
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -82,8 +84,7 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
 
           <label className="flex flex-col gap-1.5">
             <span className="text-[11px] font-black uppercase tracking-[0.12em] text-text-muted">
-              Location{' '}
-              <span className="font-medium normal-case tracking-normal">(optional)</span>
+              Location <span className="font-medium normal-case tracking-normal">(optional)</span>
             </span>
             <input
               placeholder="Coffee at Café Kitsune…"

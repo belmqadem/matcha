@@ -8,7 +8,13 @@ async function reverseGeocode(lat: number, lng: number): Promise<string | null> 
       { headers: { 'Accept-Language': 'en' } },
     );
     const data = await res.json();
-    return data.address?.city ?? data.address?.town ?? data.address?.village ?? data.address?.county ?? null;
+    return (
+      data.address?.city ??
+      data.address?.town ??
+      data.address?.village ??
+      data.address?.county ??
+      null
+    );
   } catch {
     return null;
   }
@@ -25,7 +31,9 @@ export function CityName({ lat, lng, fallback }: CityNameProps) {
 
   useEffect(() => {
     if (!fallback && lat && lng) {
-      reverseGeocode(lat, lng).then(c => { if (c) setCity(c); });
+      reverseGeocode(lat, lng).then((c) => {
+        if (c) setCity(c);
+      });
     }
   }, [lat, lng, fallback]);
 

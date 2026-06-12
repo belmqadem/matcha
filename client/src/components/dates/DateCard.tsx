@@ -1,4 +1,3 @@
-// src/components/dates/DateCard.tsx
 import { useState } from 'react';
 import { Calendar, MapPin, Check, X, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -6,6 +5,7 @@ import { dateService } from '@/services/dateService';
 import Avatar from '@/components/ui/Avatar';
 import { formatDate, formatTime, isPast } from '@/utils/dateUtils';
 import type { DateEntry, DateStatus } from '@/types/date';
+import { useAuth } from '@/context/AuthContext';
 
 const STATUS_META: Record<DateStatus, { label: string; bg: string; text: string }> = {
   pending: { label: 'Pending', bg: 'bg-primary/20', text: 'text-primary' },
@@ -22,9 +22,13 @@ interface DateCardProps {
 export default function DateCard({ date, onUpdate }: DateCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user: currentUser } = useAuth();
 
   const meta = STATUS_META[date.status];
   const past = isPast(date.scheduled_at);
+  const isReceiver = currentUser
+    ? String(date.receiver_id) === String(currentUser.id)
+    : date.my_role === 'receiver';
 
   const handleAction = async (action: 'accepted' | 'declined' | 'cancel') => {
     setLoading(true);
@@ -44,9 +48,13 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
   };
 
   return (
-    <div className={`bg-surface border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition-all ${
-      date.status === 'cancelled' || date.status === 'declined' ? 'opacity-60 grayscale' : 'opacity-100'
-    }`}>
+    <div
+      className={`bg-surface border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition-all ${
+        date.status === 'cancelled' || date.status === 'declined'
+          ? 'opacity-60 grayscale'
+          : 'opacity-100'
+      }`}
+    >
       <div className="flex gap-3 sm:gap-4 items-start">
         <Link to={`/profile/${date.other_user_id}`}>
           <Avatar
@@ -67,7 +75,9 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
                 @{date.other_username}
               </span>
             </div>
-            <span className={`text-[0.65rem] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-black uppercase tracking-wider shrink-0 ${meta.bg} ${meta.text}`}>
+            <span
+              className={`text-[0.65rem] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-black uppercase tracking-wider shrink-0 ${meta.bg} ${meta.text}`}
+            >
               {meta.label}
             </span>
           </div>
@@ -77,7 +87,9 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
             <span className="text-text font-bold">{formatDate(date.scheduled_at)}</span>
             <span className="text-text-muted font-medium">at {formatTime(date.scheduled_at)}</span>
             {past && date.status === 'accepted' && (
-              <span className="text-[0.6rem] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted font-bold ml-1 uppercase">Past</span>
+              <span className="text-[0.6rem] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted font-bold ml-1 uppercase">
+                Past
+              </span>
             )}
           </div>
 
@@ -90,7 +102,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
 
           <div className="mt-2 sm:mt-2.5">
             <span className="text-[0.65rem] sm:text-xs font-bold text-text-muted uppercase tracking-widest">
-              {date.my_role === 'proposer' ? 'You proposed this' : 'They proposed this'}
+              {isReceiver ? 'They proposed this' : 'You proposed this'}
             </span>
           </div>
         </div>
@@ -105,7 +117,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       {/* Actions */}
       {date.status === 'pending' && (
         <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-5">
-          {date.my_role === 'receiver' ? (
+          {isReceiver ? (
             <>
               <button
                 onClick={() => handleAction('accepted')}

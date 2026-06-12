@@ -31,7 +31,9 @@ export default function ConfirmModal({
       >
         <div>
           <h2 className="text-lg sm:text-xl font-black text-text">{title}</h2>
-          <p className="text-xs sm:text-sm text-text-muted font-medium mt-1.5 sm:mt-2 leading-relaxed">{description}</p>
+          <p className="text-xs sm:text-sm text-text-muted font-medium mt-1.5 sm:mt-2 leading-relaxed">
+            {description}
+          </p>
         </div>
 
         <div className="flex gap-3 sm:gap-4 mt-2">

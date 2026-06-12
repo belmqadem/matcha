@@ -34,9 +34,7 @@ export default function ChatSidebar({
 }: ChatSidebarProps) {
   const filtered = search
     ? convos.filter((c) =>
-        `${c.first_name} ${c.last_name} ${c.username}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
+        `${c.first_name} ${c.last_name} ${c.username}`.toLowerCase().includes(search.toLowerCase()),
       )
     : convos;
 
@@ -109,12 +107,12 @@ export default function ChatSidebar({
         ) : blockedUsers.length === 0 ? (
           <div className="text-center py-10 sm:py-12 px-4 sm:px-6 animate-fade-in-up">
             <Ban className="w-8 h-8 sm:w-10 sm:h-10 text-border mx-auto mb-3" />
-            <p className="text-xs sm:text-sm font-bold text-text-muted">You haven't blocked anyone.</p>
+            <p className="text-xs sm:text-sm font-bold text-text-muted">
+              You haven't blocked anyone.
+            </p>
           </div>
         ) : (
-          blockedUsers.map((u) => (
-            <BlockedItem key={u.id} user={u} onUnblock={onUnblock} />
-          ))
+          blockedUsers.map((u) => <BlockedItem key={u.id} user={u} onUnblock={onUnblock} />)
         )}
       </div>
     </>

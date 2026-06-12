@@ -63,16 +63,22 @@ export function useMessages(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConvo?.id, isBlocked]);
 
+  const scrollToBottom = useCallback(() => {
+    if (threadRef.current) {
+      threadRef.current.scrollTop = threadRef.current.scrollHeight;
+    }
+  }, []);
+
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (!loading && !forbidden && !isBlocked) {
-      const id = setTimeout(
-        () => bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }),
-        100,
-      );
+      scrollToBottom();
+      const id = setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 100);
       return () => clearTimeout(id);
     }
-  }, [messages.length, loading, forbidden, isBlocked]);
+  }, [messages.length, loading, forbidden, isBlocked, scrollToBottom]);
 
   // Socket: confirm optimistic message was delivered
   useEffect(() => {

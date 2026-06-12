@@ -24,8 +24,13 @@ export function VisitorStats({ visitors }: VisitorStatsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
       {stats.map(({ label, value }) => (
-        <div key={label} className="bg-surface rounded-2xl sm:rounded-3xl border border-border px-5 sm:px-6 py-4 sm:py-5 shadow-sm">
-          <p className="text-xs sm:text-sm text-text-muted font-bold tracking-wide uppercase mb-1 sm:mb-2">{label}</p>
+        <div
+          key={label}
+          className="bg-surface rounded-2xl sm:rounded-3xl border border-border px-5 sm:px-6 py-4 sm:py-5 shadow-sm"
+        >
+          <p className="text-xs sm:text-sm text-text-muted font-bold tracking-wide uppercase mb-1 sm:mb-2">
+            {label}
+          </p>
           <p className="text-2xl sm:text-3xl font-black text-primary leading-none">{value}</p>
         </div>
       ))}

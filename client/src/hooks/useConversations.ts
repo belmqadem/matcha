@@ -19,29 +19,33 @@ export function useConversations(activeConvoId: string | null): UseConversations
   const [loading, setLoading] = useState(true);
 
   const activeConvoIdRef = useRef(activeConvoId);
-  useEffect(() => { activeConvoIdRef.current = activeConvoId; }, [activeConvoId]);
+  useEffect(() => {
+    activeConvoIdRef.current = activeConvoId;
+  }, [activeConvoId]);
 
   useEffect(() => {
     Promise.all([
       chatService.blocked().catch(() => ({ blocked: [] as BlockedUser[] })),
       chatService.conversations().catch(() => ({ conversations: [] as Conversation[] })),
-    ]).then(([blockedData, convosData]) => {
-      // Normalize all IDs to strings so URL params always match
-      const normalizedConvos = convosData.conversations.map((c) => ({
-        ...c,
-        id: String(c.id),
-      }));
-      const normalizedBlocked = blockedData.blocked.map((b) => ({
-        ...b,
-        id: String(b.id),
-      }));
-      setBlockedUsers(normalizedBlocked);
-      setConvos(normalizedConvos);
-      // Set loading AFTER state is staged in the same microtask flush
-      setLoading(false);
-    }).catch(() => {
-      setLoading(false);
-    });
+    ])
+      .then(([blockedData, convosData]) => {
+        // Normalize all IDs to strings so URL params always match
+        const normalizedConvos = convosData.conversations.map((c) => ({
+          ...c,
+          id: String(c.id),
+        }));
+        const normalizedBlocked = blockedData.blocked.map((b) => ({
+          ...b,
+          id: String(b.id),
+        }));
+        setBlockedUsers(normalizedBlocked);
+        setConvos(normalizedConvos);
+        // Set loading AFTER state is staged in the same microtask flush
+        setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+      });
     // No .finally() — loading is set inside .then() so it's batched with the data
   }, []);
 
@@ -58,7 +62,8 @@ export function useConversations(activeConvoId: string | null): UseConversations
                 last_message: msg.content,
                 last_message_at: msg.sentAt,
                 last_message_sender_id: msg.from,
-                unread_count: String(c.id) === String(activeConvoIdRef.current) ? 0 : c.unread_count + 1,
+                unread_count:
+                  String(c.id) === String(activeConvoIdRef.current) ? 0 : c.unread_count + 1,
               }
             : c,
         ),
@@ -66,7 +71,9 @@ export function useConversations(activeConvoId: string | null): UseConversations
     };
 
     socket.on('chat:receive', onReceive);
-    return () => { socket.off('chat:receive', onReceive); };
+    return () => {
+      socket.off('chat:receive', onReceive);
+    };
   }, [socket]);
 
   return { convos, blockedUsers, loading, setConvos, setBlockedUsers };

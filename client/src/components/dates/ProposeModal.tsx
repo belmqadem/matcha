@@ -21,7 +21,8 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    chatService.conversations()
+    chatService
+      .conversations()
       .then((data) => setConnections(data.conversations ?? []))
       .catch(() => setError('Could not load your connections.'))
       .finally(() => setLoadingConns(false));
@@ -29,7 +30,8 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
 
   const handleSubmit = async () => {
     if (!receiverId || !scheduledAt) return setError('Please select a person and date/time.');
-    if (new Date(scheduledAt) < new Date()) return setError('Scheduled time must be in the future.');
+    if (new Date(scheduledAt) < new Date())
+      return setError('Scheduled time must be in the future.');
 
     setSubmitting(true);
     setError(null);
@@ -54,7 +56,10 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
       <div className="bg-surface rounded-3xl p-7 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[18px] font-black text-text">Propose a date</h2>
-          <button onClick={onClose} className="text-text-muted hover:text-text transition-colors p-1 -mr-1">
+          <button
+            onClick={onClose}
+            className="text-text-muted hover:text-text transition-colors p-1 -mr-1"
+          >
             <X size={20} />
           </button>
         </div>
@@ -91,7 +96,9 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
           </div>
 
           <div>
-            <label className="block text-[12px] font-bold text-text-muted mb-1.5">Date & time</label>
+            <label className="block text-[12px] font-bold text-text-muted mb-1.5">
+              Date & time
+            </label>
             <input
               type="datetime-local"
               min={getMinDateTime()}

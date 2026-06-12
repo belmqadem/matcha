@@ -1,5 +1,5 @@
 // src/context/AuthContext.tsx
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authService } from '@/services/authService';
 import type { User, LoginCredentials } from '@/types/auth';
 import { photoBuster } from '@/utils/photoBuster';

@@ -6,21 +6,78 @@ import { timeAgo } from '@/utils/notificationUtils';
 import Avatar from '@/components/ui/Avatar';
 import type { Notification, NotificationType } from '@/types/notification';
 
-const TYPE_META: Record<NotificationType, { icon: string; label: (n: string) => string; textCls: string; bgCls: string; borderCls: string }> = {
-  like: { icon: '❤️', label: (n) => `${n} liked your profile`, textCls: 'text-primary', bgCls: 'bg-primary/10', borderCls: 'border-primary' },
-  match: { icon: '✨', label: (n) => `You matched with ${n}!`, textCls: 'text-primary', bgCls: 'bg-primary/10', borderCls: 'border-primary' },
-  unlike: { icon: '💔', label: (n) => `${n} unliked you`, textCls: 'text-text-muted', bgCls: 'bg-border/50', borderCls: 'border-text-muted' },
-  visit: { icon: '👀', label: (n) => `${n} visited your profile`, textCls: 'text-text', bgCls: 'bg-text/5', borderCls: 'border-text' },
-  message: { icon: '💬', label: (n) => `${n} sent you a message`, textCls: 'text-primary', bgCls: 'bg-primary/10', borderCls: 'border-primary' },
-  date_proposed: { icon: '📅', label: (n) => `${n} proposed a date`, textCls: 'text-text', bgCls: 'bg-text/5', borderCls: 'border-text' },
-  date_accepted: { icon: '✅', label: (n) => `${n} accepted your date`, textCls: 'text-success', bgCls: 'bg-green-500/10', borderCls: 'border-green-500' },
-  date_declined: { icon: '❌', label: (n) => `${n} declined your date`, textCls: 'text-error', bgCls: 'bg-error/10', borderCls: 'border-error' },
-  date_cancelled: { icon: '🚫', label: (n) => `${n} cancelled your date`, textCls: 'text-text-muted', bgCls: 'bg-border/50', borderCls: 'border-text-muted' },
+const TYPE_META: Record<
+  NotificationType,
+  { icon: string; label: (n: string) => string; textCls: string; bgCls: string; borderCls: string }
+> = {
+  like: {
+    icon: '❤️',
+    label: (n) => `${n} liked your profile`,
+    textCls: 'text-primary',
+    bgCls: 'bg-primary/10',
+    borderCls: 'border-primary',
+  },
+  match: {
+    icon: '✨',
+    label: (n) => `You matched with ${n}!`,
+    textCls: 'text-primary',
+    bgCls: 'bg-primary/10',
+    borderCls: 'border-primary',
+  },
+  unlike: {
+    icon: '💔',
+    label: (n) => `${n} unliked you`,
+    textCls: 'text-text-muted',
+    bgCls: 'bg-border/50',
+    borderCls: 'border-text-muted',
+  },
+  visit: {
+    icon: '👀',
+    label: (n) => `${n} visited your profile`,
+    textCls: 'text-text',
+    bgCls: 'bg-text/5',
+    borderCls: 'border-text',
+  },
+  message: {
+    icon: '💬',
+    label: (n) => `${n} sent you a message`,
+    textCls: 'text-primary',
+    bgCls: 'bg-primary/10',
+    borderCls: 'border-primary',
+  },
+  date_proposed: {
+    icon: '📅',
+    label: (n) => `${n} proposed a date`,
+    textCls: 'text-text',
+    bgCls: 'bg-text/5',
+    borderCls: 'border-text',
+  },
+  date_accepted: {
+    icon: '✅',
+    label: (n) => `${n} accepted your date`,
+    textCls: 'text-success',
+    bgCls: 'bg-green-500/10',
+    borderCls: 'border-green-500',
+  },
+  date_declined: {
+    icon: '❌',
+    label: (n) => `${n} declined your date`,
+    textCls: 'text-error',
+    bgCls: 'bg-error/10',
+    borderCls: 'border-error',
+  },
+  date_cancelled: {
+    icon: '🚫',
+    label: (n) => `${n} cancelled your date`,
+    textCls: 'text-text-muted',
+    bgCls: 'bg-border/50',
+    borderCls: 'border-text-muted',
+  },
 };
 
 interface NotificationRowProps {
   notification: Notification;
-  onRead: (id: number) => Promise<void>;
+  onRead: (id: number) => void | Promise<void>;
   onDelete: (id: number) => void;
 }
 
@@ -58,11 +115,15 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
       } ${notification.is_read ? 'bg-surface border border-border shadow-sm hover:border-primary/50' : `${meta.bgCls} border border-transparent shadow-md`}`}
     >
       {!notification.is_read && (
-        <div className={`absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current ${meta.textCls}`} />
+        <div
+          className={`absolute left-1.5 sm:left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-current ${meta.textCls}`}
+        />
       )}
 
       <div className="relative shrink-0">
-        <div className={`p-0.5 rounded-full border-2 ${notification.is_read ? 'border-transparent' : meta.borderCls}`}>
+        <div
+          className={`p-0.5 rounded-full border-2 ${notification.is_read ? 'border-transparent' : meta.borderCls}`}
+        >
           <Avatar
             photoUrl={notification.from_profile_picture_url || undefined}
             first={notification.from_first_name}
@@ -70,13 +131,17 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
             size="md"
           />
         </div>
-        <div className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[0.6rem] sm:text-[10px] shadow-sm bg-surface ${meta.borderCls} border-2`}>
+        <div
+          className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[0.6rem] sm:text-[10px] shadow-sm bg-surface ${meta.borderCls} border-2`}
+        >
           {meta.icon}
         </div>
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className={`text-xs sm:text-sm leading-snug truncate ${notification.is_read ? 'font-bold text-text' : 'font-black text-text'}`}>
+        <p
+          className={`text-xs sm:text-sm leading-snug truncate ${notification.is_read ? 'font-bold text-text' : 'font-black text-text'}`}
+        >
           {meta.label(notification.from_first_name)}
         </p>
         <p className="text-[0.65rem] sm:text-xs mt-0.5 sm:mt-1 text-text-muted truncate font-medium">

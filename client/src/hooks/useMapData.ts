@@ -24,20 +24,23 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
   const [gpsLoading, setGpsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMapData = useCallback(async (km: RadiusKm = radiusKm) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await mapService.getBrowseMap(km);
-      setUsers(data.users);
-      setCenter(data.center ?? null);
-      setRadiusKm(data.radius_km as RadiusKm);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load map');
-    } finally {
-      setLoading(false);
-    }
-  }, [radiusKm]);
+  const fetchMapData = useCallback(
+    async (km: RadiusKm = radiusKm) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await mapService.getBrowseMap(km);
+        setUsers(data.users);
+        setCenter(data.center ?? null);
+        setRadiusKm(data.radius_km as RadiusKm);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load map');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [radiusKm],
+  );
 
   const handleGps = useCallback(() => {
     if (!navigator.geolocation) {
@@ -64,15 +67,26 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
     );
   }, [fetchMapData, radiusKm]);
 
-  const handleRadiusChange = useCallback((km: RadiusKm) => {
-    setRadiusKm(km);
-    fetchMapData(km);
-  }, [fetchMapData]);
+  const handleRadiusChange = useCallback(
+    (km: RadiusKm) => {
+      setRadiusKm(km);
+      fetchMapData(km);
+    },
+    [fetchMapData],
+  );
 
   const clearError = useCallback(() => setError(null), []);
 
   return {
-    users, center, radiusKm, loading, gpsLoading, error,
-    clearError, fetchMapData, handleGps, handleRadiusChange,
+    users,
+    center,
+    radiusKm,
+    loading,
+    gpsLoading,
+    error,
+    clearError,
+    fetchMapData,
+    handleGps,
+    handleRadiusChange,
   };
 }

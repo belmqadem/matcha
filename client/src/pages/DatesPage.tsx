@@ -1,4 +1,3 @@
-// src/pages/DatesPage.tsx
 import { useState } from 'react';
 import { Plus, Mail, Loader2, CalendarHeart } from 'lucide-react';
 import { useDates } from '@/hooks/useDates';
@@ -6,24 +5,29 @@ import { isPast } from '@/utils/dateUtils';
 import DateTabs, { type TabFilter } from '@/components/dates/DateTabs';
 import DateCard from '@/components/dates/DateCard';
 import ProposeModal from '@/components/dates/ProposeModal';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DatesPage() {
   const { dates, upcoming, loading, error, fetchDates } = useDates();
   const [showModal, setShowModal] = useState(false);
   const [tab, setTab] = useState<TabFilter>('upcoming');
+  const { user: currentUser } = useAuth();
 
   const filtered = dates.filter((d) => {
     if (tab === 'upcoming') return d.status === 'accepted' && !isPast(d.scheduled_at);
     if (tab === 'pending') return d.status === 'pending';
-    if (tab === 'past') return isPast(d.scheduled_at) || d.status === 'declined' || d.status === 'cancelled';
+    if (tab === 'past')
+      return isPast(d.scheduled_at) || d.status === 'declined' || d.status === 'cancelled';
     return true;
   });
 
-  const inboundPending = dates.filter((d) => d.status === 'pending' && d.my_role === 'receiver').length;
+  const inboundPending = dates.filter(
+    (d) =>
+      d.status === 'pending' && currentUser && String(d.receiver_id) === String(currentUser.id),
+  ).length;
 
   return (
     <div className="min-h-[100dvh] bg-background font-primary pb-10">
-
       {/* Header */}
       <header className="bg-surface border-b border-border px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between flex-wrap gap-3 sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -39,7 +43,8 @@ export default function DatesPage() {
           onClick={() => setShowModal(true)}
           className="flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-primary text-surface text-xs sm:text-sm font-bold hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20"
         >
-          <Plus className="w-4 h-4 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Propose a date</span>
+          <Plus className="w-4 h-4 sm:w-4 sm:h-4" />{' '}
+          <span className="hidden sm:inline">Propose a date</span>
           <span className="inline sm:hidden">Propose</span>
         </button>
       </header>
@@ -87,8 +92,12 @@ export default function DatesPage() {
         ) : (
           <div className="flex flex-col gap-3 sm:gap-4">
             {filtered.map((d, i) => (
-              <div key={d.id} className="animate-fade-in-up" style={{ '--delay': `${i * 40}ms` } as React.CSSProperties}>
-                 <DateCard date={d} onUpdate={fetchDates} />
+              <div
+                key={d.id}
+                className="animate-fade-in-up"
+                style={{ '--delay': `${i * 40}ms` } as React.CSSProperties}
+              >
+                <DateCard date={d} onUpdate={fetchDates} />
               </div>
             ))}
           </div>

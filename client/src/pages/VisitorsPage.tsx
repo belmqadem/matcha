@@ -12,7 +12,6 @@ export default function VisitorsPage() {
   return (
     <div className="min-h-[100dvh] bg-background font-primary pb-10">
       <div className="max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
-
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-3 sm:gap-4">
@@ -23,10 +22,13 @@ export default function VisitorsPage() {
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-text leading-none">Profile visitors</h1>
+              <h1 className="text-xl sm:text-2xl font-black text-text leading-none">
+                Profile visitors
+              </h1>
               {!loading && (
                 <p className="text-xs sm:text-sm text-text-muted mt-1 sm:mt-1.5">
-                  {visitors.length} {visitors.length === 1 ? 'person' : 'people'} visited your profile
+                  {visitors.length} {visitors.length === 1 ? 'person' : 'people'} visited your
+                  profile
                 </p>
               )}
             </div>
@@ -40,9 +42,7 @@ export default function VisitorsPage() {
                   key={s}
                   onClick={() => setSort(s)}
                   className={`px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all ${
-                    sort === s
-                      ? 'bg-primary text-surface'
-                      : 'text-text-muted hover:text-text'
+                    sort === s ? 'bg-primary text-surface' : 'text-text-muted hover:text-text'
                   }`}
                 >
                   {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -58,7 +58,9 @@ export default function VisitorsPage() {
             <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin" />
           </div>
         ) : error ? (
-          <p className="text-center py-16 text-sm sm:text-base text-text-muted bg-surface rounded-3xl border border-border shadow-sm animate-fade-in-up">{error}</p>
+          <p className="text-center py-16 text-sm sm:text-base text-text-muted bg-surface rounded-3xl border border-border shadow-sm animate-fade-in-up">
+            {error}
+          </p>
         ) : visitors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 sm:gap-4 animate-fade-in-up">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -66,7 +68,8 @@ export default function VisitorsPage() {
             </div>
             <p className="text-base sm:text-lg font-black text-text">No visitors yet</p>
             <p className="text-sm sm:text-base text-text-muted text-center max-w-xs leading-relaxed">
-              People who visit your profile will appear here. Complete your profile to attract more visitors!
+              People who visit your profile will appear here. Complete your profile to attract more
+              visitors!
             </p>
           </div>
         ) : (
@@ -76,7 +79,11 @@ export default function VisitorsPage() {
             </div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-5 mt-4 sm:mt-6">
               {sorted.map((visitor, i) => (
-                <div key={visitor.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 0.05}s` }}>
+                <div
+                  key={visitor.id}
+                  className="animate-fade-in-up"
+                  style={{ animationDelay: `${i * 0.05}s` }}
+                >
                   <VisitorCard visitor={visitor} index={i} />
                 </div>
               ))}

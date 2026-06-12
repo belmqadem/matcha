@@ -37,15 +37,21 @@ export default function ConvoItem({ convo, active, myId, onClick }: ConvoItemPro
       />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className={`text-sm sm:text-[15px] truncate ${active ? 'font-black text-surface' : 'font-bold text-text'}`}>
+          <p
+            className={`text-sm sm:text-[15px] truncate ${active ? 'font-black text-surface' : 'font-bold text-text'}`}
+          >
             {convo.first_name} {convo.last_name}
           </p>
-          <span className={`text-[0.6rem] sm:text-[10px] font-semibold shrink-0 ${active ? 'text-surface/80' : 'text-text-muted'}`}>
+          <span
+            className={`text-[0.6rem] sm:text-[10px] font-semibold shrink-0 ${active ? 'text-surface/80' : 'text-text-muted'}`}
+          >
             {formatTime(convo.last_message_at)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2 mt-0.5">
-          <p className={`text-xs sm:text-[13px] truncate ${active ? 'text-surface/90 font-medium' : 'text-text-muted font-medium'}`}>
+          <p
+            className={`text-xs sm:text-[13px] truncate ${active ? 'text-surface/90 font-medium' : 'text-text-muted font-medium'}`}
+          >
             {isMine && <span className="opacity-70">You: </span>}
             {convo.last_message || <em className="opacity-50">Say hello!</em>}
           </p>

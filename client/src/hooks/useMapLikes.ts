@@ -10,21 +10,24 @@ interface UseMapLikesReturn {
 export function useMapLikes(): UseMapLikesReturn {
   const [likeStates, setLikeStates] = useState<Record<string, boolean>>({});
 
-  const handleLike = useCallback(async (userId: string) => {
-    const already = likeStates[userId] ?? false;
-    // Optimistic update
-    setLikeStates((prev) => ({ ...prev, [userId]: !already }));
-    try {
-      if (already) {
-        await mapService.unlikeUser(userId);
-      } else {
-        await mapService.likeUser(userId);
+  const handleLike = useCallback(
+    async (userId: string) => {
+      const already = likeStates[userId] ?? false;
+      // Optimistic update
+      setLikeStates((prev) => ({ ...prev, [userId]: !already }));
+      try {
+        if (already) {
+          await mapService.unlikeUser(userId);
+        } else {
+          await mapService.likeUser(userId);
+        }
+      } catch {
+        // Rollback on failure
+        setLikeStates((prev) => ({ ...prev, [userId]: already }));
       }
-    } catch {
-      // Rollback on failure
-      setLikeStates((prev) => ({ ...prev, [userId]: already }));
-    }
-  }, [likeStates]);
+    },
+    [likeStates],
+  );
 
   return { likeStates, handleLike };
 }

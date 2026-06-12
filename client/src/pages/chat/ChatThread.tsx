@@ -1,8 +1,14 @@
 // src/pages/chat/ChatThread.tsx
 import { useRef, useState } from 'react';
 import {
-  ArrowLeft, Send, Loader2, CalendarHeart, MoreVertical,
-  Heart, Ban, UserX,
+  ArrowLeft,
+  Send,
+  Loader2,
+  CalendarHeart,
+  MoreVertical,
+  Heart,
+  Ban,
+  UserX,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -71,9 +77,7 @@ export default function ChatThread({
 
   const photoUrl =
     activeConvo.profile_picture_url ??
-    (activeConvo.profile_picture_id
-      ? `/api/photos/${activeConvo.profile_picture_id}`
-      : undefined);
+    (activeConvo.profile_picture_id ? `/api/photos/${activeConvo.profile_picture_id}` : undefined);
 
   const inputDisabled = isForbiddenOrBlocked(forbidden, isBlocked);
 
@@ -155,7 +159,10 @@ export default function ChatThread({
         className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 sm:py-5 flex flex-col gap-3 sm:gap-4 scrollbar-thin"
       >
         {isBlocked ? (
-          <BlockedState firstName={activeConvo.first_name} onUnblock={() => onConfirmAction('unblock')} />
+          <BlockedState
+            firstName={activeConvo.first_name}
+            onUnblock={() => onConfirmAction('unblock')}
+          />
         ) : forbidden ? (
           <ForbiddenState firstName={activeConvo.first_name} />
         ) : loading ? (
@@ -225,7 +232,9 @@ export default function ChatThread({
           />
           <div className="flex items-center gap-2 shrink-0 pb-1 sm:pb-1.5">
             {input.length > 900 && (
-              <span className="text-[0.65rem] sm:text-xs font-black text-error">{1000 - input.length}</span>
+              <span className="text-[0.65rem] sm:text-xs font-black text-error">
+                {1000 - input.length}
+              </span>
             )}
             <button
               onClick={handleSend}

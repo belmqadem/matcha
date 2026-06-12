@@ -12,10 +12,7 @@ export const calculateAge = (birthdate: string): number | null => {
   let age = today.getFullYear() - birth.getFullYear();
   const monthDiff = today.getMonth() - birth.getMonth();
 
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birth.getDate())
-  ) {
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--;
   }
 
@@ -27,11 +24,7 @@ export const calculateAge = (birthdate: string): number | null => {
  */
 export const getMaxBirthdateInput = (): string => {
   const today = new Date();
-  const maxDate = new Date(
-    today.getFullYear() - 18,
-    today.getMonth(),
-    today.getDate()
-  );
+  const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
   return maxDate.toISOString().split('T')[0];
 };
 
@@ -40,10 +33,6 @@ export const getMaxBirthdateInput = (): string => {
  */
 export const getMinBirthdateInput = (): string => {
   const today = new Date();
-  const minDate = new Date(
-    today.getFullYear() - 100,
-    today.getMonth(),
-    today.getDate()
-  );
+  const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
   return minDate.toISOString().split('T')[0];
 };

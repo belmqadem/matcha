@@ -37,7 +37,6 @@ export default function BrowsePage() {
   return (
     <div className="relative bg-background font-primary min-h-[100dvh] pb-10">
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-
         {/* Header */}
         <div className="mb-6 sm:mb-8 flex flex-col items-center text-center">
           <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight mb-2 flex items-center gap-2">

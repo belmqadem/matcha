@@ -4,9 +4,7 @@ import { calculateAge } from './age';
 /**
  * Validate step 0 (birthdate)
  */
-export const validateBirthdateStep = (
-  birthdate: string
-): StepValidation => {
+export const validateBirthdateStep = (birthdate: string): StepValidation => {
   if (!birthdate) {
     return {
       valid: false,
@@ -28,30 +26,28 @@ export const validateBirthdateStep = (
 /**
  * Validate step 1 (gender) - optional but if provided, must be valid
  */
-export const validateGenderStep = (gender: string): StepValidation => {
+export const validateGenderStep = (_gender: string): StepValidation => {
   return { valid: true, message: '' };
 };
 
 /**
  * Validate step 2 (preference) - optional but if provided, must be valid
  */
-export const validatePreferenceStep = (
-  preference: string
-): StepValidation => {
+export const validatePreferenceStep = (_preference: string): StepValidation => {
   return { valid: true, message: '' };
 };
 
 /**
  * Validate step 3 (bio) - optional
  */
-export const validateBioStep = (biography: string): StepValidation => {
+export const validateBioStep = (_biography: string): StepValidation => {
   return { valid: true, message: '' };
 };
 
 /**
  * Validate step 4 (tags) - optional
  */
-export const validateTagsStep = (tags: string[]): StepValidation => {
+export const validateTagsStep = (_tags: string[]): StepValidation => {
   return { valid: true, message: '' };
 };
 
@@ -59,9 +55,9 @@ export const validateTagsStep = (tags: string[]): StepValidation => {
  * Validate step 5 (location) - optional
  */
 export const validateLocationStep = (
-  city: string,
-  latitude: number | null,
-  longitude: number | null
+  _city: string,
+  _latitude: number | null,
+  _longitude: number | null,
 ): StepValidation => {
   return { valid: true, message: '' };
 };
@@ -69,17 +65,14 @@ export const validateLocationStep = (
 /**
  * Validate step 6 (photos) - optional
  */
-export const validatePhotosStep = (photos: File[]): StepValidation => {
+export const validatePhotosStep = (_photos: File[]): StepValidation => {
   return { valid: true, message: '' };
 };
 
 /**
  * Main validation dispatcher - validates the current step based on step number
  */
-export const validateStep = (
-  stepIndex: number,
-  form: ProfileFormData
-): StepValidation => {
+export const validateStep = (stepIndex: number, form: ProfileFormData): StepValidation => {
   switch (stepIndex) {
     case 0:
       return validateBirthdateStep(form.birthdate);

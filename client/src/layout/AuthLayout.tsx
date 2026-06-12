@@ -44,7 +44,6 @@ interface AuthLayoutProps {
 
 const AuthLayout = ({ children, header }: AuthLayoutProps) => (
   <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden bg-background">
-
     {/* Background blobs */}
     <div className="pointer-events-none absolute rounded-full bg-primary/20 w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] -top-16 -right-16 blur-3xl" />
     <div className="pointer-events-none absolute rounded-full bg-primary/10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] -bottom-10 -left-12 blur-3xl" />
@@ -75,14 +74,10 @@ const AuthLayout = ({ children, header }: AuthLayoutProps) => (
       <MatchaLogo size="md" className="mb-4 sm:mb-6" />
 
       <div className="text-center mb-6 sm:mb-8 w-full">
-        <p className="text-lg sm:text-xl font-bold text-text">
-          {header}
-        </p>
+        <p className="text-lg sm:text-xl font-bold text-text">{header}</p>
       </div>
 
-      <div className="w-full">
-        {children}
-      </div>
+      <div className="w-full">{children}</div>
     </div>
   </div>
 );

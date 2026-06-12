@@ -50,7 +50,6 @@ export default function SearchPage() {
   return (
     <div className="min-h-[100dvh] bg-background font-primary">
       <div className="w-full max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
-
         {/* Header */}
         <div className="flex items-end justify-between mb-6 sm:mb-7 gap-4">
           <div>
@@ -78,7 +77,9 @@ export default function SearchPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6 items-start">
           {/* Sidebar */}
-          <div className={showFilters ? 'block animate-fade-in-up lg:animate-none' : 'hidden lg:block'}>
+          <div
+            className={showFilters ? 'block animate-fade-in-up lg:animate-none' : 'hidden lg:block'}
+          >
             <FilterSidebar
               filters={filters}
               activeCount={activeFilterCount}
@@ -115,16 +116,18 @@ export default function SearchPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDown
-                    className="w-3 h-3 sm:w-4 sm:h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
-                  />
+                  <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none" />
                 </div>
 
                 <button
                   onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
                   className="flex items-center justify-center gap-1.5 bg-background border border-border px-3 py-2 rounded-xl text-xs sm:text-sm font-bold text-text hover:bg-border/50 transition-colors active:scale-95 shrink-0"
                 >
-                  {order === 'asc' ? <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}{' '}
+                  {order === 'asc' ? (
+                    <ChevronUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  )}{' '}
                   <span className="hidden sm:inline">{order === 'asc' ? 'Asc' : 'Desc'}</span>
                 </button>
               </div>
@@ -154,7 +157,9 @@ export default function SearchPage() {
                 <div className="mb-4 opacity-20 text-text">
                   <Search className="w-12 h-12 sm:w-16 sm:h-16" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-black text-text mb-1 sm:mb-2">No profiles found</h3>
+                <h3 className="text-lg sm:text-xl font-black text-text mb-1 sm:mb-2">
+                  No profiles found
+                </h3>
                 <p className="text-xs sm:text-sm text-text-muted max-w-xs px-4">
                   Try broadening your filters — maybe lower the fame range or increase the distance.
                 </p>

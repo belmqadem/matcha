@@ -1,14 +1,7 @@
 // src/components/profile-setup/profileSetupConstants.ts
 
 // 1. Remove 'type' here because these are actual React components being rendered!
-import {
-  Calendar,
-  User,
-  Heart,
-  FileText,
-  Tag,
-  Camera,
-} from 'lucide-react';
+import { Calendar, User, Heart, FileText, Tag, Camera } from 'lucide-react';
 
 // 2. Keep 'type' here because these are pure TypeScript interfaces
 import type { StepConfig, Gender, SexualPreference } from '@/types/profileSetup';

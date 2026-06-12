@@ -18,7 +18,11 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
         <div className="relative shrink-0">
           <div className="w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-black bg-primary/10 text-primary border border-primary/20 overflow-hidden">
             {user.profile_picture_url && user.profile_picture_id && user.profile_picture_id > 0 ? (
-              <img src={user.profile_picture_url} alt={user.first_name} className="w-full h-full object-cover" />
+              <img
+                src={user.profile_picture_url}
+                alt={user.first_name}
+                className="w-full h-full object-cover"
+              />
             ) : (
               getInitials(user.first_name, user.last_name)
             )}
@@ -33,7 +37,10 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
             <span className="text-[15px] font-black text-text truncate">
               {user.first_name} {user.last_name}
             </span>
-            <button onClick={onClose} className="text-text-muted hover:text-primary transition-colors p-1 -mr-1 -mt-1">
+            <button
+              onClick={onClose}
+              className="text-text-muted hover:text-primary transition-colors p-1 -mr-1 -mt-1"
+            >
               <X size={16} />
             </button>
           </div>
@@ -41,8 +48,12 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
             @{user.username}
           </div>
           <div className="flex flex-col gap-0.5 mt-1 text-[12px] font-bold text-text-muted">
-            <span className="flex items-center gap-1"><MapPin size={12} /> {user.location_city} ({fmtDist(user.distance_km)})</span>
-            <span className="flex items-center gap-1"><Star size={12} className="text-primary" /> {parseFloat(user.fame_rating).toFixed(0)}</span>
+            <span className="flex items-center gap-1">
+              <MapPin size={12} /> {user.location_city} ({fmtDist(user.distance_km)})
+            </span>
+            <span className="flex items-center gap-1">
+              <Star size={12} className="text-primary" /> {parseFloat(user.fame_rating).toFixed(0)}
+            </span>
           </div>
         </div>
       </div>
@@ -50,7 +61,10 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
       {user.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-3">
           {user.tags.slice(0, 5).map((tag) => (
-            <span key={tag} className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <span
+              key={tag}
+              className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
+            >
               #{tag}
             </span>
           ))}
@@ -66,7 +80,7 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
               : 'bg-transparent border-primary text-primary hover:bg-primary/10'
           }`}
         >
-          <Heart size={14} className={isLiked ? "fill-surface text-surface" : "text-primary"} />
+          <Heart size={14} className={isLiked ? 'fill-surface text-surface' : 'text-primary'} />
           {isLiked ? 'Liked' : 'Like'}
         </button>
         <Link

@@ -6,7 +6,11 @@ export const NOTIFICATION_FILTERS: { key: string; label: string; types?: Notific
   { key: 'social', label: 'Likes & Matches', types: ['like', 'match', 'unlike'] },
   { key: 'visits', label: 'Visitors', types: ['visit'] },
   { key: 'messages', label: 'Messages', types: ['message'] },
-  { key: 'dates', label: 'Dates', types: ['date_proposed', 'date_accepted', 'date_declined', 'date_cancelled'] },
+  {
+    key: 'dates',
+    label: 'Dates',
+    types: ['date_proposed', 'date_accepted', 'date_declined', 'date_cancelled'],
+  },
 ];
 
 interface NotificationTabsProps {
@@ -42,9 +46,11 @@ export default function NotificationTabs({
           >
             {f.label}
             {count > 0 && (
-              <span className={`text-[0.6rem] sm:text-[10px] font-black min-w-[1.25rem] sm:min-w-[1.5rem] h-4 sm:h-5 px-1 rounded-full flex items-center justify-center ${
-                active ? 'bg-surface/20 text-surface' : 'bg-primary text-surface'
-              }`}>
+              <span
+                className={`text-[0.6rem] sm:text-[10px] font-black min-w-[1.25rem] sm:min-w-[1.5rem] h-4 sm:h-5 px-1 rounded-full flex items-center justify-center ${
+                  active ? 'bg-surface/20 text-surface' : 'bg-primary text-surface'
+                }`}
+              >
                 {count > 9 ? '9+' : count}
               </span>
             )}

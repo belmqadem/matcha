@@ -13,7 +13,12 @@ interface MapSidebarProps {
 }
 
 export default function MapSidebar({
-  users, filter, radiusKm, loading, selectedUserId, onUserSelect
+  users,
+  filter,
+  radiusKm,
+  loading,
+  selectedUserId,
+  onUserSelect,
 }: MapSidebarProps) {
   return (
     <aside className="w-[280px] bg-surface border-l border-border flex flex-col overflow-hidden shrink-0 z-10 shadow-sm relative">
@@ -38,7 +43,9 @@ export default function MapSidebar({
           >
             <div className="relative shrink-0">
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-black bg-primary/10 text-primary border border-primary/20 overflow-hidden">
-                {user.profile_picture_url && user.profile_picture_id && user.profile_picture_id > 0 ? (
+                {user.profile_picture_url &&
+                user.profile_picture_id &&
+                user.profile_picture_id > 0 ? (
                   <img
                     src={user.profile_picture_url}
                     alt={user.first_name}
@@ -60,7 +67,10 @@ export default function MapSidebar({
               <div className="text-[11px] font-medium text-text-muted mt-0.5 flex items-center gap-1.5 truncate">
                 <span>{fmtDist(user.distance_km)}</span>
                 <span>·</span>
-                <span className="flex items-center"><Star size={10} className="text-primary mr-0.5" /> {parseFloat(user.fame_rating).toFixed(0)}</span>
+                <span className="flex items-center">
+                  <Star size={10} className="text-primary mr-0.5" />{' '}
+                  {parseFloat(user.fame_rating).toFixed(0)}
+                </span>
                 {user.location_city && (
                   <>
                     <span>·</span>

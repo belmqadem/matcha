@@ -1,7 +1,12 @@
 // src/utils/dateUtils.ts
 export function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export function formatTime(iso: string): string {

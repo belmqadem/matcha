@@ -104,7 +104,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="relative flex-1 flex flex-col bg-background font-primary min-h-0 overflow-hidden">
+    <div className="relative h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] flex flex-col bg-background font-primary overflow-hidden">
       <FloatingHearts />
 
       {(error || deepLinkError) && (
@@ -177,7 +177,6 @@ export default function ChatPage() {
 
       {/* Main Flex Layout */}
       <div className="relative z-10 flex flex-1 overflow-hidden w-full max-w-7xl mx-auto p-2 sm:p-4 lg:p-6 gap-3 sm:gap-5">
-
         {/* Sidebar */}
         <aside
           className={`w-full md:w-80 lg:w-96 shrink-0 flex flex-col bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
@@ -228,7 +227,6 @@ export default function ChatPage() {
             <NoConvoState />
           )}
         </main>
-
       </div>
     </div>
   );

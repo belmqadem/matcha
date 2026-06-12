@@ -9,11 +9,7 @@ interface PhotoGridProps {
   onRemovePhoto: (index: number) => void;
 }
 
-export const PhotoGrid = ({
-  photos,
-  onAddPhotos,
-  onRemovePhoto,
-}: PhotoGridProps) => {
+export const PhotoGrid = ({ photos, onAddPhotos, onRemovePhoto }: PhotoGridProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +70,9 @@ export const PhotoGrid = ({
             aria-label="Add photo"
           >
             <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span className="text-[0.65rem] sm:text-xs font-semibold uppercase tracking-wider">Add photo</span>
+            <span className="text-[0.65rem] sm:text-xs font-semibold uppercase tracking-wider">
+              Add photo
+            </span>
           </button>
         )}
       </div>
@@ -94,11 +92,7 @@ export const PhotoGrid = ({
             key={i}
             className={`
               w-2 h-2 rounded-full transition-all duration-300
-              ${
-                i < photos.length
-                  ? 'bg-primary scale-125'
-                  : 'bg-border scale-100'
-              }
+              ${i < photos.length ? 'bg-primary scale-125' : 'bg-border scale-100'}
             `}
           />
         ))}

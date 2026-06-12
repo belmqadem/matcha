@@ -30,7 +30,8 @@ export function SaveBar({ saving, error, onSave, onCancel }: SaveBarProps) {
           disabled={saving}
           className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-xl bg-primary text-surface cursor-pointer hover:bg-primary-hover hover:shadow-md transition-all disabled:opacity-60 active:scale-95"
         >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} Save
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}{' '}
+          Save
         </button>
       </div>
     </div>
