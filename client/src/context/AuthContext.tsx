@@ -1,3 +1,4 @@
+// src/context/AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '@/services/authService';
 import type { User, LoginCredentials } from '@/types/auth';
@@ -7,6 +8,8 @@ interface AuthContextType {
   loading: boolean;
   // login returns the User so the calling component can decide where to route
   login: (credentials: LoginCredentials) => Promise<User>;
+  // logout clears the local user state
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -30,8 +33,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return user; // Return user so the UI can navigate based on profile status
   };
 
+  const logout = () => {
+    setUser(null); // Clear the local state so the UI updates immediately
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

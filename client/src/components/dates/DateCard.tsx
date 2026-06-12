@@ -8,7 +8,7 @@ import { formatDate, formatTime, isPast } from '@/utils/dateUtils';
 import type { DateEntry, DateStatus } from '@/types/date';
 
 const STATUS_META: Record<DateStatus, { label: string; bg: string; text: string }> = {
-  pending: { label: 'Pending', bg: 'bg-warning/20', text: 'text-warning' },
+  pending: { label: 'Pending', bg: 'bg-primary/20', text: 'text-primary' },
   accepted: { label: 'Accepted', bg: 'bg-success/20', text: 'text-success' },
   declined: { label: 'Declined', bg: 'bg-error/20', text: 'text-error' },
   cancelled: { label: 'Cancelled', bg: 'bg-border', text: 'text-text-muted' },
@@ -44,10 +44,10 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
   };
 
   return (
-    <div className={`bg-surface border border-border rounded-2xl p-4 transition-all ${
-      date.status === 'cancelled' || date.status === 'declined' ? 'opacity-60' : 'opacity-100'
+    <div className={`bg-surface border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition-all ${
+      date.status === 'cancelled' || date.status === 'declined' ? 'opacity-60 grayscale' : 'opacity-100'
     }`}>
-      <div className="flex gap-3 items-start">
+      <div className="flex gap-3 sm:gap-4 items-start">
         <Link to={`/profile/${date.other_user_id}`}>
           <Avatar
             photoUrl={date.other_profile_picture_url || undefined}
@@ -60,36 +60,36 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <div>
-              <span className="text-[14px] font-bold text-text">
+              <span className="text-sm sm:text-base font-black text-text">
                 {date.other_first_name} {date.other_last_name}
               </span>
-              <span className="text-[12px] text-text-muted ml-1.5">
+              <span className="text-[0.65rem] sm:text-xs text-text-muted ml-1.5 font-medium">
                 @{date.other_username}
               </span>
             </div>
-            <span className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold shrink-0 ${meta.bg} ${meta.text}`}>
+            <span className={`text-[0.65rem] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-black uppercase tracking-wider shrink-0 ${meta.bg} ${meta.text}`}>
               {meta.label}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 mt-2 text-[13px]">
-            <Calendar size={13} className="text-text-muted shrink-0" />
-            <span className="text-text font-medium">{formatDate(date.scheduled_at)}</span>
-            <span className="text-text-muted">at {formatTime(date.scheduled_at)}</span>
+          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3 text-xs sm:text-sm">
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
+            <span className="text-text font-bold">{formatDate(date.scheduled_at)}</span>
+            <span className="text-text-muted font-medium">at {formatTime(date.scheduled_at)}</span>
             {past && date.status === 'accepted' && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted font-bold ml-1">Past</span>
+              <span className="text-[0.6rem] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted font-bold ml-1 uppercase">Past</span>
             )}
           </div>
 
           {date.location && (
-            <div className="flex items-center gap-1.5 mt-1.5 text-[13px]">
-              <MapPin size={13} className="text-text-muted shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 text-xs sm:text-sm font-medium text-text-muted">
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
               <span className="text-text">{date.location}</span>
             </div>
           )}
 
-          <div className="mt-1.5">
-            <span className="text-[11px] text-text-muted">
+          <div className="mt-2 sm:mt-2.5">
+            <span className="text-[0.65rem] sm:text-xs font-bold text-text-muted uppercase tracking-widest">
               {date.my_role === 'proposer' ? 'You proposed this' : 'They proposed this'}
             </span>
           </div>
@@ -97,36 +97,36 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       </div>
 
       {error && (
-        <div className="mt-2.5 p-2 rounded-lg bg-error/10 text-error text-[12px] font-medium">
+        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 rounded-xl bg-error/10 text-error text-xs sm:text-sm font-bold animate-fade-in-up">
           {error}
         </div>
       )}
 
       {/* Actions */}
       {date.status === 'pending' && (
-        <div className="flex gap-2 mt-3.5">
+        <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-5">
           {date.my_role === 'receiver' ? (
             <>
               <button
                 onClick={() => handleAction('accepted')}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-success text-surface text-[12px] font-bold disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 sm:py-3 rounded-xl bg-success text-surface text-xs sm:text-sm font-black disabled:opacity-50 active:scale-95 transition-all shadow-sm shadow-success/20"
               >
-                <Check size={14} /> Accept
+                <Check className="w-4 h-4 sm:w-5 sm:h-5" /> Accept
               </button>
               <button
                 onClick={() => handleAction('declined')}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl border border-error/50 text-error text-[12px] font-bold disabled:opacity-50 hover:bg-error/10"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 sm:py-3 rounded-xl border-2 border-error/50 text-error text-xs sm:text-sm font-black disabled:opacity-50 hover:bg-error/10 active:scale-95 transition-all"
               >
-                <X size={14} /> Decline
+                <X className="w-4 h-4 sm:w-5 sm:h-5" /> Decline
               </button>
             </>
           ) : (
             <button
               onClick={() => handleAction('cancel')}
               disabled={loading}
-              className="px-4 py-2 rounded-xl border border-border text-text-muted text-[12px] font-bold disabled:opacity-50 hover:bg-background"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border-2 border-border text-text-muted text-xs sm:text-sm font-black disabled:opacity-50 hover:bg-background active:scale-95 transition-all"
             >
               Cancel proposal
             </button>
@@ -135,21 +135,21 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       )}
 
       {date.status === 'accepted' && !past && (
-        <div className="flex gap-2 mt-3.5">
-          {date.my_role === 'proposer' && (
-            <button
-              onClick={() => handleAction('cancel')}
-              disabled={loading}
-              className="px-4 py-2 rounded-xl border border-border text-text-muted text-[12px] font-bold disabled:opacity-50 hover:bg-background"
-            >
-              Cancel date
-            </button>
-          )}
+        <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-5">
+          {/* Removed the my_role check here so either user can cancel an upcoming date */}
+          <button
+            onClick={() => handleAction('cancel')}
+            disabled={loading}
+            className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border-2 border-border text-text-muted text-xs sm:text-sm font-black disabled:opacity-50 hover:bg-background active:scale-95 transition-all"
+          >
+            Cancel date
+          </button>
+
           <Link
             to={`/chat/${date.other_user_id}`}
-            className="px-4 py-2 flex items-center gap-1.5 rounded-xl bg-primary text-surface text-[12px] font-bold hover:opacity-90"
+            className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-surface text-xs sm:text-sm font-black hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-primary/20"
           >
-            <MessageCircle size={14} /> Chat
+            <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> Chat
           </Link>
         </div>
       )}
