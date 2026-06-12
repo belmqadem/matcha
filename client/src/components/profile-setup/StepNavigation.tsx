@@ -57,7 +57,7 @@ export const StepNavigation = ({
             <button
               type="button"
               onClick={onSkip}
-              className="text-xs sm:text-sm text-border font-medium transition-colors duration-150 hover:text-text-muted px-2 py-1"
+              className="text-xs sm:text-sm text-text-muted/60 font-medium transition-colors duration-150 hover:text-text px-2 py-1"
             >
               Skip
             </button>
@@ -98,7 +98,7 @@ export const StepNavigation = ({
         <button
           type="button"
           onClick={onSkipAll}
-          className="text-xs sm:text-sm text-border font-medium transition-colors duration-150 hover:text-text-muted"
+          className="text-xs sm:text-sm text-text-muted/60 font-medium transition-colors duration-150 hover:text-text"
         >
           Skip setup for now
         </button>

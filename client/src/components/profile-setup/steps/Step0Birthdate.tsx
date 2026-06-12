@@ -24,6 +24,7 @@ export const Step0Birthdate = ({ form, setForm }: Step0BirthdateProps) => {
 
       <input
         type="date"
+        autoComplete="new-birthdate"
         value={form.birthdate}
         onChange={(e) => setForm((p) => ({ ...p, birthdate: e.target.value }))}
         min={minDate}

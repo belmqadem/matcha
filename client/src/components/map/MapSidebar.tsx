@@ -21,7 +21,7 @@ export default function MapSidebar({
   onUserSelect,
 }: MapSidebarProps) {
   return (
-    <aside className="w-[280px] bg-surface border-l border-border flex flex-col overflow-hidden shrink-0 z-10 shadow-sm relative">
+    <aside className="w-full md:w-[280px] h-[220px] md:h-full bg-surface border-t md:border-t-0 md:border-l border-border flex flex-col overflow-hidden shrink-0 z-10 shadow-sm relative">
       <div className="px-4 py-3 border-b border-border text-[11px] font-bold text-text-muted">
         {users.length} {filter === 'online' ? 'online' : 'people'} within {radiusKm}km
       </div>
@@ -43,9 +43,7 @@ export default function MapSidebar({
           >
             <div className="relative shrink-0">
               <div className="w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-black bg-primary/10 text-primary border border-primary/20 overflow-hidden">
-                {user.profile_picture_url &&
-                user.profile_picture_id &&
-                user.profile_picture_id > 0 ? (
+                {user.profile_picture_url ? (
                   <img
                     src={user.profile_picture_url}
                     alt={user.first_name}

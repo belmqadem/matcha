@@ -1,5 +1,5 @@
 // src/hooks/useMapData.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { mapService } from '@/services/mapService';
 import type { MapUser, RadiusKm } from '@/types/map';
 
@@ -41,6 +41,12 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
     },
     [radiusKm],
   );
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchMapData();
+    }, 0);
+  }, [fetchMapData]);
 
   const handleGps = useCallback(() => {
     if (!navigator.geolocation) {

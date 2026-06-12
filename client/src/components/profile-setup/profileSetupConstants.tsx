@@ -1,7 +1,7 @@
 // src/components/profile-setup/profileSetupConstants.ts
 
 // 1. Remove 'type' here because these are actual React components being rendered!
-import { Calendar, User, Heart, FileText, Tag, Camera } from 'lucide-react';
+import { Calendar, User, Heart, FileText, Tag, Camera, MapPin } from 'lucide-react';
 
 // 2. Keep 'type' here because these are pure TypeScript interfaces
 import type { StepConfig, Gender, SexualPreference } from '@/types/profileSetup';
@@ -79,7 +79,7 @@ export const STEPS: StepConfig[] = [
   {
     title: 'Your location',
     subtitle: 'Where you are',
-    icon: Camera, // Consider changing this to MapPin
+    icon: MapPin,
     skippable: true,
   },
   {

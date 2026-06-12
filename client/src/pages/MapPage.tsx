@@ -1,5 +1,5 @@
 // src/pages/MapPage.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { useMapData } from '@/hooks/useMapData';
 import { useLeafletMap } from '@/hooks/useleafletMap';
@@ -14,10 +14,18 @@ export default function MapPage() {
   const { users, center, radiusKm, loading, gpsLoading, error, handleGps, handleRadiusChange } =
     useMapData();
 
-  const { likeStates, handleLike } = useMapLikes();
+  const { likeStates, handleLike, checkLikeStatus } = useMapLikes();
 
   const [filter, setFilter] = useState<MapFilter>('all');
   const [selectedUser, setSelectedUser] = useState<MapUser | null>(null);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setTimeout(() => {
+        checkLikeStatus(selectedUser.id);
+      }, 0);
+    }
+  }, [selectedUser, checkLikeStatus]);
 
   const filteredUsers = filter === 'online' ? users.filter((u) => u.is_online) : users;
 
@@ -35,7 +43,7 @@ export default function MapPage() {
 
   // Pure rendering layout - No inline styles anywhere
   return (
-    <div className="flex flex-col h-screen bg-background font-primary overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] bg-background font-primary overflow-hidden">
       <MapHeader
         userCount={filteredUsers.length}
         loading={loading}
@@ -54,8 +62,8 @@ export default function MapPage() {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden relative">
-        <div ref={containerRef} className="flex-1 h-full z-0" />
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative">
+        <div ref={containerRef} className="flex-1 min-h-0 z-0" />
 
         {loading && (
           <div className="absolute inset-0 bg-background/75 backdrop-blur-sm flex items-center justify-center z-50">

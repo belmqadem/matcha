@@ -84,6 +84,7 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
 
       <input
         value={form.location_city}
+        autoComplete="new-city"
         onChange={(e) => setForm((p) => ({ ...p, location_city: e.target.value }))}
         placeholder="City or neighborhood (e.g. Paris, Montmartre)"
         className={`

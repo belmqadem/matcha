@@ -13,11 +13,11 @@ interface MapPopupProps {
 
 export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupProps) {
   return (
-    <div className="absolute bottom-6 left-6 z-[1000] bg-surface border border-border rounded-2xl p-4 w-[300px] shadow-xl animate-in fade-in slide-in-from-bottom-4">
+    <div className="absolute bottom-0 left-0 right-0 md:bottom-6 md:left-6 z-[1000] bg-surface border-t md:border border-border rounded-t-2xl md:rounded-2xl p-4 w-full md:w-[300px] shadow-xl animate-in fade-in slide-in-from-bottom-4">
       <div className="flex gap-3 items-start">
         <div className="relative shrink-0">
           <div className="w-14 h-14 rounded-full flex items-center justify-center text-[18px] font-black bg-primary/10 text-primary border border-primary/20 overflow-hidden">
-            {user.profile_picture_url && user.profile_picture_id && user.profile_picture_id > 0 ? (
+            {user.profile_picture_url ? (
               <img
                 src={user.profile_picture_url}
                 alt={user.first_name}

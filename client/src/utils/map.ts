@@ -15,7 +15,7 @@ export function makeUserIcon(user: MapUser): L.DivIcon {
 
   // Use Tailwind classes right inside the template literal; Tailwind v4 will scan and compile them!
   const inner =
-    user.profile_picture_url && user.profile_picture_id && user.profile_picture_id > 0
+    user.profile_picture_url
       ? `<img src="${user.profile_picture_url}" class="w-full h-full object-cover rounded-full" />`
       : `<span class="text-[13px] font-black text-primary">${initials}</span>`;
 

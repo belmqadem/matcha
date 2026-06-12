@@ -65,7 +65,7 @@ export default function ProfileSetupPage() {
   };
 
   const handleNext = () => handleValidateAndGo(step + 1);
-  const handleBack = () => handleValidateAndGo(step - 1);
+  const handleBack = () => goToStep(step - 1);
 
   const handleSkipStep = () => {
     setError('');
@@ -77,11 +77,25 @@ export default function ProfileSetupPage() {
   };
 
   const handleSkipAll = async () => {
+    setLoading(true);
     try {
-      await saveCompleteProfile(form);
+      const skipForm: ProfileFormData = {
+        birthdate: form.birthdate,
+        gender: form.gender || 'other', // Keep minimal fallback to bypass the RequireProfile router guard
+        sexual_preference: form.sexual_preference || 'bisexual',
+        biography: form.biography,
+        tags: form.tags,
+        location_city: form.location_city, // No fallback
+        latitude: form.latitude, // No fallback
+        longitude: form.longitude, // No fallback
+        photos: form.photos,
+      };
+      await saveCompleteProfile(skipForm);
       handleCompletion();
     } catch (err) {
-      console.error('Failed to save profile:', err);
+      setError(err instanceof Error ? err.message : 'Failed to skip setup.');
+    } finally {
+      setLoading(false);
     }
   };
 
