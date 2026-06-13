@@ -108,7 +108,7 @@ export default function AppHeader() {
         <div className="flex items-center">
           <NavLink
             to="/browse"
-            className="font-serif text-[28px] font-black italic text-primary no-underline tracking-tight leading-none"
+            className="font-serif text-[28px] font-black italic bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent no-underline tracking-tight leading-none hover:scale-[1.02] active:scale-95 transition-all duration-300"
           >
             Matcha
           </NavLink>
@@ -123,10 +123,10 @@ export default function AppHeader() {
               <NavLink
                 key={to}
                 to={to}
-                className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13.5px] whitespace-nowrap transition-colors ${
+                className={`relative flex items-center gap-1.5 px-4 py-2 rounded-full text-[13.5px] whitespace-nowrap transition-all duration-300 hover:scale-[1.03] active:scale-95 ${
                   active
-                    ? 'font-semibold text-primary bg-primary/10'
-                    : 'font-normal text-text-muted hover:bg-background hover:text-text'
+                    ? 'font-semibold text-surface bg-gradient-to-r from-primary-light to-primary shadow-sm shadow-primary/20'
+                    : 'font-normal text-text-muted hover:bg-primary/5 hover:text-primary'
                 }`}
               >
                 <span className="relative flex items-center">
@@ -322,10 +322,10 @@ export default function AppHeader() {
                     <NavLink
                       key={to}
                       to={to}
-                      className={`flex items-center gap-3 p-2.5 rounded-xl text-sm transition-colors ${
+                      className={`flex items-center gap-3 p-2.5 rounded-xl text-sm transition-all duration-300 ${
                         active
-                          ? 'font-semibold text-primary bg-primary/10'
-                          : 'font-normal text-text hover:bg-background'
+                          ? 'font-semibold text-surface bg-gradient-to-r from-[#f27183] to-[#e94057] shadow-sm shadow-[#e94057]/20'
+                          : 'font-normal text-text hover:bg-primary/5 hover:text-primary'
                       }`}
                     >
                       <Icon size={16} strokeWidth={active ? 2.2 : 1.6} />
@@ -341,10 +341,10 @@ export default function AppHeader() {
 
                 <NavLink
                   to="/notifications"
-                  className={`flex items-center gap-3 p-2.5 rounded-xl text-sm transition-colors ${
+                  className={`flex items-center gap-3 p-2.5 rounded-xl text-sm transition-all duration-300 ${
                     isActive('/notifications')
-                      ? 'font-semibold text-primary bg-primary/10'
-                      : 'font-normal text-text hover:bg-background'
+                      ? 'font-semibold text-surface bg-gradient-to-r from-primary-light to-primary shadow-sm shadow-primary/20'
+                      : 'font-normal text-text hover:bg-primary/5 hover:text-primary'
                   }`}
                 >
                   <Bell size={16} strokeWidth={1.8} />

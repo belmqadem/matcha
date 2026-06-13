@@ -1,5 +1,5 @@
 // src/pages/auth/LoginPage.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
@@ -19,14 +19,10 @@ const LoginPage = () => {
   const passwordVisibility = usePasswordVisibility();
 
   const [form, setForm] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
+  const [error, setError] = useState(
+    searchParams.get('error') === 'oauth_failed' ? 'OAuth sign-in failed. Please try again.' : '',
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (searchParams.get('error') === 'oauth_failed') {
-      setError('OAuth sign-in failed. Please try again.');
-    }
-  }, [searchParams]);
 
   const handleChange =
     (field: 'username' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {

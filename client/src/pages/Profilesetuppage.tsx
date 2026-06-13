@@ -130,7 +130,7 @@ export default function ProfileSetupPage() {
         <div className="text-center mb-5 sm:mb-6">
           <div className="flex items-center justify-center gap-2">
             <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-primary fill-current" />
-            <span className="text-xl sm:text-2xl font-black italic text-primary tracking-tight">
+            <span className="text-xl sm:text-2xl font-black italic bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent tracking-tight">
               Matcha
             </span>
             <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-primary fill-current" />
@@ -138,12 +138,12 @@ export default function ProfileSetupPage() {
           <div className="w-6 h-0.5 bg-primary rounded-full mx-auto mt-2 opacity-30" />
         </div>
 
-        <div className="h-1 rounded-full bg-border mb-5 sm:mb-6 overflow-hidden">
+        {/* <div className="h-1 rounded-full bg-border mb-5 sm:mb-6 overflow-hidden">
           <div
             className="h-full rounded-full bg-primary opacity-90 transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
-        </div>
+        </div> */}
 
         <StepDots total={STEPS.length} current={step} />
 

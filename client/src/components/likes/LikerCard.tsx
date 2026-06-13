@@ -40,7 +40,7 @@ export function LikerCard({ liker, index }: LikerCardProps) {
         {/* Time badge */}
         <span className="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-black/55 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
           <Clock size={9} />
-          {timeAgo(liker.liked_at)}
+          {timeAgo(liker.created_at)}
         </span>
       </div>
 
@@ -52,7 +52,7 @@ export function LikerCard({ liker, index }: LikerCardProps) {
         <p className="text-[11px] text-text-muted truncate">@{liker.username}</p>
         <p className="text-[10px] text-text-muted flex items-center gap-1 mt-1">
           <Clock size={9} />
-          {formatVisitDate(liker.liked_at)}
+          {formatVisitDate(liker.created_at)}
         </p>
       </div>
     </div>

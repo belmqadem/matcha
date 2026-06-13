@@ -201,7 +201,7 @@ export default function ProfilePage() {
         <div className="flex-1 flex flex-col gap-6 md:h-full md:min-h-0 md:overflow-y-auto scrollbar-thin pr-1 w-full">
           {/* Split Profile Card */}
           <div className="bg-surface/85 backdrop-blur-md rounded-3xl sm:rounded-[2.2rem] border border-border/70 shadow-premium hover:shadow-glow/5 hover:border-primary/20 transition-all duration-500 overflow-hidden animate-fade-in-up shrink-0">
-            <div className="flex flex-col sm:flex-row min-h-[18rem] sm:min-h-[22rem]">
+            <div className="flex flex-col sm:flex-row h-[18rem] min-h-[22rem]">
               <div
                 className="relative w-full sm:w-80 bg-background/50 flex-shrink-0 aspect-square sm:aspect-auto overflow-hidden cursor-pointer group/photo"
                 onClick={() => setLightboxPhoto(activePhoto)}

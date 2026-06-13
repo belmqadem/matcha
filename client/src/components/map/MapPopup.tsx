@@ -65,7 +65,7 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
               key={tag}
               className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20"
             >
-              #{tag}
+              {tag}
             </span>
           ))}
         </div>

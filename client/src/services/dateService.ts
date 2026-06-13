@@ -22,12 +22,12 @@ export const dateService = {
       body: JSON.stringify(data),
     }).then((res) => handleResponse<{ date: DateEntry }>(res)),
 
-  respondToDate: (id: number, status: 'accepted' | 'declined') =>
+  respondToDate: (id: number, status: 'accepted' | 'declined', scheduled_at: string) =>
     fetch(`/api/dates/${id}`, {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, scheduled_at }),
     }).then((res) => handleResponse<{ date: DateEntry }>(res)),
 
   cancelDate: (id: number) =>

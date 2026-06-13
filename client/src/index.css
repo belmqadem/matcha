@@ -3,9 +3,10 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Semantic Color Tokens */
   --color-primary: #e94057;
   --color-primary-hover: #d83548;
+  --color-primary-light: #f27183;
+  --color-primary-accent: #ff758c;
   --color-background: #fff5f7;
   --color-surface: #ffffff;
   --color-text: #1a1a2e;
@@ -29,6 +30,7 @@
   --animate-gradient-move: gradientMove 15s ease infinite;
   --animate-heart-beat: heartBeat 1.5s ease-in-out infinite;
   --animate-float-slow: floatSlow 8s ease-in-out infinite;
+  --animate-page-transition: pageTransition 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 
   @keyframes gradientMove {
     0% {
@@ -96,6 +98,17 @@
     }
   }
 
+  @keyframes pageTransition {
+    0% {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
   @keyframes authDrift {
     0% {
       transform: translateY(0) translateX(0) rotate(0deg);
@@ -157,6 +170,14 @@
     background-attachment: fixed;
     color: var(--color-text);
     font-family: var(--font-primary);
+  }
+
+  .bg-primary:not(:disabled) {
+    background: linear-gradient(135deg, #f27183 0%, #e94057 100%) !important;
+    border-color: transparent !important;
+  }
+  .bg-primary:not(:disabled):hover {
+    background: linear-gradient(135deg, #e75b6e 0%, #d83548 100%) !important;
   }
 
   /* Allow main layout sub-page containers to be transparent so the background gradient and floating hearts show through */

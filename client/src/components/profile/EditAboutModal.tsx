@@ -71,8 +71,8 @@ export function EditAboutModal({ user, onUpdate, onClose }: Props) {
 
     try {
       // 1. Save location changes if GPS or City Name changed
-      let finalLat = gpsCoords?.lat ?? user.latitude;
-      let finalLng = gpsCoords?.lng ?? user.longitude;
+      const finalLat = gpsCoords?.lat ?? user.latitude;
+      const finalLng = gpsCoords?.lng ?? user.longitude;
 
       const cityChanged = cityInput.trim() !== (user.location_city ?? '');
       const gpsChanged =

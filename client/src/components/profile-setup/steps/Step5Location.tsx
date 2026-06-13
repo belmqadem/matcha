@@ -74,7 +74,7 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
         </p>
       )}
 
-      <div className="flex items-center gap-3 sm:gap-4 my-5 sm:my-6">
+      {/* <div className="flex items-center gap-3 sm:gap-4 my-5 sm:my-6">
         <div className="flex-1 h-[2px] bg-border" />
         <span className="text-xs sm:text-sm font-medium text-text-muted opacity-80 uppercase tracking-wider">
           or enter manually
@@ -96,7 +96,7 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
               : 'border-border bg-surface focus:border-primary/50'
           }
         `}
-      />
+      /> */}
     </div>
   );
 };

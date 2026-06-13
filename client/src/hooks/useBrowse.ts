@@ -27,7 +27,7 @@ export function useBrowse() {
     setPage(1);
 
     userService
-      .searchUsers(buildParams(1))
+      .browseUsers(buildParams(1))
       .then((data) => {
         if (ctrl.signal.aborted) return;
         const sanitizedUsers = (data.users ?? []).map((u) => ({
@@ -53,7 +53,7 @@ export function useBrowse() {
     const next = page + 1;
     setLoadingMore(true);
     try {
-      const data = await userService.searchUsers(buildParams(next));
+      const data = await userService.browseUsers(buildParams(next));
       const sanitizedUsers = (data.users ?? []).map((u) => ({
         ...u,
         liked_by_me: Boolean(u.liked_by_me),

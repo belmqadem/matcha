@@ -15,15 +15,16 @@ export function ActivityPanel({ user }: Props) {
   const [tab, setTab] = useState<'visitors' | 'likers'>('visitors');
   const [loading, setLoading] = useState(true);
 
+
   const fame = Math.min(100, Math.max(0, user.fame_rating ?? 0));
 
   useEffect(() => {
     Promise.all([userService.getVisitors(), userService.getLikedBy()])
-      .then(([v, l]) => {
-        setVisitors(v ?? []);
-        setLikers(l ?? []);
-      })
-      .finally(() => setLoading(false));
+    .then(([v, l]) => {
+      setVisitors(v ?? []);
+      setLikers(l ?? []);
+    })
+    .finally(() => setLoading(false));
   }, []);
 
   const list = tab === 'visitors' ? visitors : likers;
@@ -80,7 +81,8 @@ export function ActivityPanel({ user }: Props) {
       ) : list.length > 0 ? (
         <div className="flex flex-col gap-2.5 sm:gap-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin">
           {list.map((item) => {
-            const time = 'visited_at' in item ? item.visited_at : item.liked_at;
+            const time = 'visited_at' in item ? item.visited_at : item.created_at;
+
             return (
               <div
                 key={item.id}

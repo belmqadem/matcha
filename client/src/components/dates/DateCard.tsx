@@ -37,7 +37,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       if (action === 'cancel') {
         await dateService.cancelDate(date.id);
       } else {
-        await dateService.respondToDate(date.id, action);
+        await dateService.respondToDate(date.id, action, date.scheduled_at);
       }
       onUpdate();
     } catch (e) {
@@ -122,7 +122,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
               <button
                 onClick={() => handleAction('accepted')}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 sm:py-3 rounded-xl bg-success text-surface text-xs sm:text-sm font-black disabled:opacity-50 active:scale-95 transition-all shadow-sm shadow-success/20"
+                className="bg-primary flex-1 flex items-center justify-center gap-1.5 py-2.5 sm:py-3 rounded-xl bg-success text-surface text-xs sm:text-sm font-black disabled:opacity-50 active:scale-95 transition-all shadow-sm shadow-success/20"
               >
                 <Check className="w-4 h-4 sm:w-5 sm:h-5" /> Accept
               </button>

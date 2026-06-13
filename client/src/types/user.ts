@@ -42,7 +42,7 @@ export interface Liker {
   first_name: string;
   last_name: string;
   profile_picture_url: string | null;
-  liked_at: string;
+  created_at: string;
 }
 
 export interface BrowseUser {

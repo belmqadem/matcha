@@ -11,8 +11,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
 export const chatService = {
   getUser: (id: string) =>
     fetch(`/api/users/${id}`, { credentials: 'include' })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then((res) => handleResponse<any>(res)),
+      .then((res) => handleResponse<Record<string, unknown>>(res)),
 
   conversations: () =>
     fetch('/api/chat/conversations', { credentials: 'include' }).then((res) =>

@@ -45,9 +45,9 @@ interface AuthLayoutProps {
 const AuthLayout = ({ children, header }: AuthLayoutProps) => (
   <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden bg-background">
     {/* Background blobs */}
-    <div className="pointer-events-none absolute rounded-full bg-primary/20 w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] -top-16 -right-16 blur-3xl" />
-    <div className="pointer-events-none absolute rounded-full bg-primary/10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] -bottom-10 -left-12 blur-3xl" />
-    <div className="pointer-events-none absolute rounded-full bg-primary/15 w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] top-[40%] left-[4%] blur-2xl" />
+    <div className="pointer-events-none absolute rounded-full bg-primary/20 w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] -top-16 -right-16 blur-3xl animate-float-slow" />
+    <div className="pointer-events-none absolute rounded-full bg-primary/10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] -bottom-10 -left-12 blur-3xl animate-float-slow [animation-delay:2s]" />
+    <div className="pointer-events-none absolute rounded-full bg-primary/15 w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] top-[40%] left-[4%] blur-2xl animate-float-slow [animation-delay:4s]" />
 
     <FloatingHearts />
 

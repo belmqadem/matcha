@@ -9,7 +9,6 @@ import { useMessages } from '@/hooks/useMessages';
 import { useChatActions } from '@/hooks/useChatActions';
 import { useChatDeepLink } from '@/hooks/useChatDeepLink';
 
-import FloatingHearts from '@/components/FloatingHearts';
 import ConfirmModal from '@/components/chat/ConfirmModal';
 import ProposeModal from '@/components/chat/ProposeModal';
 import ChatSidebar from '@/pages/chat/ChatSidebar';
@@ -105,7 +104,6 @@ export default function ChatPage() {
 
   return (
     <div className="relative h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] flex flex-col bg-background font-primary overflow-hidden">
-      <FloatingHearts />
 
       {(error || deepLinkError) && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-xs sm:text-sm font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl flex items-center gap-2 sm:gap-3 max-w-[90%] sm:max-w-sm animate-fade-in-up">

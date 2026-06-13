@@ -1,4 +1,5 @@
 // src/components/visitors/VisitorStats.tsx
+import { useMemo } from 'react';
 import type { Visitor } from '@/types/user';
 
 interface VisitorStatsProps {
@@ -6,20 +7,23 @@ interface VisitorStatsProps {
 }
 
 export function VisitorStats({ visitors }: VisitorStatsProps) {
-  const DAY_MS = 86_400_000;
-  const today = visitors.filter(
-    (v) => Date.now() - new Date(v.visited_at).getTime() < DAY_MS,
-  ).length;
+  const stats = useMemo(() => {
+    const DAY_MS = 86_400_000;
+    const now = Date.now();
+    const today = visitors.filter(
+      (v) => now - new Date(v.visited_at).getTime() < DAY_MS,
+    ).length;
 
-  const week = visitors.filter(
-    (v) => Date.now() - new Date(v.visited_at).getTime() < 7 * DAY_MS,
-  ).length;
+    const week = visitors.filter(
+      (v) => now - new Date(v.visited_at).getTime() < 7 * DAY_MS,
+    ).length;
 
-  const stats = [
-    { label: 'Total visitors', value: visitors.length },
-    { label: 'Last 24h', value: today },
-    { label: 'Last 7 days', value: week },
-  ];
+    return [
+      { label: 'Total visitors', value: visitors.length },
+      { label: 'Last 24h', value: today },
+      { label: 'Last 7 days', value: week },
+    ];
+  }, [visitors]);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">

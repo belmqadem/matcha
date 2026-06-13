@@ -108,19 +108,19 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
                 : 'Use my current GPS location'}
           </button>
           <p className="text-[0.65rem] sm:text-xs font-bold text-primary/80 mt-2 flex items-center gap-1.5">
-            <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Only used for distance calculation.
+            <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Only used for distance calculation
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        {/* <div className="flex items-center gap-4">
           <div className="flex-1 h-[2px] bg-background" />
           <span className="text-[0.65rem] sm:text-xs font-black text-text-muted uppercase tracking-widest">
             or
           </span>
           <div className="flex-1 h-[2px] bg-background" />
-        </div>
+        </div> */}
 
-        <div>
+        {/* <div>
           <label className={labelCls}>City Name (Display only)</label>
           <input
             value={cityInput}
@@ -128,7 +128,7 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
             placeholder="e.g. Paris, Marais district"
             className={inputCls}
           />
-        </div>
+        </div> */}
 
         <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
       </div>

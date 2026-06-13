@@ -2,10 +2,8 @@
 import { useState } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 
-import FloatingHearts from '@/components/FloatingHearts';
-import NotificationTabs, {
-  NOTIFICATION_FILTERS,
-} from '@/components/notifications/NotificationTabs';
+import NotificationTabs from '@/components/notifications/NotificationTabs';
+import { NOTIFICATION_FILTERS } from '@/components/notifications/notificationConstants';
 import NotificationList from '@/components/notifications/NotificationList';
 import EmptyNotifications from '@/components/notifications/EmptyNotifications';
 
@@ -21,7 +19,6 @@ export default function NotificationsPage() {
 
   return (
     <div className="relative min-h-[100dvh] bg-background font-primary overflow-x-hidden pb-10">
-      <FloatingHearts />
 
       <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {/* Header */}

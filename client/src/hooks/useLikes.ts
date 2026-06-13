@@ -28,8 +28,8 @@ export function useLikes(): UseLikesReturn {
   }, []);
 
   const sorted = [...likedBy].sort((a, b) => {
-    const ta = new Date(a.liked_at).getTime();
-    const tb = new Date(b.liked_at).getTime();
+    const ta = new Date(a.created_at).getTime();
+    const tb = new Date(b.created_at).getTime();
     return sort === 'recent' ? tb - ta : ta - tb;
   });
 

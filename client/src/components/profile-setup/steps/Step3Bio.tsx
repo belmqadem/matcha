@@ -32,7 +32,7 @@ export const Step3Bio = ({ form, setForm }: Step3BioProps) => {
         `}
       />
 
-      <div className="flex justify-between items-center mt-3 gap-3">
+      {/* <div className="flex justify-between items-center mt-3 gap-3">
         <div className="h-1 sm:h-1.5 rounded-full bg-border flex-1 overflow-hidden">
           <div
             className="h-full rounded-full bg-primary opacity-60 transition-all duration-200"
@@ -42,7 +42,7 @@ export const Step3Bio = ({ form, setForm }: Step3BioProps) => {
         <span className="text-xs sm:text-sm text-text-muted flex-shrink-0 font-medium">
           {form.biography.length} / {BIO_MAX_LENGTH}
         </span>
-      </div>
+      </div> */}
     </div>
   );
 };

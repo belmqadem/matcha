@@ -42,10 +42,11 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
         location: location.trim() || undefined,
       });
       onSuccess();
-    } catch (e: any) {
-      if (e.message?.includes('409')) setError('You already have a pending date with this person.');
-      else if (e.message?.includes('403')) setError('You can only propose to connected users.');
-      else setError(e.message ?? 'Failed to propose date');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes('409')) setError('You already have a pending date with this person.');
+      else if (msg.includes('403')) setError('You can only propose to connected users.');
+      else setError(msg || 'Failed to propose date');
     } finally {
       setSubmitting(false);
     }
