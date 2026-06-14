@@ -30,6 +30,7 @@ export const getNotifications = async (userId) => {
       n.id,
       n.type,
       n.is_read,
+			n.count,
       n.created_at,
       u.id        AS from_id,
       u.username  AS from_username,
