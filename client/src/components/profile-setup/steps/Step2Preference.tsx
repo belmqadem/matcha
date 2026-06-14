@@ -15,10 +15,10 @@ export const Step2Preference = ({ form, setForm }: Step2PreferenceProps) => {
         Who are you interested in meeting?
       </p>
 
-      {PREFERENCES.map(({ value, label, emoji }) => (
+      {PREFERENCES.map(({ value, label }) => (
         <OptionButton
           key={value}
-          label={`${emoji}  ${label}`}
+          label={label}
           selected={form.sexual_preference === value}
           onClick={() => setForm((p) => ({ ...p, sexual_preference: value }))}
         />

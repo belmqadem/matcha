@@ -95,7 +95,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           }}
           className="flex-1 py-2 sm:py-2.5 rounded-full bg-primary text-surface text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95"
         >
-          <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Say Hi
+          <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Send msg
         </button>
       );
     }
@@ -110,7 +110,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
             <Spinner size="sm" />
           ) : (
             <>
-              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Liked
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Match
             </>
           )}
         </button>
@@ -159,11 +159,17 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
         <Avatar user={user} />
         <div className="absolute inset-0 bg-gradient-to-t from-text/80 via-text/10 to-transparent pointer-events-none" />
 
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-surface/20 backdrop-blur-md px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border border-surface/30 shadow-sm">
+        <div
+          className={`absolute top-3 left-3 flex items-center gap-1.5 backdrop-blur-md px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border shadow-sm ${
+            user.is_online
+              ? 'bg-surface/90 text-success border-success/30'
+              : 'bg-surface/20 text-surface border-surface/30'
+          }`}
+        >
           <Circle
-            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-primary' : 'text-surface'}`}
+            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-success' : 'text-surface'}`}
           />
-          <span className="text-[0.6rem] sm:text-[0.65rem] text-surface font-bold uppercase tracking-wider drop-shadow-md">
+          <span className="text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider drop-shadow-md">
             {user.is_online ? 'Online' : timeAgo(user.last_seen)}
           </span>
         </div>

@@ -15,10 +15,10 @@ export const Step1Gender = ({ form, setForm }: Step1GenderProps) => {
         Select the option that best describes you.
       </p>
 
-      {GENDERS.map(({ value, label, emoji }) => (
+      {GENDERS.map(({ value, label }) => (
         <OptionButton
           key={value}
-          label={`${emoji}  ${label}`}
+          label={label}
           selected={form.gender === value}
           onClick={() => setForm((p) => ({ ...p, gender: value }))}
         />

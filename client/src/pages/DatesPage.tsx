@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Mail, Loader2, CalendarHeart } from 'lucide-react';
 import { useDates } from '@/hooks/useDates';
 import { isPast } from '@/utils/dateUtils';
@@ -10,7 +11,18 @@ import { useAuth } from '@/context/AuthContext';
 export default function DatesPage() {
   const { dates, upcoming, loading, error, fetchDates } = useDates();
   const [showModal, setShowModal] = useState(false);
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<TabFilter>('upcoming');
+
+  useEffect(() => {
+    const queryTab = searchParams.get('tab') as TabFilter;
+    if (queryTab && ['upcoming', 'pending', 'past', 'all'].includes(queryTab)) {
+      Promise.resolve().then(() => {
+        setTab(queryTab);
+      });
+    }
+  }, [searchParams]);
+
   const { user: currentUser } = useAuth();
 
   const filtered = dates.filter((d) => {

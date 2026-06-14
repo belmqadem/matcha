@@ -8,7 +8,13 @@ import type { Notification, NotificationType } from '@/types/notification';
 
 const TYPE_META: Record<
   NotificationType,
-  { icon: string; label: (n: string) => string; textCls: string; bgCls: string; borderCls: string }
+  {
+    icon: string;
+    label: (n: string, count: number) => string;
+    textCls: string;
+    bgCls: string;
+    borderCls: string;
+  }
 > = {
   like: {
     icon: '❤️',
@@ -33,14 +39,16 @@ const TYPE_META: Record<
   },
   visit: {
     icon: '👀',
-    label: (n) => `${n} visited your profile`,
+    label: (n, count) =>
+      count > 1 ? `${n} visited your profile ${count} times` : `${n} visited your profile`,
     textCls: 'text-text',
     bgCls: 'bg-text/5',
     borderCls: 'border-text',
   },
   message: {
     icon: '💬',
-    label: (n) => `${n} sent you a message`,
+    label: (n, count) =>
+      count > 1 ? `${n} sent you ${count} messages` : `${n} sent you a message`,
     textCls: 'text-primary',
     bgCls: 'bg-primary/10',
     borderCls: 'border-primary',
@@ -92,11 +100,13 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
     }
     if (notification.type === 'message') {
       navigate(`/chat/${notification.from_id}`);
-    } else if (
-      notification.type !== 'unlike' &&
-      notification.type !== 'date_cancelled' &&
-      notification.type !== 'date_declined'
-    ) {
+    } else if (notification.type === 'date_proposed') {
+      navigate('/dates?tab=pending');
+    } else if (notification.type === 'date_accepted') {
+      navigate('/dates?tab=upcoming');
+    } else if (notification.type === 'date_cancelled' || notification.type === 'date_declined') {
+      navigate('/dates?tab=past');
+    } else if (notification.type !== 'unlike') {
       navigate(`/profile/${notification.from_id}`);
     }
   };
@@ -142,7 +152,7 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
         <p
           className={`text-xs sm:text-sm leading-snug truncate ${notification.is_read ? 'font-bold text-text' : 'font-black text-text'}`}
         >
-          {meta.label(notification.from_first_name)}
+          {meta.label(notification.from_first_name, notification.count ?? 1)}
         </p>
         <p className="text-[0.65rem] sm:text-xs mt-0.5 sm:mt-1 text-text-muted truncate font-medium">
           @{notification.from_username} • {timeAgo(notification.created_at)}

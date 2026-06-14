@@ -9,22 +9,20 @@ import type { StepConfig, Gender, SexualPreference } from '@/types/profileSetup'
 export const GENDERS: Array<{
   value: Gender;
   label: string;
-  emoji: string;
 }> = [
-  { value: 'male', label: 'Man', emoji: '👨' },
-  { value: 'female', label: 'Woman', emoji: '👩' },
-  { value: 'non-binary', label: 'Non-binary', emoji: '🧑' },
-  { value: 'other', label: 'Other', emoji: '✨' },
+  { value: 'male', label: 'Man' },
+  { value: 'female', label: 'Woman' },
+  { value: 'non-binary', label: 'Non-binary' },
+  { value: 'other', label: 'Other' },
 ];
 
 export const PREFERENCES: Array<{
   value: SexualPreference;
   label: string;
-  emoji: string;
 }> = [
-  { value: 'heterosexual', label: 'Heterosexual', emoji: '👫' },
-  { value: 'homosexual', label: 'Homosexual', emoji: '👬' },
-  { value: 'bisexual', label: 'Bisexual', emoji: '🌈' },
+  { value: 'heterosexual', label: 'Heterosexual' },
+  { value: 'homosexual', label: 'Homosexual' },
+  { value: 'bisexual', label: 'Bisexual' },
 ];
 
 export const SUGGESTED_TAGS = [
@@ -56,37 +54,37 @@ export const STEPS: StepConfig[] = [
     title: "What's your gender?",
     subtitle: 'Identity',
     icon: User,
-    skippable: true,
+    skippable: false,
   },
   {
     title: 'Who are you into?',
     subtitle: 'Romantic preference',
     icon: Heart,
-    skippable: true,
+    skippable: false,
   },
   {
     title: 'Write your bio',
     subtitle: 'About you',
     icon: FileText,
-    skippable: true,
+    skippable: false,
   },
   {
     title: 'Your interests',
     subtitle: 'Tags & hobbies',
     icon: Tag,
-    skippable: true,
+    skippable: false,
   },
   {
     title: 'Your location',
     subtitle: 'Where you are',
     icon: MapPin,
-    skippable: true,
+    skippable: false,
   },
   {
     title: 'Add your photos',
     subtitle: 'Show yourself',
     icon: Camera,
-    skippable: true,
+    skippable: false,
   },
 ];
 

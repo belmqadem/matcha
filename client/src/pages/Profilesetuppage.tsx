@@ -1,7 +1,6 @@
 // src/pages/Profilesetuppage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react';
 
 import type { ProfileFormData } from '@/types/profileSetup';
 
@@ -14,6 +13,7 @@ import { StepHeader } from '@/components/profile-setup/StepHeader';
 import { StepRenderer } from '@/components/profile-setup/StepRenderer';
 import { StepNavigation } from '@/components/profile-setup/StepNavigation';
 import { useAuth } from '@/context/AuthContext';
+import MatchaLogo from '@/components/Logo';
 
 export default function ProfileSetupPage() {
   const navigate = useNavigate();
@@ -67,36 +67,8 @@ export default function ProfileSetupPage() {
   const handleNext = () => handleValidateAndGo(step + 1);
   const handleBack = () => goToStep(step - 1);
 
-  const handleSkipStep = () => {
-    setError('');
-    goToStep(step + 1);
-  };
-
   const handleCompletion = async () => {
     window.location.href = '/browse';
-  };
-
-  const handleSkipAll = async () => {
-    setLoading(true);
-    try {
-      const skipForm: ProfileFormData = {
-        birthdate: form.birthdate,
-        gender: form.gender || 'other', // Keep minimal fallback to bypass the RequireProfile router guard
-        sexual_preference: form.sexual_preference || 'bisexual',
-        biography: form.biography,
-        tags: form.tags,
-        location_city: form.location_city, // No fallback
-        latitude: form.latitude, // No fallback
-        longitude: form.longitude, // No fallback
-        photos: form.photos,
-      };
-      await saveCompleteProfile(skipForm);
-      handleCompletion();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to skip setup.');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleSubmit = async () => {
@@ -128,12 +100,8 @@ export default function ProfileSetupPage() {
       {/* Main card */}
       <div className="w-full max-w-[95%] sm:max-w-md bg-surface rounded-3xl shadow-xl p-6 sm:p-8 relative z-10 border border-border">
         <div className="text-center mb-5 sm:mb-6">
-          <div className="flex items-center justify-center gap-2">
-            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-primary fill-current" />
-            <span className="text-xl sm:text-2xl font-black italic bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent tracking-tight">
-              Matcha
-            </span>
-            <Heart className="w-3 h-3 sm:w-4 sm:h-4 text-primary fill-current" />
+          <div className="flex items-center justify-center select-none">
+            <MatchaLogo size="sm" to="" showText={true} />
           </div>
           <div className="w-6 h-0.5 bg-primary rounded-full mx-auto mt-2 opacity-30" />
         </div>
@@ -159,13 +127,10 @@ export default function ProfileSetupPage() {
         <StepNavigation
           step={step}
           totalSteps={STEPS.length}
-          isSkippable={currentStep.skippable}
           loading={loading}
           error={error}
           onBack={handleBack}
-          onSkip={handleSkipStep}
           onNext={isLast ? handleSubmit : handleNext}
-          onSkipAll={handleSkipAll}
         />
       </div>
     </div>

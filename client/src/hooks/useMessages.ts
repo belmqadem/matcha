@@ -20,7 +20,6 @@ interface UseMessagesReturn {
 
 export function useMessages(
   activeConvo: Conversation | null,
-  isBlocked: boolean,
   onConvoUpdate: (convoId: string, patch: Partial<Conversation>) => void,
 ): UseMessagesReturn {
   const { socket } = useSocket();
@@ -44,7 +43,6 @@ export function useMessages(
       setMessages([]);
       setPage(1);
       setForbidden(false);
-      if (isBlocked) return;
 
       setLoading(true);
       chatService
@@ -78,7 +76,7 @@ export function useMessages(
       aborted = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeConvo?.id, isBlocked]);
+  }, [activeConvo?.id]);
 
   const scrollToBottom = useCallback(() => {
     if (threadRef.current) {
@@ -88,14 +86,14 @@ export function useMessages(
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    if (!loading && !forbidden && !isBlocked) {
+    if (!loading && !forbidden) {
       scrollToBottom();
       const id = setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
       }, 100);
       return () => clearTimeout(id);
     }
-  }, [messages.length, loading, forbidden, isBlocked, scrollToBottom]);
+  }, [messages.length, loading, forbidden, scrollToBottom]);
 
   // Socket: confirm optimistic message was delivered
   useEffect(() => {

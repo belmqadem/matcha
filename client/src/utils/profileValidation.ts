@@ -24,56 +24,91 @@ export const validateBirthdateStep = (birthdate: string): StepValidation => {
 };
 
 /**
- * Validate step 1 (gender) - optional but if provided, must be valid
+ * Validate step 1 (gender) - required
  */
-export const validateGenderStep = (_gender: string): StepValidation => {
-  void _gender;
+export const validateGenderStep = (gender: string): StepValidation => {
+  if (!gender) {
+    return {
+      valid: false,
+      message: 'Please select your gender identity.',
+    };
+  }
   return { valid: true, message: '' };
 };
 
 /**
- * Validate step 2 (preference) - optional but if provided, must be valid
+ * Validate step 2 (preference) - required
  */
-export const validatePreferenceStep = (_preference: string): StepValidation => {
-  void _preference;
+export const validatePreferenceStep = (preference: string): StepValidation => {
+  if (!preference) {
+    return {
+      valid: false,
+      message: 'Please select your romantic orientation.',
+    };
+  }
   return { valid: true, message: '' };
 };
 
 /**
- * Validate step 3 (bio) - optional
+ * Validate step 3 (bio) - required
  */
-export const validateBioStep = (_biography: string): StepValidation => {
-  void _biography;
+export const validateBioStep = (biography: string): StepValidation => {
+  if (!biography || !biography.trim()) {
+    return {
+      valid: false,
+      message: 'Please write a short biography about yourself.',
+    };
+  }
+  if (biography.trim().length < 10) {
+    return {
+      valid: false,
+      message: 'Your biography must be at least 10 characters long.',
+    };
+  }
   return { valid: true, message: '' };
 };
 
 /**
- * Validate step 4 (tags) - optional
+ * Validate step 4 (tags) - required
  */
-export const validateTagsStep = (_tags: string[]): StepValidation => {
-  void _tags;
+export const validateTagsStep = (tags: string[]): StepValidation => {
+  if (!tags || tags.length === 0) {
+    return {
+      valid: false,
+      message: 'Please select or add at least one interest.',
+    };
+  }
   return { valid: true, message: '' };
 };
 
 /**
- * Validate step 5 (location) - optional
+ * Validate step 5 (location) - required
  */
 export const validateLocationStep = (
-  _city: string,
-  _latitude: number | null,
-  _longitude: number | null,
+  city: string,
+  latitude: number | null,
+  longitude: number | null,
 ): StepValidation => {
-  void _city;
-  void _latitude;
-  void _longitude;
+  void city;
+  if (latitude === null || longitude === null) {
+    return {
+      valid: false,
+      message: 'Please set your location using your GPS.',
+    };
+  }
   return { valid: true, message: '' };
 };
 
 /**
- * Validate step 6 (photos) - optional
+ * Validate step 6 (photos) - required
  */
-export const validatePhotosStep = (_photos: File[]): StepValidation => {
-  void _photos;
+export const validatePhotosStep = (photos: File[]): StepValidation => {
+  if (!photos || photos.length === 0) {
+    return {
+      valid: false,
+      message: 'Please upload at least one photo.',
+    };
+  }
   return { valid: true, message: '' };
 };
 

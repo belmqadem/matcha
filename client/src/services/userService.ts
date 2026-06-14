@@ -36,7 +36,7 @@ export const userService = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== '' && v !== null && v !== undefined) q.set(k, String(v));
     });
-    return fetch(`/api/browse?${q}`, { credentials: 'include' })
+    return fetch(`/api/search?${q}`, { credentials: 'include' })
       .then((res) => handleResponse<BrowseResponse>(res))
       .then((data) => ({
         ...data,

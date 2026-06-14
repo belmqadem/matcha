@@ -166,7 +166,7 @@ export default function LandingPage() {
     <main className="relative min-h-screen overflow-hidden bg-background font-primary">
       {/* ── Navbar ── */}
       <nav className="relative z-20 flex items-center justify-between px-5 sm:px-10 lg:px-14 py-5 sm:py-6">
-        <Logo />
+        <Logo showText={true} />
         <div className="flex items-center gap-2 sm:gap-3">
           <Link
             to="/login"

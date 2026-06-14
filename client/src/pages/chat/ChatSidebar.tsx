@@ -112,7 +112,28 @@ export default function ChatSidebar({
             </p>
           </div>
         ) : (
-          blockedUsers.map((u) => <BlockedItem key={u.id} user={u} onUnblock={onUnblock} />)
+          blockedUsers.map((u) => (
+            <BlockedItem
+              key={u.id}
+              user={u}
+              onUnblock={onUnblock}
+              onClick={() => {
+                onSelectConvo({
+                  id: u.id,
+                  username: u.username,
+                  first_name: u.first_name,
+                  last_name: u.last_name,
+                  profile_picture_id: u.profile_picture_id,
+                  profile_picture_url: u.profile_picture_url,
+                  is_online: false,
+                  last_message: '',
+                  last_message_at: '',
+                  last_message_sender_id: '',
+                  unread_count: 0,
+                });
+              }}
+            />
+          ))
         )}
       </div>
     </>

@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
 import { authService } from '@/services/authService';
+import MatchaLogo from '@/components/Logo';
 
 type BadgeKey = 'messages' | 'notifications';
 
@@ -106,12 +107,7 @@ export default function AppHeader() {
       <div className="grid grid-cols-[auto_1fr_auto] lg:grid-cols-[180px_1fr_180px] items-center h-16 px-4 md:px-6 gap-2">
         {/* ── LEFT: Logo ── */}
         <div className="flex items-center">
-          <NavLink
-            to="/browse"
-            className="font-serif text-[28px] font-black italic bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent no-underline tracking-tight leading-none hover:scale-[1.02] active:scale-95 transition-all duration-300"
-          >
-            Matcha
-          </NavLink>
+          <MatchaLogo size="sm" showText={true} />
         </div>
 
         {/* ── CENTER: Nav links + Search ── */}

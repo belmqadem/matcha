@@ -4,24 +4,18 @@ import { ChevronLeft, ChevronRight, Heart } from 'lucide-react';
 interface StepNavigationProps {
   step: number;
   totalSteps: number;
-  isSkippable: boolean;
   loading: boolean;
   onBack: () => void;
-  onSkip: () => void;
   onNext: () => void;
-  onSkipAll: () => void;
   error?: string;
 }
 
 export const StepNavigation = ({
   step,
   totalSteps,
-  isSkippable,
   loading,
   onBack,
-  onSkip,
   onNext,
-  onSkipAll,
   error,
 }: StepNavigationProps) => {
   const isLast = step === totalSteps - 1;
@@ -53,16 +47,6 @@ export const StepNavigation = ({
         )}
 
         <div className="flex items-center gap-3 ml-auto">
-          {isSkippable && !isLast && (
-            <button
-              type="button"
-              onClick={onSkip}
-              className="text-xs sm:text-sm text-text-muted/60 font-medium transition-colors duration-150 hover:text-text px-2 py-1"
-            >
-              Skip
-            </button>
-          )}
-
           <button
             type="button"
             disabled={loading}
@@ -92,16 +76,6 @@ export const StepNavigation = ({
             )}
           </button>
         </div>
-      </div>
-
-      <div className="text-center mt-5 sm:mt-6">
-        <button
-          type="button"
-          onClick={onSkipAll}
-          className="text-xs sm:text-sm text-text-muted/60 font-medium transition-colors duration-150 hover:text-text"
-        >
-          Skip setup for now
-        </button>
       </div>
     </>
   );

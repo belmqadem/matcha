@@ -21,6 +21,7 @@ export interface Notification {
   from_last_name: string;
   from_profile_picture_id: string | null;
   from_profile_picture_url: string | null;
+  count?: number;
 }
 
 export interface NotificationsResponse {

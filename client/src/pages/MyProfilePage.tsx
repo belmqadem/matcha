@@ -171,7 +171,7 @@ const MyProfilePage = () => {
 
             {/* Online indicator */}
             {user.is_online && (
-              <span className="mt-3.5 flex items-center gap-1.5 bg-primary text-surface text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest shadow-md shadow-primary/20 animate-pulse">
+              <span className="mt-3.5 flex items-center gap-1.5 bg-success text-surface text-[9px] font-black px-2.5 py-1 rounded-full tracking-widest shadow-md shadow-success/20 animate-pulse">
                 <div className="w-1 h-1 bg-surface rounded-full shadow-[0_0_6px_white]" /> ONLINE
               </span>
             )}

@@ -69,12 +69,12 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
         <div
           className={`absolute top-2 sm:top-3 left-2 sm:left-3 flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[0.6rem] sm:text-[0.65rem] font-bold backdrop-blur-md border shadow-sm ${
             user.is_online
-              ? 'bg-surface/90 text-primary border-primary/20'
+              ? 'bg-surface/90 text-success border-success/20'
               : 'bg-text/40 text-surface/90 border-surface/20'
           }`}
         >
           <Circle
-            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-primary' : 'text-surface/50'}`}
+            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-success' : 'text-surface/50'}`}
           />
           {user.is_online ? 'Online' : 'Offline'}
         </div>

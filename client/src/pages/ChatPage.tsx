@@ -55,7 +55,7 @@ export default function ChatPage() {
     appendOptimistic,
     threadRef,
     bottomRef,
-  } = useMessages(activeConvo, isBlocked, onConvoUpdate);
+  } = useMessages(activeConvo, onConvoUpdate);
 
   const {
     sending,

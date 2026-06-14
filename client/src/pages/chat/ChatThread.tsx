@@ -113,7 +113,7 @@ export default function ChatThread({
                 {isBlocked ? (
                   <span className="text-error">Blocked</span>
                 ) : activeConvo.is_online && !forbidden ? (
-                  <span className="text-primary">Active now</span>
+                  <span className="text-success">Active now</span>
                 ) : (
                   <span className="text-text-muted">@{activeConvo.username}</span>
                 )}
@@ -158,20 +158,11 @@ export default function ChatThread({
         ref={threadRef}
         className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 sm:py-5 flex flex-col gap-3 sm:gap-4 scrollbar-thin"
       >
-        {isBlocked ? (
-          <BlockedState
-            firstName={activeConvo.first_name}
-            onUnblock={() => onConfirmAction('unblock')}
-          />
-        ) : forbidden ? (
-          <ForbiddenState firstName={activeConvo.first_name} />
-        ) : loading ? (
+        {loading ? (
           <div className="flex-1 flex justify-center items-center">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
           </div>
-        ) : messages.length === 0 ? (
-          <EmptyState firstName={activeConvo.first_name} />
-        ) : (
+        ) : messages.length > 0 ? (
           <>
             {hasOlder && (
               <div className="text-center pb-2">
@@ -200,6 +191,15 @@ export default function ChatThread({
               </div>
             ))}
           </>
+        ) : isBlocked ? (
+          <BlockedState
+            firstName={activeConvo.first_name}
+            onUnblock={() => onConfirmAction('unblock')}
+          />
+        ) : forbidden ? (
+          <ForbiddenState firstName={activeConvo.first_name} />
+        ) : (
+          <EmptyState firstName={activeConvo.first_name} />
         )}
         <div ref={bottomRef} />
       </div>

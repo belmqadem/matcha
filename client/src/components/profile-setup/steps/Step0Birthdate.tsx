@@ -41,9 +41,8 @@ export const Step0Birthdate = ({ form, setForm }: Step0BirthdateProps) => {
       />
 
       {form.birthdate && age !== null && age >= 18 && (
-        <div className="mt-4 p-3 sm:p-4 bg-primary/10 rounded-2xl border border-primary/20 flex items-center gap-3 animate-fade-in-up">
-          <span className="text-lg sm:text-xl">🎂</span>
-          <p className="text-sm sm:text-base text-primary font-semibold">
+        <div className="mt-4 p-3 sm:p-4 bg-primary/10 rounded-2xl border border-primary/20 flex items-center justify-center animate-fade-in-up">
+          <p className="text-xs sm:text-sm text-primary font-semibold">
             You are <strong>{age}</strong> years old
           </p>
         </div>

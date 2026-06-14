@@ -1,5 +1,5 @@
 // src/hooks/useBrowse.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { userService } from '@/services/userService';
 import type { BrowseUser } from '@/types/user';
 
@@ -11,43 +11,32 @@ export function useBrowse() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const abortRef = useRef<AbortController | null>(null);
-
   const buildParams = useCallback((pageNum: number) => {
     return { page: pageNum, limit: 20 };
   }, []);
 
   useEffect(() => {
-    if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
-    abortRef.current = ctrl;
 
-    Promise.resolve().then(() => {
-      if (ctrl.signal.aborted) return;
-      setLoading(true);
-      setError(null);
-      setPage(1);
-
-      userService
-        .browseUsers(buildParams(1))
-        .then((data) => {
-          if (ctrl.signal.aborted) return;
-          const sanitizedUsers = (data.users ?? []).map((u) => ({
-            ...u,
-            liked_by_me: Boolean(u.liked_by_me),
-            liked_me: Boolean(u.liked_me),
-            is_connected: Boolean(u.is_connected),
-          }));
-          setUsers(sanitizedUsers);
-          setTotal(data.total ?? 0);
-        })
-        .catch((err: Error) => {
-          if (!ctrl.signal.aborted) setError(err.message);
-        })
-        .finally(() => {
-          if (!ctrl.signal.aborted) setLoading(false);
-        });
-    });
+    userService
+      .browseUsers(buildParams(1))
+      .then((data) => {
+        if (ctrl.signal.aborted) return;
+        const sanitizedUsers = (data.users ?? []).map((u) => ({
+          ...u,
+          liked_by_me: Boolean(u.liked_by_me),
+          liked_me: Boolean(u.liked_me),
+          is_connected: Boolean(u.is_connected),
+        }));
+        setUsers(sanitizedUsers);
+        setTotal(data.total ?? 0);
+        setLoading(false);
+      })
+      .catch((err: Error) => {
+        if (ctrl.signal.aborted) return;
+        setError(err.message);
+        setLoading(false);
+      });
 
     return () => ctrl.abort();
   }, [buildParams]);
