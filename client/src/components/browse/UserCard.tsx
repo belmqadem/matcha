@@ -97,7 +97,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           }}
           className="flex-1 py-2 sm:py-2.5 rounded-full bg-primary text-surface text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95"
         >
-          <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Send msg
+          <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Send message
         </button>
       );
     }
@@ -112,7 +112,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
             <Spinner size="sm" />
           ) : (
             <>
-              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Match
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Unlike
             </>
           )}
         </button>
