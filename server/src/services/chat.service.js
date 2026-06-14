@@ -3,19 +3,6 @@ import { query } from "../db/pool.js";
 import AppError from "../utils/AppError.js";
 import logger from "../utils/logger.js";
 
-const ESCAPE_MAP = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "'": "&#39;",
-};
-
-const escapeHtml = (value) =>
-  typeof value === "string"
-    ? value.replace(/[&<>"']/g, (char) => ESCAPE_MAP[char])
-    : value;
-
 export const isConnected = async (userAId, userBId) => {
   const { rows } = await query(
     `SELECT 1 FROM likes WHERE liker_id = $1 AND liked_id = $2
@@ -56,7 +43,6 @@ const normalizeContent = (content) => {
 
 export const sendMessage = async (senderId, receiverId, content) => {
   const normalized = normalizeContent(content);
-  const sanitized = escapeHtml(normalized);
 
   const connected = await isConnected(senderId, receiverId);
   if (!connected) {
@@ -78,7 +64,7 @@ export const sendMessage = async (senderId, receiverId, content) => {
     `INSERT INTO messages (sender_id, receiver_id, content)
      VALUES ($1, $2, $3)
      RETURNING id, sender_id, receiver_id, content, is_read, sent_at`,
-    [senderId, receiverId, sanitized],
+    [senderId, receiverId, normalized],
   );
 
   logger.info({ senderId, receiverId }, "Message sent");
