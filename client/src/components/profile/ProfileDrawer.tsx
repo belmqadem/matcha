@@ -418,10 +418,12 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                   {profile.biography && (
                     <div className="relative bg-primary/5 border-l-4 border-primary rounded-r-2xl p-3.5 my-1.5 overflow-hidden shadow-sm">
                       <Quote className="absolute right-2 top-2 w-10 h-10 text-primary/10 -rotate-12 pointer-events-none" />
-                      <p className="text-[10px] font-black text-primary/70 uppercase tracking-widest mb-1">Biography</p>
-                      <p className="text-xs sm:text-sm text-text leading-relaxed font-semibold italic opacity-95 relative z-10">
-                        "{profile.biography}"
-                      </p>
+                      <p className="text-[10px] font-black text-primary/70 uppercase tracking-widest mb-1 relative z-10">Biography</p>
+                      <div className="max-h-[110px] overflow-y-auto scrollbar-thin pr-1 relative z-10">
+                        <p className="text-xs sm:text-sm text-text leading-relaxed font-semibold italic opacity-95">
+                          "{profile.biography}"
+                        </p>
+                      </div>
                     </div>
                   )}
 

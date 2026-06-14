@@ -1,5 +1,3 @@
-// src/pages/BrowsePage.tsx
-import { useState } from 'react';
 import { Sparkles, Heart } from 'lucide-react';
 
 import { useBrowse } from '@/hooks/useBrowse';
@@ -7,12 +5,9 @@ import { Spinner } from '@/components/ui/Spinner';
 import { SkeletonCard } from '@/components/browse/SkeletonCard';
 import { UserCard } from '@/components/browse/UserCard';
 
-type TabValue = 'all' | 'liked' | 'matches';
+type TabValue = 'all' | 'liked' | 'liked-me' | 'matches';
 
 export default function BrowsePage() {
-  const [activeTab, setActiveTab] = useState<TabValue>('all');
-
-  // Strict separation of concerns: All API logic is abstracted to the hook
   const {
     users,
     total,
@@ -23,15 +18,11 @@ export default function BrowsePage() {
     loadMore,
     handleLike,
     handleUnlike,
+    activeTab,
+    fetchTab,
   } = useBrowse();
 
-  // Pure UI filtering logic
-  const displayed = users.filter((u) => {
-    if (activeTab === 'liked') return u.liked_by_me;
-    if (activeTab === 'matches') return u.is_connected;
-    return true;
-  });
-
+  const displayed = users;
   const hasMore = users.length < total;
 
   return (
@@ -67,12 +58,13 @@ export default function BrowsePage() {
               [
                 ['all', 'All'],
                 ['liked', 'Liked'],
+                ['liked-me', 'Liked Me'],
                 ['matches', 'Matches'],
               ] as [TabValue, string][]
             ).map(([val, label]) => (
               <button
                 key={val}
-                onClick={() => setActiveTab(val)}
+                onClick={() => fetchTab(val)}
                 className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-full border-none text-xs sm:text-sm font-bold cursor-pointer transition-all duration-300 ${
                   activeTab === val
                     ? 'bg-primary text-surface shadow-md'
@@ -130,7 +122,9 @@ export default function BrowsePage() {
                 ? 'No matches yet'
                 : activeTab === 'liked'
                   ? "You haven't liked anyone yet"
-                  : 'No profiles found'}
+                  : activeTab === 'liked-me'
+                    ? 'No one has liked you yet'
+                    : 'No profiles found'}
             </h3>
             <p className="text-sm sm:text-base font-medium text-text-muted max-w-sm mx-auto leading-relaxed">
               Check back soon — new cuties join every day, or try adjusting your filters.

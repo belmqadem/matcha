@@ -43,6 +43,8 @@ export interface Liker {
   last_name: string;
   profile_picture_url: string | null;
   created_at: string;
+  fame_rating?: number;
+  profile_picture_id?: number | null;
 }
 
 export interface BrowseUser {

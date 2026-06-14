@@ -25,8 +25,13 @@ export function SaveBar({ saving, error, onSave, onCancel }: SaveBarProps) {
           Cancel
         </button>
         <button
-          type="button"
-          onClick={onSave}
+          type="submit"
+          onClick={(e) => {
+            const form = e.currentTarget.closest('form');
+            if (!form) {
+              onSave();
+            }
+          }}
           disabled={saving}
           className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-xl bg-primary text-surface cursor-pointer hover:bg-primary-hover hover:shadow-md transition-all disabled:opacity-60 active:scale-95"
         >

@@ -21,7 +21,6 @@ import MapPage from './pages/MapPage';
 import MyProfilePage from './pages/MyProfilePage';
 // import EditProfilePage from './pages/EditProfilePage';
 import ProfilePage from './pages/ProfilePage';
-import LikesPage from './pages/LikesPage';
 import VisitorsPage from './pages/VisitorsPage';
 import DatesPage from './pages/DatesPage';
 
@@ -67,7 +66,6 @@ const App = () => {
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/chat/:id" element={<ChatPage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
-                  <Route path="/likes" element={<LikesPage />} />
                   <Route path="/visitors" element={<VisitorsPage />} />
                   <Route path="/map" element={<MapPage />} />
                   <Route path="/dates" element={<DatesPage />} />

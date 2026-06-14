@@ -160,8 +160,8 @@ export function PhotosPanel({ user, onUpdate }: Props) {
   };
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
+    <div className="w-full h-full flex flex-col min-h-0">
+      <div className="flex items-center justify-between mb-3 shrink-0">
         <h3 className="text-lg sm:text-xl font-black text-text">Photos</h3>
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="text-xs sm:text-sm font-bold text-text-muted">{photos.length}/5</span>
@@ -179,36 +179,32 @@ export function PhotosPanel({ user, onUpdate }: Props) {
       </div>
 
       <div
-        className="grid grid-cols-4 gap-3 sm:gap-4 w-full"
+        className="flex-1 min-h-0 flex flex-col justify-between"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => handleDrop(e, slots.findIndex((x) => x === null) ?? 4)}
       >
-        {slots.map((photo, i) => {
-          const isOver = dragOverIndex === i;
-          const isMainSlot = i === 0;
+        {/* Big Main Image (Slot 0) */}
+        {(() => {
+          const photo = slots[0];
+          const isOver = dragOverIndex === 0;
           return (
             <div
-              key={photo?.id ?? `empty-${i}`}
               draggable={!!photo}
-              onDragStart={(e) => photo && handleDragStart(e, i)}
-              onDragEnter={(e) => handleDragEnter(e, i)}
-              onDragOver={(e) => handleDragOver(e, i)}
+              onDragStart={(e) => photo && handleDragStart(e, 0)}
+              onDragEnter={(e) => handleDragEnter(e, 0)}
+              onDragOver={(e) => handleDragOver(e, 0)}
               onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, i)}
+              onDrop={(e) => handleDrop(e, 0)}
               onClick={() => !photo && fileRef.current?.click()}
-              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group ${
+              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group flex-1 min-h-[220px] sm:min-h-[280px] aspect-[4/3] md:aspect-auto w-full mb-3 ${
                 isOver ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' : 'border-border'
-              } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'} ${
-                isMainSlot
-                  ? 'col-span-2 row-span-2 w-full h-full aspect-[3/4] sm:aspect-auto min-h-[220px] sm:min-h-[280px]'
-                  : 'col-span-1 row-span-1 w-full aspect-[3/4]'
-              }`}
+              } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'}`}
             >
               {photo ? (
                 <>
                   <img
                     src={photo.url}
-                    alt="Gallery"
+                    alt="Main Profile"
                     className="w-full h-full object-cover select-none pointer-events-none"
                   />
                   {photo.id === user.profile_picture_id && (
@@ -258,19 +254,107 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                 </>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-1 sm:gap-2 text-text-muted opacity-60">
-                  {uploading && i === photos.length ? (
+                  {uploading && slots.findIndex((x) => x === null) === 0 ? (
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-primary" />
                   ) : (
                     <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                   )}
                   <span className="text-[0.55rem] sm:text-[10px] font-bold uppercase tracking-wider">
-                    Add
+                    Add Photo
                   </span>
                 </div>
               )}
             </div>
           );
-        })}
+        })()}
+
+        {/* Thumbnail Row (Slots 1-4) */}
+        <div className="grid grid-cols-4 gap-3 w-full shrink-0">
+          {slots.slice(1).map((photo, index) => {
+            const i = index + 1;
+            const isOver = dragOverIndex === i;
+            return (
+              <div
+                key={photo?.id ?? `empty-${i}`}
+                draggable={!!photo}
+                onDragStart={(e) => photo && handleDragStart(e, i)}
+                onDragEnter={(e) => handleDragEnter(e, i)}
+                onDragOver={(e) => handleDragOver(e, i)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, i)}
+                onClick={() => !photo && fileRef.current?.click()}
+                className={`relative rounded-xl overflow-hidden bg-background/50 border-2 transition-all duration-300 group aspect-[3/4] w-full ${
+                  isOver ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' : 'border-border'
+                } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'}`}
+              >
+                {photo ? (
+                  <>
+                    <img
+                      src={photo.url}
+                      alt="Gallery"
+                      className="w-full h-full object-cover select-none pointer-events-none"
+                    />
+                    {photo.id === user.profile_picture_id && (
+                      <span className="absolute top-1 left-1 bg-primary text-surface text-[7px] font-black px-1.5 py-0.5 rounded-full tracking-widest shadow-md scale-90">
+                        MAIN
+                      </span>
+                    )}
+
+                    <div className="absolute inset-0 bg-text/0 group-hover:bg-text/30 transition-all duration-300">
+                      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {photo.id !== user.profile_picture_id && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSetMain(photo.id);
+                            }}
+                            title="Set as main"
+                            className="w-5 h-5 rounded-full bg-surface flex items-center justify-center text-primary cursor-pointer shadow-sm hover:scale-110 transition-transform"
+                          >
+                            <Star className="w-2.5 h-2.5 fill-current" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPhoto(photo);
+                          }}
+                          title="Edit photo"
+                          className="w-5 h-5 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-primary transition-transform"
+                        >
+                          <Wand2 className="w-2.5 h-2.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(photo.id);
+                          }}
+                          className="w-5 h-5 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-error transition-transform"
+                        >
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-0.5 text-text-muted opacity-60">
+                    {uploading && slots.findIndex((x) => x === null) === i ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                    ) : (
+                      <Camera className="w-3.5 h-3.5" />
+                    )}
+                    <span className="text-[8px] font-bold uppercase tracking-wider">
+                      Add
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       <input

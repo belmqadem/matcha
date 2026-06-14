@@ -5,7 +5,6 @@ import {
   Compass,
   MessageCircle,
   Bell,
-  Heart,
   MapPin,
   User,
   LogOut,
@@ -26,7 +25,6 @@ type BadgeKey = 'messages' | 'notifications';
 const MAIN_NAV = [
   { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
   { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
-  { to: '/likes', label: 'Likes', Icon: Heart, badge: undefined },
   { to: '/map', label: 'Map', Icon: MapPin, badge: undefined },
   { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: undefined },
 ];

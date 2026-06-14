@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { userService } from '@/services/userService';
 import type { BrowseUser } from '@/types/user';
 
+type TabValue = 'all' | 'liked' | 'liked-me' | 'matches';
+
 export function useBrowse() {
   const [users, setUsers] = useState<BrowseUser[]>([]);
   const [total, setTotal] = useState(0);
@@ -10,18 +12,32 @@ export function useBrowse() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<TabValue>('all');
 
   const buildParams = useCallback((pageNum: number) => {
     return { page: pageNum, limit: 20 };
   }, []);
 
-  useEffect(() => {
-    const ctrl = new AbortController();
+  const fetchTab = useCallback((tab: TabValue) => {
+    setLoading(true);
+    setError(null);
+    setPage(1);
+    setActiveTab(tab);
 
-    userService
-      .browseUsers(buildParams(1))
+    const fetchPromise = (() => {
+      if (tab === 'all') {
+        return userService.browseUsers(buildParams(1));
+      } else if (tab === 'liked') {
+        return userService.getLikedUsers();
+      } else if (tab === 'liked-me') {
+        return userService.getLikedByUsers();
+      } else {
+        return userService.getMatches();
+      }
+    })();
+
+    fetchPromise
       .then((data) => {
-        if (ctrl.signal.aborted) return;
         const sanitizedUsers = (data.users ?? []).map((u) => ({
           ...u,
           liked_by_me: Boolean(u.liked_by_me),
@@ -33,15 +49,39 @@ export function useBrowse() {
         setLoading(false);
       })
       .catch((err: Error) => {
-        if (ctrl.signal.aborted) return;
+        setError(err.message);
+        setLoading(false);
+      });
+  }, [buildParams]);
+
+  useEffect(() => {
+    let active = true;
+    userService.browseUsers({ page: 1, limit: 20 })
+      .then((data) => {
+        if (!active) return;
+        const sanitizedUsers = (data.users ?? []).map((u) => ({
+          ...u,
+          liked_by_me: Boolean(u.liked_by_me),
+          liked_me: Boolean(u.liked_me),
+          is_connected: Boolean(u.is_connected),
+        }));
+        setUsers(sanitizedUsers);
+        setTotal(data.total ?? 0);
+        setLoading(false);
+      })
+      .catch((err: Error) => {
+        if (!active) return;
         setError(err.message);
         setLoading(false);
       });
 
-    return () => ctrl.abort();
-  }, [buildParams]);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const loadMore = async () => {
+    if (activeTab !== 'all') return;
     const next = page + 1;
     setLoadingMore(true);
     try {
@@ -82,23 +122,37 @@ export function useBrowse() {
 
   const handleUnlike = async (id: string) => {
     const original = users.find((u) => u.id === id);
-    setUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
-    );
+
+    if (activeTab === 'liked' || activeTab === 'matches') {
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+      setTotal((prev) => Math.max(0, prev - 1));
+    } else {
+      setUsers((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
+      );
+    }
+
     try {
       await userService.unlike(id);
     } catch (err) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === id
-            ? {
-                ...u,
-                liked_by_me: original?.liked_by_me ?? false,
-                is_connected: original?.is_connected ?? false,
-              }
-            : u,
-        ),
-      );
+      if (activeTab === 'liked' || activeTab === 'matches') {
+        if (original) {
+          setUsers((prev) => [...prev, original]);
+          setTotal((prev) => prev + 1);
+        }
+      } else {
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === id
+              ? {
+                  ...u,
+                  liked_by_me: original?.liked_by_me ?? false,
+                  is_connected: original?.is_connected ?? false,
+                }
+              : u,
+          ),
+        );
+      }
       setError((err as Error).message);
     }
   };
@@ -113,5 +167,7 @@ export function useBrowse() {
     loadMore,
     handleLike,
     handleUnlike,
+    activeTab,
+    fetchTab,
   };
 }
