@@ -37,29 +37,46 @@ export function useMessages(
   // Fetch messages whenever active conversation changes
   useEffect(() => {
     if (!activeConvo) return;
-    setMessages([]);
-    setPage(1);
-    setForbidden(false);
-    if (isBlocked) return;
+    let aborted = false;
 
-    setLoading(true);
-    chatService
-      .messages(activeConvo.id, 1)
-      .then((d) => {
-        setMessages((d.messages ?? []).map(normalizeMessage));
-        setTotal(d.total ?? 0);
-        chatService.markRead(activeConvo.id).catch(() => {});
-        onConvoUpdate(activeConvo.id, { unread_count: 0 });
-      })
-      .catch((e: Error) => {
-        const msg = e.message.toLowerCase();
-        // Only mark as forbidden if it's an explicit connection/permission error,
-        // not a 404 (which means no messages yet) or temporary failure
-        if (msg.includes('not connected') || msg.includes('blocked') || msg.includes('unmatched')) {
-          setForbidden(true);
-        }
-      })
-      .finally(() => setLoading(false));
+    Promise.resolve().then(() => {
+      if (aborted) return;
+      setMessages([]);
+      setPage(1);
+      setForbidden(false);
+      if (isBlocked) return;
+
+      setLoading(true);
+      chatService
+        .messages(activeConvo.id, 1)
+        .then((d) => {
+          if (aborted) return;
+          setMessages((d.messages ?? []).map(normalizeMessage));
+          setTotal(d.total ?? 0);
+          chatService.markRead(activeConvo.id).catch(() => {});
+          onConvoUpdate(activeConvo.id, { unread_count: 0 });
+        })
+        .catch((e: Error) => {
+          if (aborted) return;
+          const msg = e.message.toLowerCase();
+          // Only mark as forbidden if it's an explicit connection/permission error,
+          // not a 404 (which means no messages yet) or temporary failure
+          if (
+            msg.includes('not connected') ||
+            msg.includes('blocked') ||
+            msg.includes('unmatched')
+          ) {
+            setForbidden(true);
+          }
+        })
+        .finally(() => {
+          if (!aborted) setLoading(false);
+        });
+    });
+
+    return () => {
+      aborted = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConvo?.id, isBlocked]);
 

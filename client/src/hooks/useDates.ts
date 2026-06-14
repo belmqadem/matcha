@@ -24,7 +24,9 @@ export function useDates() {
   }, []);
 
   useEffect(() => {
-    fetchDates();
+    Promise.resolve().then(() => {
+      fetchDates();
+    });
   }, [fetchDates]);
 
   return { dates, upcoming, loading, error, fetchDates };

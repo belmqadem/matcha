@@ -1,24 +1,5 @@
-// src/components/ui/CityName.tsx
 import { useState, useEffect } from 'react';
-
-async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-      { headers: { 'Accept-Language': 'en' } },
-    );
-    const data = await res.json();
-    return (
-      data.address?.city ??
-      data.address?.town ??
-      data.address?.village ??
-      data.address?.county ??
-      null
-    );
-  } catch {
-    return null;
-  }
-}
+import { mapService } from '@/services/mapService';
 
 interface CityNameProps {
   lat: number;
@@ -31,7 +12,7 @@ export function CityName({ lat, lng, fallback }: CityNameProps) {
 
   useEffect(() => {
     if (!fallback && lat && lng) {
-      reverseGeocode(lat, lng).then((c) => {
+      mapService.reverseGeocode(lat, lng).then((c) => {
         if (c) setCity(c);
       });
     }

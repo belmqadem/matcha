@@ -22,29 +22,32 @@ export function useBrowse() {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    setLoading(true);
-    setError(null);
-    setPage(1);
+    Promise.resolve().then(() => {
+      if (ctrl.signal.aborted) return;
+      setLoading(true);
+      setError(null);
+      setPage(1);
 
-    userService
-      .browseUsers(buildParams(1))
-      .then((data) => {
-        if (ctrl.signal.aborted) return;
-        const sanitizedUsers = (data.users ?? []).map((u) => ({
-          ...u,
-          liked_by_me: Boolean(u.liked_by_me),
-          liked_me: Boolean(u.liked_me),
-          is_connected: Boolean(u.is_connected),
-        }));
-        setUsers(sanitizedUsers);
-        setTotal(data.total ?? 0);
-      })
-      .catch((err: Error) => {
-        if (!ctrl.signal.aborted) setError(err.message);
-      })
-      .finally(() => {
-        if (!ctrl.signal.aborted) setLoading(false);
-      });
+      userService
+        .browseUsers(buildParams(1))
+        .then((data) => {
+          if (ctrl.signal.aborted) return;
+          const sanitizedUsers = (data.users ?? []).map((u) => ({
+            ...u,
+            liked_by_me: Boolean(u.liked_by_me),
+            liked_me: Boolean(u.liked_me),
+            is_connected: Boolean(u.is_connected),
+          }));
+          setUsers(sanitizedUsers);
+          setTotal(data.total ?? 0);
+        })
+        .catch((err: Error) => {
+          if (!ctrl.signal.aborted) setError(err.message);
+        })
+        .finally(() => {
+          if (!ctrl.signal.aborted) setLoading(false);
+        });
+    });
 
     return () => ctrl.abort();
   }, [buildParams]);

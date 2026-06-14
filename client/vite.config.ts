@@ -13,6 +13,9 @@ export default defineConfig({
       '@assets': '/src/assets',
     },
   },
+  build: {
+    outDir: 'dist-local',
+  },
   server: {
     port: 5173,
     proxy: {

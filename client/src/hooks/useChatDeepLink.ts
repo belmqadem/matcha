@@ -48,7 +48,8 @@ export function useChatDeepLink({
       .then((userData) => {
         // Handle response structure: { profile: { user: {...} } }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const u: any = userData.profile?.user ?? userData.user ?? userData;
+        const data = userData as any;
+        const u = data.profile?.user ?? data.user ?? data;
         if (!u?.id) {
           navigate('/chat');
           return;
@@ -61,7 +62,9 @@ export function useChatDeepLink({
           last_name: u.last_name,
           profile_picture_id: u.profile_picture_id,
           profile_picture_url:
-            u.photos?.find((p: any) => p.id === u.profile_picture_id)?.url ??
+            u.photos?.find(
+              (p: { id: number | string; url: string }) => p.id === u.profile_picture_id,
+            )?.url ??
             u.photos?.[0]?.url ??
             null,
           is_online: u.is_online,

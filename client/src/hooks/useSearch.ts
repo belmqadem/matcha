@@ -93,7 +93,9 @@ export function useSearch(): UseSearchReturn {
 
   // Re-fetch when sort or order changes
   useEffect(() => {
-    fetchResults();
+    Promise.resolve().then(() => {
+      fetchResults();
+    });
     return () => abortRef.current?.abort();
   }, [sort, order]); // eslint-disable-line react-hooks/exhaustive-deps
 

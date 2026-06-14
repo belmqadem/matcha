@@ -7,9 +7,7 @@ interface StepHeaderProps {
   config: StepConfig;
 }
 
-export const StepHeader = ({ step, totalSteps, config }: StepHeaderProps) => {
-  const Icon = config.icon;
-
+export const StepHeader = ({ config }: StepHeaderProps) => {
   return (
     <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
       {/* Icon container */}

@@ -10,15 +10,15 @@ async function handleResponse<T>(res: Response): Promise<T> {
 
 export const chatService = {
   getUser: (id: string) =>
-    fetch(`/api/users/${id}`, { credentials: 'include' })
-      .then((res) => handleResponse<Record<string, unknown>>(res)),
+    fetch(`/api/users/${id}`, { credentials: 'include' }).then((res) =>
+      handleResponse<Record<string, unknown>>(res),
+    ),
 
   conversations: () =>
     fetch('/api/chat/conversations', { credentials: 'include' }).then((res) =>
       handleResponse<{ conversations: Conversation[] }>(res),
     ),
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   messages: (userId: string, page = 1) =>
     fetch(`/api/chat/${userId}?page=${page}&limit=30`, { credentials: 'include' }).then((res) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

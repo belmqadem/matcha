@@ -14,7 +14,8 @@ export default function DatesPage() {
   const { user: currentUser } = useAuth();
 
   const filtered = dates.filter((d) => {
-    if (tab === 'upcoming') return !isPast(d.scheduled_at) && d.status !== 'declined' && d.status !== 'cancelled';
+    if (tab === 'upcoming')
+      return !isPast(d.scheduled_at) && d.status !== 'declined' && d.status !== 'cancelled';
     if (tab === 'pending') return d.status === 'pending';
     if (tab === 'past')
       return isPast(d.scheduled_at) || d.status === 'declined' || d.status === 'cancelled';

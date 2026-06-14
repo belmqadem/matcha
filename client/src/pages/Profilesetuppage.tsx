@@ -44,7 +44,7 @@ export default function ProfileSetupPage() {
 
   const currentStep = STEPS[step];
   const isLast = step === STEPS.length - 1;
-  const progress = (step / (STEPS.length - 1)) * 100;
+  // const progress = (step / (STEPS.length - 1)) * 100;
 
   const goToStep = (nextStep: number) => {
     setAnimating(true);

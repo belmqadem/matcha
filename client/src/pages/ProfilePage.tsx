@@ -40,18 +40,33 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    userService
-      .getPublicProfile(id)
-      .then((p) => {
-        setProfile(p);
-        if (p.profile_picture_id) {
-          const idx = p.photos.findIndex((ph) => ph.id === p.profile_picture_id);
-          if (idx >= 0) setActivePhoto(idx);
-        }
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    let aborted = false;
+
+    Promise.resolve().then(() => {
+      if (aborted) return;
+      setLoading(true);
+      userService
+        .getPublicProfile(id)
+        .then((p) => {
+          if (aborted) return;
+          setProfile(p);
+          if (p.profile_picture_id) {
+            const idx = p.photos.findIndex((ph) => ph.id === p.profile_picture_id);
+            if (idx >= 0) setActivePhoto(idx);
+          }
+        })
+        .catch((e) => {
+          if (aborted) return;
+          setError(e.message);
+        })
+        .finally(() => {
+          if (!aborted) setLoading(false);
+        });
+    });
+
+    return () => {
+      aborted = true;
+    };
   }, [id]);
 
   useEffect(() => {

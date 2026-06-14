@@ -1,5 +1,5 @@
 // src/components/chat/ProposeModal.tsx
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { X, CalendarHeart, Loader2 } from 'lucide-react';
 import type { DateProposal } from '@/types/chat';
 
@@ -15,10 +15,13 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const minDatetime = useMemo(
-    () => new Date(Date.now() + 60_000).toISOString().slice(0, 16),
-    [],
-  );
+  const [minDatetime, setMinDatetime] = useState('');
+
+  useEffect(() => {
+    Promise.resolve().then(() => {
+      setMinDatetime(new Date(Date.now() + 60_000).toISOString().slice(0, 16));
+    });
+  }, []);
 
   const handleSubmit = async () => {
     if (!scheduledAt) {

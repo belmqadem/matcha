@@ -33,4 +33,23 @@ export const mapService = {
     fetch(`/api/likes/${id}`, { method: 'DELETE', credentials: 'include' }).then((res) =>
       handleResponse<{ liked: false; connected: false }>(res),
     ),
+
+  reverseGeocode: async (lat: number, lng: number): Promise<string | null> => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+        { headers: { 'Accept-Language': 'en' } },
+      );
+      const data = await res.json();
+      return (
+        data.address?.city ??
+        data.address?.town ??
+        data.address?.village ??
+        data.address?.county ??
+        null
+      );
+    } catch {
+      return null;
+    }
+  },
 };

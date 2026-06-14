@@ -6,8 +6,8 @@ import type { UserProfile } from '@/types/user';
 import { EditModal } from './EditModal';
 import { SaveBar } from './SaveBar';
 
-const inputCls =
-  'w-full bg-background border-2 border-transparent rounded-2xl px-4 py-3 sm:py-3.5 text-sm sm:text-base font-bold text-text placeholder-text-muted outline-none focus:border-primary transition-all';
+// const inputCls =
+//   'w-full bg-background border-2 border-transparent rounded-2xl px-4 py-3 sm:py-3.5 text-sm sm:text-base font-bold text-text placeholder-text-muted outline-none focus:border-primary transition-all';
 const labelCls =
   'block text-[0.65rem] sm:text-xs font-bold tracking-widest uppercase text-text-muted mb-2';
 
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function EditLocationModal({ user, onUpdate, onClose }: Props) {
-  const [cityInput, setCityInput] = useState(user.location_city ?? '');
+  const [cityInput] = useState(user.location_city ?? '');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(
     user.latitude && user.longitude ? { lat: user.latitude, lng: user.longitude } : null,

@@ -48,7 +48,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     const onConnect = () => {
       const now = Date.now();
       // Only fetch counts if this is the first connection, or if we were disconnected for > 10 seconds
-      const shouldFetch = !hasFetchedInitial || (disconnectedAt > 0 && now - disconnectedAt > 10000);
+      const shouldFetch =
+        !hasFetchedInitial || (disconnectedAt > 0 && now - disconnectedAt > 10000);
       if (shouldFetch) {
         fetchInitialCounts();
       }

@@ -15,16 +15,15 @@ export function ActivityPanel({ user }: Props) {
   const [tab, setTab] = useState<'visitors' | 'likers'>('visitors');
   const [loading, setLoading] = useState(true);
 
-
   const fame = Math.min(100, Math.max(0, user.fame_rating ?? 0));
 
   useEffect(() => {
     Promise.all([userService.getVisitors(), userService.getLikedBy()])
-    .then(([v, l]) => {
-      setVisitors(v ?? []);
-      setLikers(l ?? []);
-    })
-    .finally(() => setLoading(false));
+      .then(([v, l]) => {
+        setVisitors(v ?? []);
+        setLikers(l ?? []);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const list = tab === 'visitors' ? visitors : likers;

@@ -104,7 +104,6 @@ export default function ChatPage() {
 
   return (
     <div className="relative h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] flex flex-col bg-background font-primary overflow-hidden">
-
       {(error || deepLinkError) && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-xs sm:text-sm font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl flex items-center gap-2 sm:gap-3 max-w-[90%] sm:max-w-sm animate-fade-in-up">
           <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
