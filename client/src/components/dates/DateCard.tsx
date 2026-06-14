@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Calendar, MapPin, Check, X, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import { dateService } from '@/services/dateService';
 import Avatar from '@/components/ui/Avatar';
 import { formatDate, formatTime, isPast } from '@/utils/dateUtils';
@@ -20,6 +21,7 @@ interface DateCardProps {
 }
 
 export default function DateCard({ date, onUpdate }: DateCardProps) {
+  const { openProfile } = useProfileDrawer();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user: currentUser } = useAuth();
@@ -56,14 +58,14 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
     >
       {/* Main content */}
       <div className="p-4 flex gap-3 items-start">
-        <Link to={`/profile/${date.other_user_id}`} className="flex-shrink-0 mt-0.5">
+        <div onClick={() => openProfile(date.other_user_id)} className="flex-shrink-0 mt-0.5 cursor-pointer">
           <Avatar
             photoUrl={date.other_profile_picture_url || undefined}
             first={date.other_first_name}
             last={date.other_last_name}
             size="md"
           />
-        </Link>
+        </div>
 
         <div className="flex-1 min-w-0">
           {/* Name + status */}

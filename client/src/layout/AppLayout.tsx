@@ -1,9 +1,12 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
 import FloatingHearts from '@/components/FloatingHearts';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
+import { ProfileDrawer } from '@/components/profile/ProfileDrawer';
 
 export default function AppLayout() {
   const location = useLocation();
+  const { activeProfileId, closeProfile } = useProfileDrawer();
 
   return (
     <div className="relative flex min-h-[100dvh] flex-col bg-transparent text-text font-primary overflow-x-hidden">
@@ -18,6 +21,11 @@ export default function AppLayout() {
           <Outlet />
         </div>
       </main>
+
+      {/* Global Profile Drawer overlay */}
+      {activeProfileId && (
+        <ProfileDrawer profileId={activeProfileId} onClose={closeProfile} />
+      )}
     </div>
   );
 }

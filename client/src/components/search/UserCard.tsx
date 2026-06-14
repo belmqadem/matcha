@@ -1,6 +1,6 @@
-// src/components/search/UserCard.tsx
 import { useState } from 'react';
 import { Loader2, Heart, MapPin, Flame, Sparkles, Circle } from 'lucide-react';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 
 import { calculateAge } from '@/utils/age';
 import { getPhotoUrl, getInitials } from '@/utils/user';
@@ -13,6 +13,7 @@ interface UserCardProps {
 }
 
 export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
+  const { openProfile } = useProfileDrawer();
   const [liked, setLiked] = useState(user.liked_by_me);
   const [connected, setConnected] = useState(user.is_connected);
   const [loading, setLoading] = useState(false);
@@ -45,8 +46,8 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
   };
 
   return (
-    <a
-      href={`/profile/${user.id}`}
+    <div
+      onClick={() => openProfile(user.id)}
       className="group relative flex flex-col bg-surface rounded-2xl sm:rounded-3xl border border-border overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-200 cursor-pointer"
     >
       {/* Photo */}
@@ -156,6 +157,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           </div>
         )}
       </div>
-    </a>
+    </div>
   );
 }
+

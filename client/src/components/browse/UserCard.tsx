@@ -1,6 +1,7 @@
 // src/components/browse/UserCard.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import { Heart, MessageCircle, MapPin, Sparkles, Circle } from 'lucide-react';
 
 import { Spinner } from '@/components/ui/Spinner';
@@ -60,6 +61,7 @@ interface UserCardProps {
 
 export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
   const navigate = useNavigate();
+  const { openProfile } = useProfileDrawer();
   const [busy, setBusy] = useState(false);
   const age = calcAge(user.birth_date);
 
@@ -152,7 +154,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
 
   return (
     <div
-      onClick={() => navigate(`/profile/${user.id}`)}
+      onClick={() => openProfile(user.id)}
       className="relative z-10 group bg-surface rounded-3xl overflow-hidden border border-border flex flex-col cursor-pointer transition-all duration-500 [transition-timing-function:cubic-bezier(0.175,0.885,0.32,1.275)] hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_12px_28px_rgba(233,64,87,0.18)]"
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-background rounded-t-3xl">

@@ -10,7 +10,7 @@ import {
   Ban,
   UserX,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 
 import Avatar from '@/components/ui/Avatar';
 import Bubble from '@/components/chat/Bubble';
@@ -55,7 +55,7 @@ export default function ChatThread({
   onAskOut,
   onConfirmAction,
 }: ChatThreadProps) {
-  const navigate = useNavigate();
+  const { openProfile } = useProfileDrawer();
   const [input, setInput] = useState('');
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -94,7 +94,7 @@ export default function ChatThread({
           </button>
 
           <button
-            onClick={() => navigate(`/profile/${activeConvo.id}`)}
+            onClick={() => openProfile(activeConvo.id)}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 text-left"
           >
             <Avatar

@@ -1,6 +1,6 @@
 // src/components/visitors/VisitorCard.tsx
 import { Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import { timeAgo, formatVisitDate, avatarColorFor } from '@/utils/visitors';
 import type { Visitor } from '@/types/user';
 
@@ -10,13 +10,13 @@ interface VisitorCardProps {
 }
 
 export function VisitorCard({ visitor, index }: VisitorCardProps) {
-  const navigate = useNavigate();
+  const { openProfile } = useProfileDrawer();
   const initials = `${visitor.first_name[0]}${visitor.last_name[0]}`.toUpperCase();
   const color = avatarColorFor(index);
 
   return (
     <div
-      onClick={() => navigate(`/profile/${visitor.id}`)}
+      onClick={() => openProfile(visitor.id)}
       className="group flex flex-col bg-surface rounded-2xl sm:rounded-3xl border border-border overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
     >
       <div className="relative aspect-[4/5] bg-background flex-shrink-0 overflow-hidden">

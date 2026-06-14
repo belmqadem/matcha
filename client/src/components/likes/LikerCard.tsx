@@ -1,5 +1,5 @@
 import { Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import { timeAgo, formatVisitDate, avatarColorFor } from '@/utils/visitors';
 import type { Liker } from '@/types/user';
 
@@ -9,13 +9,13 @@ interface LikerCardProps {
 }
 
 export function LikerCard({ liker, index }: LikerCardProps) {
-  const navigate = useNavigate();
+  const { openProfile } = useProfileDrawer();
   const initials = `${liker.first_name[0]}${liker.last_name?.[0] ?? ''}`.toUpperCase();
   const color = avatarColorFor(index);
 
   return (
     <div
-      onClick={() => navigate(`/profile/${liker.id}`)}
+      onClick={() => openProfile(liker.id)}
       className="group relative flex flex-col bg-surface rounded-2xl border border-border overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
     >
       {/* Photo / avatar */}

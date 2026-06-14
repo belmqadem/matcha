@@ -1,6 +1,7 @@
 // src/components/notifications/NotificationRow.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import {
   X,
   Heart,
@@ -102,6 +103,7 @@ interface NotificationRowProps {
 
 export default function NotificationRow({ notification, onRead, onDelete }: NotificationRowProps) {
   const navigate = useNavigate();
+  const { openProfile } = useProfileDrawer();
   const meta = TYPE_META[notification.type];
   const [deleting, setDeleting] = useState(false);
 
@@ -118,7 +120,7 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
     } else if (notification.type === 'date_cancelled' || notification.type === 'date_declined') {
       navigate('/dates?tab=past');
     } else if (notification.type !== 'unlike') {
-      navigate(`/profile/${notification.from_id}`);
+      openProfile(notification.from_id);
     }
   };
 

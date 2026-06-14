@@ -1,6 +1,5 @@
-// src/components/map/MapPopup.tsx
 import { X, Heart, Star, MapPin } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import { getInitials, fmtDist } from '@/utils/map';
 import type { MapUser } from '@/types/map';
 
@@ -12,6 +11,7 @@ interface MapPopupProps {
 }
 
 export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupProps) {
+  const { openProfile } = useProfileDrawer();
   return (
     <div className="absolute bottom-0 left-0 right-0 md:bottom-6 md:left-6 z-[1000] bg-surface border-t md:border border-border rounded-t-2xl md:rounded-2xl p-4 w-full md:w-[300px] shadow-xl animate-in fade-in slide-in-from-bottom-4">
       <div className="flex gap-3 items-start">
@@ -83,12 +83,12 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
           <Heart size={14} className={isLiked ? 'fill-surface text-surface' : 'text-primary'} />
           {isLiked ? 'Liked' : 'Like'}
         </button>
-        <Link
-          to={`/profile/${user.id}`}
-          className="flex-1 py-2 rounded-xl text-[12px] font-black bg-text text-surface hover:bg-text/90 transition-colors text-center flex items-center justify-center shadow-md"
+        <button
+          onClick={() => openProfile(user.id)}
+          className="flex-1 py-2 rounded-xl text-[12px] font-black bg-text text-surface hover:bg-text/90 transition-colors text-center flex items-center justify-center shadow-md cursor-pointer"
         >
           View Profile
-        </Link>
+        </button>
       </div>
     </div>
   );
