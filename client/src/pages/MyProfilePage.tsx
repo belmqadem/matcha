@@ -11,6 +11,8 @@ import {
   Image,
   User,
   Activity,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 import { userService } from '@/services/userService';
@@ -40,6 +42,25 @@ const MyProfilePage = () => {
   const [editModal, setEditModal] = useState<ModalType>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('photos');
+
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const isLight = document.documentElement.classList.contains('light-theme');
+    return isLight ? 'light' : 'dark';
+  });
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      if (next === 'light') {
+        document.documentElement.classList.add('light-theme');
+        localStorage.setItem('theme', 'light');
+      } else {
+        document.documentElement.classList.remove('light-theme');
+        localStorage.setItem('theme', 'dark');
+      }
+      return next;
+    });
+  };
 
   const avatarFileRef = useRef<HTMLInputElement>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -224,6 +245,26 @@ const MyProfilePage = () => {
                 Edit Bio
               </button>
             </div>
+          </div>
+
+          {/* Theme Switcher Card */}
+          <div className="bg-surface/85 backdrop-blur-md rounded-3xl border border-border/70 overflow-hidden shadow-premium animate-fade-in-up shrink-0">
+            <button
+              onClick={toggleTheme}
+              className="w-full flex justify-center items-center gap-2 py-3.5 text-xs font-black text-text hover:bg-primary/5 transition-colors cursor-pointer active:scale-95"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="w-3.5 h-3.5 text-primary" />
+                  <span>Switch to Light Mode</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-primary" />
+                  <span>Switch to Dark Mode</span>
+                </>
+              )}
+            </button>
           </div>
 
           {/* Quick Logout Card */}

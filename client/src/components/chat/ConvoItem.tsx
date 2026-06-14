@@ -23,9 +23,9 @@ export default function ConvoItem({ convo, active, myId, onClick }: ConvoItemPro
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-3.5 text-left transition-all duration-200 rounded-2xl ${
+      className={`w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-3.5 text-left transition-all duration-200 rounded-2xl cursor-pointer ${
         active
-          ? 'bg-primary text-surface shadow-md'
+          ? 'bg-primary text-on-primary shadow-md'
           : 'hover:bg-surface border border-transparent hover:border-border bg-transparent active:scale-[0.98]'
       }`}
     >
@@ -38,25 +38,25 @@ export default function ConvoItem({ convo, active, myId, onClick }: ConvoItemPro
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
           <p
-            className={`text-sm sm:text-[15px] truncate ${active ? 'font-black text-surface' : 'font-bold text-text'}`}
+            className={`text-sm sm:text-[15px] truncate ${active ? 'font-black text-on-primary' : 'font-bold text-text'}`}
           >
             {convo.first_name} {convo.last_name}
           </p>
           <span
-            className={`text-[0.6rem] sm:text-[10px] font-semibold shrink-0 ${active ? 'text-surface/80' : 'text-text-muted'}`}
+            className={`text-[0.6rem] sm:text-[10px] font-semibold shrink-0 ${active ? 'text-on-primary/80' : 'text-text-muted'}`}
           >
             {formatTime(convo.last_message_at)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-2 mt-0.5">
           <p
-            className={`text-xs sm:text-[13px] truncate ${active ? 'text-surface/90 font-medium' : 'text-text-muted font-medium'}`}
+            className={`text-xs sm:text-[13px] truncate ${active ? 'text-on-primary/90 font-medium' : 'text-text-muted font-medium'}`}
           >
             {isMine && <span className="opacity-70">You: </span>}
             {convo.last_message || <em className="opacity-50">Say hello!</em>}
           </p>
           {convo.unread_count > 0 && !active && (
-            <span className="shrink-0 bg-primary text-surface text-[0.6rem] sm:text-[10px] font-black min-w-[1.2rem] h-[1.2rem] sm:min-w-[1.25rem] sm:h-[1.25rem] rounded-full flex items-center justify-center px-1 shadow-sm">
+            <span className="shrink-0 bg-primary text-on-primary text-[0.6rem] sm:text-[10px] font-black min-w-[1.2rem] h-[1.2rem] sm:min-w-[1.25rem] sm:h-[1.25rem] rounded-full flex items-center justify-center px-1 shadow-sm">
               {convo.unread_count > 99 ? '99+' : convo.unread_count}
             </span>
           )}

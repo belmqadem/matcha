@@ -14,34 +14,34 @@ export default function DateTabs({ tab, setTab, dates, upcomingCount }: DateTabs
   const pendingCount = dates.filter((d) => d.status === 'pending').length;
 
   const TABS: { key: TabFilter; label: string; count?: number }[] = [
-    { key: 'upcoming', label: 'Upcoming', count: upcomingCount },
-    { key: 'pending', label: 'Pending', count: pendingCount },
-    { key: 'past', label: 'Past' },
-    { key: 'all', label: 'All', count: dates.length },
+    { key: 'upcoming', label: 'upcoming', count: upcomingCount },
+    { key: 'pending',  label: 'pending',  count: pendingCount  },
+    { key: 'past',     label: 'past'                           },
+    { key: 'all',      label: 'all',      count: dates.length  },
   ];
 
   return (
-    <div className="flex gap-2 border-b border-border bg-surface px-6 pt-4 mt-3">
+    <div className="flex gap-1 p-1 rounded-2xl bg-surface border border-border/60">
       {TABS.map((t) => {
         const active = tab === t.key;
         return (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl border-b-2 text-[13px] font-medium transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs transition-all duration-150 ${
               active
-                ? 'bg-background border-primary text-primary font-bold'
-                : 'bg-transparent border-transparent text-text-muted hover:text-text'
+                ? 'bg-primary text-surface shadow-sm'
+                : 'text-text-muted hover:text-text'
             }`}
           >
             {t.label}
             {t.count !== undefined && t.count > 0 && (
               <span
-                className={`text-[11px] px-1.5 py-0.5 rounded-full ${
-                  active ? 'bg-primary text-surface' : 'bg-border text-text-muted'
+                className={`text-[10px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center ${
+                  active ? 'bg-surface/20 text-surface' : 'bg-border text-text-muted'
                 }`}
               >
-                {t.count}
+                {t.count > 99 ? '99+' : t.count}
               </span>
             )}
           </button>

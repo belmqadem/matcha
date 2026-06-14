@@ -46,8 +46,8 @@ export default function ConfirmModal({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`flex-1 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-black text-surface transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-md ${
-              danger ? 'bg-error hover:bg-red-700' : 'bg-primary hover:bg-primary-hover'
+            className={`flex-1 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-black text-on-primary transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-md cursor-pointer ${
+              danger ? 'bg-error hover:opacity-90' : 'bg-primary hover:bg-primary-hover'
             }`}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : confirmLabel}

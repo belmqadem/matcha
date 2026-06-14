@@ -153,11 +153,11 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
   return (
     <div
       onClick={() => navigate(`/profile/${user.id}`)}
-      className="relative z-10 group bg-surface rounded-3xl overflow-hidden border border-border flex flex-col cursor-pointer transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-xl"
+      className="relative z-10 group bg-surface rounded-3xl overflow-hidden border border-border flex flex-col cursor-pointer transition-all duration-500 [transition-timing-function:cubic-bezier(0.175,0.885,0.32,1.275)] hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_12px_28px_rgba(233,64,87,0.18)]"
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-background rounded-t-3xl">
         <Avatar user={user} />
-        <div className="absolute inset-0 bg-gradient-to-t from-text/80 via-text/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
 
         <div
           className={`absolute top-3 left-3 flex items-center gap-1.5 backdrop-blur-md px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border shadow-sm ${
@@ -167,7 +167,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           }`}
         >
           <Circle
-            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-success' : 'text-surface'}`}
+            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-success animate-pulse' : 'text-surface'}`}
           />
           <span className="text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider drop-shadow-md">
             {user.is_online ? 'Online' : timeAgo(user.last_seen)}
@@ -176,12 +176,12 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
 
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
           {user.is_connected && (
-            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] font-bold tracking-wide bg-primary text-surface rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-md animate-pulse">
+            <span className="flex items-center gap-1 text-[0.6rem] sm:text-[0.65rem] font-bold tracking-wide bg-primary text-surface rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-md animate-heart-beat">
               <Sparkles className="w-3 h-3" /> MATCH
             </span>
           )}
           {!user.is_connected && user.liked_me && (
-            <span className="text-[0.6rem] sm:text-[0.65rem] font-bold tracking-wide bg-surface/95 backdrop-blur-sm text-primary rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-sm">
+            <span className="text-[0.6rem] sm:text-[0.65rem] font-bold tracking-wide bg-surface/95 backdrop-blur-sm text-primary rounded-full px-2.5 sm:px-3 py-0.5 sm:py-1 shadow-sm animate-float-cute">
               Likes you
             </span>
           )}
@@ -190,12 +190,12 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
         <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
           <div className="flex items-end justify-between gap-2">
             <div className="min-w-0">
-              <p className="m-0 text-surface text-lg sm:text-xl font-extrabold leading-tight truncate drop-shadow-lg">
+              <p className="m-0 text-white text-lg sm:text-xl font-extrabold leading-tight truncate drop-shadow-lg">
                 {user.first_name}
                 {age !== null ? <span className="font-normal opacity-90">, {age}</span> : ''}
               </p>
               {(user.distance_km != null || user.location_city) && (
-                <p className="mt-1 sm:mt-1.5 text-surface/80 text-[0.65rem] sm:text-xs flex items-center gap-1 sm:gap-1.5 font-medium drop-shadow-md">
+                <p className="mt-1 sm:mt-1.5 text-white/85 text-[0.65rem] sm:text-xs flex items-center gap-1 sm:gap-1.5 font-medium drop-shadow-md">
                   <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary" />
                   {user.distance_km != null && (
                     <span>

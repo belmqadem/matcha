@@ -30,10 +30,10 @@ const Button = ({
       <button
         type={type}
         onClick={onClick}
-        className={`${baseStyles} border border-text/80 text-text text-sm sm:text-base uppercase hover:bg-primary/10 ${className}`}
+        className={`${baseStyles} border border-border text-text text-xs sm:text-sm font-bold uppercase hover:bg-primary/10 hover:border-primary/50 transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-3 px-5 cursor-pointer ${className}`}
         disabled={disabled}
       >
-        <svg width="18" height="18" viewBox="0 0 48 48" className="w-4 h-4 sm:w-[18px] sm:h-[18px]">
+        <svg width="18" height="18" viewBox="0 0 48 48" className="w-4 h-4 sm:w-[18px] sm:h-[18px] shrink-0">
           <path
             fill="#EA4335"
             d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -51,6 +51,7 @@ const Button = ({
             d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
           />
         </svg>
+        <span>{children}</span>
       </button>
     );
   }
@@ -60,14 +61,15 @@ const Button = ({
       <button
         type={type}
         onClick={onClick}
-        className={`${baseStyles} border border-text/80 text-text text-sm sm:text-base uppercase hover:bg-primary/10 ${className}`}
+        className={`${baseStyles} border border-border text-text text-xs sm:text-sm font-bold uppercase hover:bg-primary/10 hover:border-primary/50 transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-3 px-5 cursor-pointer ${className}`}
         disabled={disabled}
       >
         <img
           src="/src/assets/42-logo.png"
           alt="42"
-          className="w-4 h-4 sm:w-[22px] sm:h-[22px] object-contain"
+          className="w-4 h-4 sm:w-[22px] sm:h-[22px] object-contain shrink-0 invert-0 dark:invert"
         />
+        <span>{children}</span>
       </button>
     );
   }
@@ -77,10 +79,10 @@ const Button = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${baseStyles} font-bold text-sm sm:text-base uppercase text-surface bg-primary hover:bg-primary-hover active:scale-95 ${className}`}
+      className={`${baseStyles} font-bold text-xs sm:text-sm uppercase text-on-primary bg-primary hover:bg-primary-hover active:scale-95 transition-all hover:scale-102 hover:shadow-[0_4px_15px_rgba(233,64,87,0.4)] flex items-center justify-center gap-2 cursor-pointer ${className}`}
     >
-      {children}
-      {withArrow && <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />}
+      <span>{children}</span>
+      {withArrow && <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />}
     </button>
   );
 };

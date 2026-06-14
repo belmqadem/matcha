@@ -7,11 +7,11 @@ import { formatDate, formatTime, isPast } from '@/utils/dateUtils';
 import type { DateEntry, DateStatus } from '@/types/date';
 import { useAuth } from '@/context/AuthContext';
 
-const STATUS_META: Record<DateStatus, { label: string; bg: string; text: string }> = {
-  pending: { label: 'Pending', bg: 'bg-primary/20', text: 'text-primary' },
-  accepted: { label: 'Accepted', bg: 'bg-success/20', text: 'text-success' },
-  declined: { label: 'Declined', bg: 'bg-error/20', text: 'text-error' },
-  cancelled: { label: 'Cancelled', bg: 'bg-border', text: 'text-text-muted' },
+const STATUS_META: Record<DateStatus, { label: string; color: string }> = {
+  pending:   { label: 'pending',    color: 'text-primary' },
+  accepted:  { label: 'confirmed', color: 'text-primary' },
+  declined:  { label: 'declined',  color: 'text-error'   },
+  cancelled: { label: 'cancelled', color: 'text-text-muted' },
 };
 
 interface DateCardProps {
@@ -26,6 +26,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
 
   const meta = STATUS_META[date.status];
   const past = isPast(date.scheduled_at);
+  const faded = date.status === 'cancelled' || date.status === 'declined';
   const isReceiver = currentUser
     ? String(date.receiver_id) === String(currentUser.id)
     : date.my_role === 'receiver';
@@ -41,7 +42,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       }
       onUpdate();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Error processing request');
+      setError(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -49,14 +50,13 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
 
   return (
     <div
-      className={`bg-surface border border-border rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm transition-all ${
-        date.status === 'cancelled' || date.status === 'declined'
-          ? 'opacity-60 grayscale'
-          : 'opacity-100'
+      className={`bg-surface border border-border/60 rounded-2xl overflow-hidden transition-all ${
+        faded ? 'opacity-40' : 'hover:border-border hover:shadow-sm'
       }`}
     >
-      <div className="flex gap-3 sm:gap-4 items-start">
-        <Link to={`/profile/${date.other_user_id}`}>
+      {/* Main content */}
+      <div className="p-4 flex gap-3 items-start">
+        <Link to={`/profile/${date.other_user_id}`} className="flex-shrink-0 mt-0.5">
           <Avatar
             photoUrl={date.other_profile_picture_url || undefined}
             first={date.other_first_name}
@@ -66,102 +66,93 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
         </Link>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <div>
-              <span className="text-sm sm:text-base font-black text-text">
-                {date.other_first_name} {date.other_last_name}
-              </span>
-              <span className="text-[0.65rem] sm:text-xs text-text-muted ml-1.5 font-medium">
-                @{date.other_username}
-              </span>
-            </div>
-            <span
-              className={`text-[0.65rem] sm:text-xs px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-black uppercase tracking-wider shrink-0 ${meta.bg} ${meta.text}`}
-            >
-              {meta.label}
-            </span>
+          {/* Name + status */}
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm text-text truncate">
+              {date.other_first_name} {date.other_last_name}
+              <span className="text-text-muted ml-1.5 text-xs">@{date.other_username}</span>
+            </p>
+            <span className={`text-[11px] flex-shrink-0 ${meta.color}`}>{meta.label}</span>
           </div>
 
-          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mt-2 sm:mt-3 text-xs sm:text-sm">
-            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
-            <span className="text-text font-bold">{formatDate(date.scheduled_at)}</span>
-            <span className="text-text-muted font-medium">at {formatTime(date.scheduled_at)}</span>
-            {past && date.status === 'accepted' && (
-              <span className="text-[0.6rem] sm:text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted font-bold ml-1 uppercase">
-                Past
-              </span>
+          {/* Date & location */}
+          <div className="mt-2 flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-xs text-text-muted">
+              <Calendar className="w-3 h-3 text-primary flex-shrink-0" />
+              <span className="text-text">{formatDate(date.scheduled_at)}</span>
+              <span>·</span>
+              <span>{formatTime(date.scheduled_at)}</span>
+              {past && date.status === 'accepted' && (
+                <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted">past</span>
+              )}
+            </div>
+
+            {date.location && (
+              <div className="flex items-center gap-1.5 text-xs text-text-muted">
+                <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
+                <span className="truncate">{date.location}</span>
+              </div>
             )}
           </div>
 
-          {date.location && (
-            <div className="flex items-center gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 text-xs sm:text-sm font-medium text-text-muted">
-              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary shrink-0" />
-              <span className="text-text">{date.location}</span>
-            </div>
-          )}
-
-          <div className="mt-2 sm:mt-2.5">
-            <span className="text-[0.65rem] sm:text-xs font-bold text-text-muted uppercase tracking-widest">
-              {isReceiver ? 'They proposed this' : 'You proposed this'}
-            </span>
-          </div>
+          {/* Role hint */}
+          <p className="mt-1.5 text-[10px] text-text-muted">
+            {isReceiver ? 'they proposed' : 'you proposed'}
+          </p>
         </div>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 rounded-xl bg-error/10 text-error text-xs sm:text-sm font-bold animate-fade-in-up">
-          {error}
-        </div>
+        <p className="px-4 pb-3 -mt-1 text-xs text-error">{error}</p>
       )}
 
       {/* Actions */}
       {date.status === 'pending' && (
-        <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-5">
+        <div className="px-4 pb-3 flex gap-2 justify-end">
           {isReceiver ? (
             <>
               <button
                 onClick={() => handleAction('accepted')}
                 disabled={loading}
-                className="bg-primary flex-1 flex items-center justify-center gap-1.5 py-2.5 sm:py-3 rounded-xl bg-success text-surface text-xs sm:text-sm font-black disabled:opacity-50 active:scale-95 transition-all shadow-sm shadow-success/20"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
               >
-                <Check className="w-4 h-4 sm:w-5 sm:h-5" /> Accept
+                <Check className="w-3 h-3" /> accept
               </button>
               <button
                 onClick={() => handleAction('declined')}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 sm:py-3 rounded-xl border-2 border-error/50 text-error text-xs sm:text-sm font-black disabled:opacity-50 hover:bg-error/10 active:scale-95 transition-all"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
               >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" /> Decline
+                <X className="w-3 h-3" /> decline
               </button>
             </>
           ) : (
             <button
               onClick={() => handleAction('cancel')}
               disabled={loading}
-              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border-2 border-border text-text-muted text-xs sm:text-sm font-black disabled:opacity-50 hover:bg-background active:scale-95 transition-all"
+              className="px-4 py-2 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
             >
-              Cancel proposal
+              cancel proposal
             </button>
           )}
         </div>
       )}
 
       {date.status === 'accepted' && !past && (
-        <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-5">
-          {/* Removed the my_role check here so either user can cancel an upcoming date */}
+        <div className="px-4 pb-4 flex gap-2">
           <button
             onClick={() => handleAction('cancel')}
             disabled={loading}
-            className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl border-2 border-border text-text-muted text-xs sm:text-sm font-black disabled:opacity-50 hover:bg-background active:scale-95 transition-all"
+            className="px-4 py-2 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
           >
-            Cancel date
+            cancel
           </button>
-
           <Link
             to={`/chat/${date.other_user_id}`}
-            className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-surface text-xs sm:text-sm font-black hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-primary/20"
+            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-primary text-surface text-xs hover:opacity-90 active:scale-95 transition-all"
           >
-            <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" /> Chat
+            <MessageCircle className="w-3.5 h-3.5" /> chat
           </Link>
         </div>
       )}

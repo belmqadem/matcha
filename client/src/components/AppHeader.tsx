@@ -103,7 +103,7 @@ export default function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-[100] w-full border-b border-border bg-surface/80 shadow-sm backdrop-blur-md">
+    <header className="sticky top-0 z-100 w-full border-b border-border bg-surface/80 shadow-sm backdrop-blur-md">
       <div className="grid grid-cols-[auto_1fr_auto] lg:grid-cols-[180px_1fr_180px] items-center h-16 px-4 md:px-6 gap-2">
         {/* ── LEFT: Logo ── */}
         <div className="flex items-center">
@@ -356,7 +356,7 @@ export default function AppHeader() {
                 <button
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-xl text-sm font-medium text-primary hover:bg-primary/5 transition-colors text-left disabled:opacity-50 active:scale-95"
+                  className="w-full flex items-center gap-3 p-2.5 rounded-xl text-sm font-medium text-primary hover:bg-primary/5 transition-colors text-left disabled:opacity-50 active:scale-95 cursor-pointer"
                 >
                   <LogOut size={16} />
                   {loggingOut ? 'Signing out…' : 'Sign out'}

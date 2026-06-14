@@ -2,16 +2,51 @@
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Outfit:wght@100..900&family=Pacifico&display=swap');
 @import 'tailwindcss';
 
-@theme {
-  --color-primary: #e94057;
-  --color-primary-hover: #d83548;
-  --color-primary-light: #f27183;
-  --color-primary-accent: #ff758c;
+:root {
+  /* Default is Dark Theme */
+  --color-background: #090a0f;
+  --color-surface: #14151b;
+  --color-text: #ffffff;
+  --color-text-muted: #9499b0;
+  --color-border: #232533;
+  --body-gradient: linear-gradient(
+    135deg,
+    #090a0f 0%,
+    #12131a 25%,
+    #1b1222 50%,
+    #12131a 75%,
+    #090a0f 100%
+  );
+}
+
+.light-theme {
+  /* Light Theme Override */
   --color-background: #fff5f7;
   --color-surface: #ffffff;
   --color-text: #1a1a2e;
   --color-text-muted: #8c6a70;
   --color-border: #ffdbe0;
+  --body-gradient: linear-gradient(
+    135deg,
+    #fff9fa 0%,
+    #fff0f3 25%,
+    #ffe6eb 50%,
+    #fff0f3 75%,
+    #fff9fa 100%
+  );
+}
+
+@theme {
+  --color-primary: #e94057;
+  --color-primary-hover: #d83548;
+  --color-primary-light: #f27183;
+  --color-primary-accent: #ff758c;
+  --color-on-primary: #ffffff;
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
   --color-error: #dc2626;
   --color-success: #10b981;
 
@@ -33,6 +68,26 @@
   --animate-heart-beat: heartBeat 1.5s ease-in-out infinite;
   --animate-float-slow: floatSlow 8s ease-in-out infinite;
   --animate-page-transition: pageTransition 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-jello: jello 0.8s ease-in-out both;
+  --animate-float-cute: floatCute 3s ease-in-out infinite;
+  --animate-bear-bob: bearBob 3s ease-in-out infinite;
+  --animate-float-bob: floatBob 2.8s ease-in-out infinite;
+  --animate-heart-pulse: heartPulse 1.8s ease-in-out infinite;
+
+  @keyframes bearBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes floatBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  @keyframes heartPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+  }
 
   @keyframes gradientMove {
     0% {
@@ -63,6 +118,58 @@
     }
     50% {
       transform: translateY(-6px) rotate(1.5deg);
+    }
+  }
+
+  @keyframes jello {
+    11.1% {
+      transform: skewX(0deg) skewY(0deg);
+    }
+    22.2% {
+      transform: skewX(-12.5deg) skewY(-12.5deg);
+    }
+    33.3% {
+      transform: skewX(6.25deg) skewY(6.25deg);
+    }
+    44.4% {
+      transform: skewX(-3.125deg) skewY(-3.125deg);
+    }
+    55.5% {
+      transform: skewX(1.5625deg) skewY(1.5625deg);
+    }
+    66.6% {
+      transform: skewX(-0.78125deg) skewY(-0.78125deg);
+    }
+    77.7% {
+      transform: skewX(0.390625deg) skewY(0.390625deg);
+    }
+    88.8% {
+      transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
+    }
+    100% {
+      transform: skewX(0deg) skewY(0deg);
+    }
+  }
+
+  @keyframes floatCute {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-4px) rotate(3deg);
+    }
+  }
+
+  @keyframes pulseSlow {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.95;
     }
   }
 
@@ -159,14 +266,7 @@
 
 @layer base {
   body {
-    background: linear-gradient(
-      135deg,
-      #fff9fa 0%,
-      #fff0f3 25%,
-      #ffe6eb 50%,
-      #fff0f3 75%,
-      #fff9fa 100%
-    );
+    background: var(--body-gradient);
     background-size: 400% 400%;
     animation: var(--animate-gradient-move);
     background-attachment: fixed;

@@ -1,7 +1,18 @@
 // src/components/notifications/NotificationRow.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import {
+  X,
+  Heart,
+  Sparkles,
+  HeartOff,
+  Eye,
+  MessageSquare,
+  Calendar,
+  Check,
+  Ban,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { timeAgo } from '@/utils/notificationUtils';
 import Avatar from '@/components/ui/Avatar';
 import type { Notification, NotificationType } from '@/types/notification';
@@ -9,7 +20,7 @@ import type { Notification, NotificationType } from '@/types/notification';
 const TYPE_META: Record<
   NotificationType,
   {
-    icon: string;
+    icon: LucideIcon;
     label: (n: string, count: number) => string;
     textCls: string;
     bgCls: string;
@@ -17,28 +28,28 @@ const TYPE_META: Record<
   }
 > = {
   like: {
-    icon: '❤️',
+    icon: Heart,
     label: (n) => `${n} liked your profile`,
     textCls: 'text-primary',
     bgCls: 'bg-primary/10',
     borderCls: 'border-primary',
   },
   match: {
-    icon: '✨',
+    icon: Sparkles,
     label: (n) => `You matched with ${n}!`,
     textCls: 'text-primary',
     bgCls: 'bg-primary/10',
     borderCls: 'border-primary',
   },
   unlike: {
-    icon: '💔',
+    icon: HeartOff,
     label: (n) => `${n} unliked you`,
     textCls: 'text-text-muted',
     bgCls: 'bg-border/50',
     borderCls: 'border-text-muted',
   },
   visit: {
-    icon: '👀',
+    icon: Eye,
     label: (n, count) =>
       count > 1 ? `${n} visited your profile ${count} times` : `${n} visited your profile`,
     textCls: 'text-text',
@@ -46,7 +57,7 @@ const TYPE_META: Record<
     borderCls: 'border-text',
   },
   message: {
-    icon: '💬',
+    icon: MessageSquare,
     label: (n, count) =>
       count > 1 ? `${n} sent you ${count} messages` : `${n} sent you a message`,
     textCls: 'text-primary',
@@ -54,28 +65,28 @@ const TYPE_META: Record<
     borderCls: 'border-primary',
   },
   date_proposed: {
-    icon: '📅',
+    icon: Calendar,
     label: (n) => `${n} proposed a date`,
     textCls: 'text-text',
     bgCls: 'bg-text/5',
     borderCls: 'border-text',
   },
   date_accepted: {
-    icon: '✅',
+    icon: Check,
     label: (n) => `${n} accepted your date`,
     textCls: 'text-success',
     bgCls: 'bg-green-500/10',
     borderCls: 'border-green-500',
   },
   date_declined: {
-    icon: '❌',
+    icon: X,
     label: (n) => `${n} declined your date`,
     textCls: 'text-error',
     bgCls: 'bg-error/10',
     borderCls: 'border-error',
   },
   date_cancelled: {
-    icon: '🚫',
+    icon: Ban,
     label: (n) => `${n} cancelled your date`,
     textCls: 'text-text-muted',
     bgCls: 'bg-border/50',
@@ -142,9 +153,9 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
           />
         </div>
         <div
-          className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[0.6rem] sm:text-[10px] shadow-sm bg-surface ${meta.borderCls} border-2`}
+          className={`absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center p-1 shadow-sm bg-surface ${meta.borderCls} border-2 ${meta.textCls}`}
         >
-          {meta.icon}
+          <meta.icon className="w-full h-full" />
         </div>
       </div>
 

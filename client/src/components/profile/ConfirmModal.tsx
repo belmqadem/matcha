@@ -18,7 +18,7 @@ export function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, 
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-3xl p-7 w-full max-w-[380px] shadow-2xl animate-[fadeUp_0.2s_ease-out]">
+      <div className="bg-surface rounded-3xl p-7 w-full max-w-[380px] shadow-2xl animate-[fadeUp_0.2s_ease-out]">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-bold text-text">{title}</h3>
           <button
@@ -32,7 +32,7 @@ export function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, 
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-[13px] font-bold rounded-xl border-2 border-border bg-white text-text-muted hover:bg-background transition-colors"
+            className="px-5 py-2.5 text-[13px] font-bold rounded-xl border-2 border-border bg-surface text-text-muted hover:bg-background transition-colors"
           >
             Cancel
           </button>

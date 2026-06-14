@@ -16,7 +16,7 @@ export function LikerCard({ liker, index }: LikerCardProps) {
   return (
     <div
       onClick={() => navigate(`/profile/${liker.id}`)}
-      className="group relative flex flex-col bg-white rounded-2xl border border-border overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+      className="group relative flex flex-col bg-surface rounded-2xl border border-border overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
     >
       {/* Photo / avatar */}
       <div className="relative h-[200px] bg-background shrink-0 overflow-hidden">

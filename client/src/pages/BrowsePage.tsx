@@ -87,14 +87,14 @@ export default function BrowsePage() {
 
         {/* Content Grid */}
         {loading ? (
-          <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : displayed.length > 0 ? (
           <>
-            <div className="grid gap-4 sm:gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {displayed.map((user) => (
                 <div key={user.id} className="animate-fade-in-up">
                   <UserCard user={user} onLike={handleLike} onUnlike={handleUnlike} />

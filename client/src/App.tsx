@@ -32,6 +32,14 @@ import ProfileSetupPage from './pages/Profilesetuppage';
 import AppLayout from './layout/AppLayout';
 import { RequireAuth, RequireProfile } from './components/routing/ProtectedRoute';
 
+// Initialize theme from localStorage on load
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'light') {
+  document.documentElement.classList.add('light-theme');
+} else {
+  document.documentElement.classList.remove('light-theme');
+}
+
 const App = () => {
   return (
     <BrowserRouter>
