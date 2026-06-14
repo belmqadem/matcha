@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   type       notif_type  NOT NULL,
   from_id    UUID        REFERENCES users(id) ON DELETE SET NULL,
+  count      INTEGER     NOT NULL DEFAULT 1,
   is_read    BOOLEAN     NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP   WITH TIME ZONE DEFAULT NOW()
 );
@@ -182,6 +183,14 @@ CREATE INDEX IF NOT EXISTS idx_messages_receiver      ON messages(receiver_id, i
 CREATE INDEX IF NOT EXISTS idx_notifications_user     ON notifications(user_id, is_read);
 CREATE INDEX IF NOT EXISTS idx_users_location         ON users(latitude, longitude);
 CREATE INDEX IF NOT EXISTS idx_users_fame             ON users(fame_rating DESC);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_unread_message
+  ON notifications (user_id, from_id, type)
+  WHERE is_read = false AND type = 'message';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_visit
+  ON notifications (user_id, from_id, type)
+  WHERE type = 'visit';
 
 CREATE OR REPLACE FUNCTION haversine_km(
   lat1 DECIMAL, lng1 DECIMAL,
