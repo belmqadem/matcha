@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Bell, Loader2, CalendarHeart } from 'lucide-react';
+import { Plus, Bell, CalendarHeart } from 'lucide-react';
 import { useDates } from '@/hooks/useDates';
 import { isPast } from '@/utils/dateUtils';
 import DateTabs, { type TabFilter } from '@/components/dates/DateTabs';

@@ -1,6 +1,5 @@
-// src/components/ui/Button.tsx
 import type { ReactNode } from 'react';
-import { ChevronRight } from 'lucide-react';
+import logo42 from '@/assets/42-logo.png';
 
 interface ButtonProps {
   onClick?: () => void;
@@ -21,19 +20,15 @@ const Button = ({
   disabled = false,
   withArrow = true,
 }: ButtonProps) => {
-  // Mobile-first responsive base styles
-  const baseStyles =
-    'w-full flex items-center justify-center gap-2 rounded-full py-2.5 sm:py-3 font-semibold tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed';
-
   if (variant === 'google') {
     return (
       <button
         type={type}
         onClick={onClick}
-        className={`${baseStyles} border border-border text-text text-xs sm:text-sm font-bold uppercase hover:bg-primary/10 hover:border-primary/50 transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-3 px-5 cursor-pointer ${className}`}
+        className={`w-full flex items-center justify-center gap-2 border border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
         disabled={disabled}
       >
-        <svg width="18" height="18" viewBox="0 0 48 48" className="w-4 h-4 sm:w-[18px] sm:h-[18px] shrink-0">
+        <svg width="18" height="18" viewBox="0 0 48 48">
           <path
             fill="#EA4335"
             d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -51,7 +46,6 @@ const Button = ({
             d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
           />
         </svg>
-        <span>{children}</span>
       </button>
     );
   }
@@ -61,15 +55,16 @@ const Button = ({
       <button
         type={type}
         onClick={onClick}
-        className={`${baseStyles} border border-border text-text text-xs sm:text-sm font-bold uppercase hover:bg-primary/10 hover:border-primary/50 transition-all hover:scale-102 active:scale-98 flex items-center justify-center gap-3 px-5 cursor-pointer ${className}`}
+        className={`w-full flex items-center justify-center gap-2 border border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
         disabled={disabled}
       >
         <img
-          src="/src/assets/42-logo.png"
+          src={logo42}
           alt="42"
-          className="w-4 h-4 sm:w-[22px] sm:h-[22px] object-contain shrink-0 invert-0 dark:invert"
+          width={22}
+          height={22}
+          className="object-contain"
         />
-        <span>{children}</span>
       </button>
     );
   }
@@ -78,11 +73,11 @@ const Button = ({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`${baseStyles} font-bold text-xs sm:text-sm uppercase text-on-primary bg-primary hover:bg-primary-hover active:scale-95 transition-all hover:scale-102 hover:shadow-[0_4px_15px_rgba(233,64,87,0.4)] flex items-center justify-center gap-2 cursor-pointer ${className}`}
+      className={`w-full flex items-center justify-center gap-2 rounded-full py-3 font-bold tracking-wider uppercase text-white transition-all hover:opacity-90 active:scale-95 ${className}`}
+      style={{ background: 'linear-gradient(90deg, #C4364A, #e05570)' }}
     >
-      <span>{children}</span>
-      {withArrow && <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />}
+      {children}
+      {withArrow && <span className="text-[10px]">▶</span>}
     </button>
   );
 };

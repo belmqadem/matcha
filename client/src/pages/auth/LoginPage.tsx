@@ -1,6 +1,5 @@
-// src/pages/auth/LoginPage.tsx
-import { useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Divider from '@/components/ui/Divider';
@@ -8,7 +7,6 @@ import Input from '@/components/ui/Input';
 import ShowPasswordButton from '@/components/ui/ShowPasswordButton';
 import { usePasswordVisibility } from '@/hooks/usePasswordVisibility';
 import { Lock, User } from 'lucide-react';
-
 import { useAuth } from '@/context/AuthContext';
 import { authService } from '@/services/authService';
 
@@ -16,31 +14,54 @@ const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const passwordVisibility = usePasswordVisibility();
-
   const [form, setForm] = useState({ username: '', password: '' });
+  const passwordVisibility = usePasswordVisibility();
   const [error, setError] = useState(
     searchParams.get('error') === 'oauth_failed' ? 'OAuth sign-in failed. Please try again.' : '',
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleChange =
-    (field: 'username' | 'password') => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setForm((prev) => ({ ...prev, [field]: e.target.value }));
-      if (error) setError('');
+  useEffect(() => {
+    const checkOAuthRedirect = async () => {
+      try {
+        const { user } = await authService.me();
+        if (user.gender) {
+          navigate('/browse');
+        } else {
+          navigate('/profile/setup');
+        }
+      } catch {
+        // Not logged in, stay on login page
+      }
     };
+
+    checkOAuthRedirect();
+  }, [searchParams, navigate]);
+
+  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleGoogleLogin = () => {
+    authService.googleLogin();
+  };
+
+  const handle42Login = () => {
+    authService.login42();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
 
-    if (!form.username.trim() || !form.password.trim()) {
+    if (form.username.trim() === '' || form.password.trim() === '') {
       setError('Please enter both username and password.');
       return;
     }
 
-    setIsSubmitting(true);
+    setLoading(true);
     try {
-      const loggedInUser = await login(form);
+      const loggedInUser = await login({ username: form.username, password: form.password });
       if (!loggedInUser.gender) {
         navigate('/profile/setup');
       } else {
@@ -49,80 +70,66 @@ const LoginPage = () => {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
     <AuthLayout header="Log in to find your match">
-      <div className="w-full max-w-sm md:max-w-md mx-auto px-4 sm:px-0">
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-          <Input
-            id="username"
-            type="text"
-            label="Username"
-            value={form.username}
-            onChange={handleChange('username')}
-            required
-            icon={User}
-          />
+      <form onSubmit={handleSubmit}>
+        <Input
+          id="username"
+          type="text"
+          label="Username"
+          value={form.username}
+          onChange={handleChange('username')}
+          required
+          icon={User}
+        />
+        <Input
+          id="password"
+          type={passwordVisibility.inputType}
+          label="Password"
+          value={form.password}
+          onChange={handleChange('password')}
+          required
+          icon={Lock}
+          showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
+        />
 
-          <Input
-            id="password"
-            type={passwordVisibility.inputType}
-            label="Password"
-            value={form.password}
-            onChange={handleChange('password')}
-            required
-            icon={Lock}
-            showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
-          />
+        {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
-          {error && (
-            <p className="text-xs sm:text-sm font-medium text-error text-center mt-2 animate-fade-in-up">
-              {error}
-            </p>
-          )}
+        <div className="mt-6">
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Logging in…' : 'Log In'}
+          </Button>
+        </div>
+      </form>
 
-          <div className="pt-2 sm:pt-4">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Logging in…' : 'Log In'}
-            </Button>
-          </div>
-        </form>
-
-        <div className="text-center mt-6 sm:mt-8 space-y-3 sm:space-y-4">
-          <Link
-            to="/forgot-password"
-            className="block text-sm sm:text-base text-text font-medium hover:text-primary transition-colors underline hover:underline-offset-2"
-          >
-            Forgot your password?
+      <div className="text-center mt-4 space-y-2">
+        <Link
+          to="/forgot-password"
+          className="block text-sm text-(--color-text) font-medium hover:text-(--color-primary) transition underline hover:underline-offset-2 duration-150 ease-in"
+        >
+          Forgot your password?
+        </Link>
+        <p className="text-xs text-(--color-text)/80">
+          You don't have an account?{' '}
+          <Link to="/register" className="text-(--color-primary) font-semibold hover:underline">
+            Register
           </Link>
-          <p className="text-sm sm:text-base text-text-muted">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary font-bold hover:underline">
-              Register
-            </Link>
-          </p>
-        </div>
+        </p>
+      </div>
 
-        <div className="my-6 sm:my-8">
-          <Divider />
-        </div>
+      <Divider />
 
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <Button
-            variant="google"
-            onClick={authService.googleLogin}
-            type="button"
-            withArrow={false}
-          >
-            Continue with Google
-          </Button>
-          <Button variant="42" onClick={authService.login42} type="button" withArrow={false}>
-            Continue with 42
-          </Button>
-        </div>
+      <div className="flex gap-4">
+        <Button variant="google" onClick={handleGoogleLogin}>
+          Continue with Google
+        </Button>
+        <Button variant="42" onClick={handle42Login}>
+          Continue with 42
+        </Button>
       </div>
     </AuthLayout>
   );

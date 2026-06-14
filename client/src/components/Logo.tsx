@@ -1,5 +1,5 @@
-// src/components/Logo.tsx
 import { NavLink } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
 interface MatchaLogoProps {
   to?: string;
@@ -8,10 +8,16 @@ interface MatchaLogoProps {
   showText?: boolean;
 }
 
+const HEART_SIZES = {
+  sm: 18,
+  md: 22,
+  lg: 26,
+};
+
 const TEXT_SIZE_CLASSES = {
-  sm: 'text-xl sm:text-2xl',
-  md: 'text-2xl sm:text-3xl',
-  lg: 'text-3xl sm:text-4xl',
+  sm: 'text-xl',
+  md: 'text-2xl',
+  lg: 'text-3xl',
 };
 
 export default function MatchaLogo({
@@ -20,14 +26,10 @@ export default function MatchaLogo({
   className = '',
 }: MatchaLogoProps) {
   const content = (
-    <div className={`flex items-center select-none ${className}`}>
-      <span
-        className={`font-primary font-bold tracking-tight leading-none ${TEXT_SIZE_CLASSES[size]}`}
-      >
-        <span className="text-primary inline-block">
-          M
-        </span>
-        <span className="text-text transition-colors duration-300">atcha.</span>
+    <div className={`flex items-center gap-2 select-none ${className}`}>
+      <Heart size={HEART_SIZES[size]} className="text-primary fill-primary shrink-0" />
+      <span className={`font-primary font-bold tracking-tight text-text ${TEXT_SIZE_CLASSES[size]}`}>
+        matcha<span className="text-primary">.</span>
       </span>
     </div>
   );
