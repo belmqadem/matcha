@@ -27,9 +27,6 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
               getInitials(user.first_name, user.last_name)
             )}
           </div>
-          {user.is_online && (
-            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-success border-2 border-surface" />
-          )}
         </div>
 
         <div className="flex-1 min-w-0">

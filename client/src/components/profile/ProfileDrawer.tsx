@@ -333,20 +333,6 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                   {/* Gradient overlay at bottom */}
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
 
-                  {/* Online indicator */}
-                  <div className="absolute bottom-4 left-4 z-10">
-                    {profile.is_online ? (
-                      <span className="flex items-center gap-2 bg-success text-text text-[9px] font-black px-3 py-1.5 rounded-full tracking-wider shadow-md">
-                        <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping absolute" />
-                        <span className="w-1.5 h-1.5 bg-white rounded-full relative" />
-                        ONLINE
-                      </span>
-                    ) : (
-                      <span className="bg-black/55 text-text text-[9px] font-black px-3 py-1.5 rounded-full tracking-wider backdrop-blur-xs">
-                        OFFLINE
-                      </span>
-                    )}
-                  </div>
 
                   {/* Navigation Chevrons */}
                   {sortedPhotos.length > 1 && (

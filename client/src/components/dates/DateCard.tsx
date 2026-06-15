@@ -7,6 +7,7 @@ import Avatar from '@/components/ui/Avatar';
 import { formatDate, formatTime, isPast } from '@/utils/dateUtils';
 import type { DateEntry, DateStatus } from '@/types/date';
 import { useAuth } from '@/context/AuthContext';
+import { useSocket } from '@/context/SocketContext';
 
 const STATUS_META: Record<DateStatus, { label: string; color: string }> = {
   pending: { label: 'pending', color: 'text-primary' },
@@ -25,6 +26,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { user: currentUser } = useAuth();
+  const { socket } = useSocket();
 
   const meta = STATUS_META[date.status];
   const past = isPast(date.scheduled_at);
@@ -41,6 +43,17 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
         await dateService.cancelDate(date.id);
       } else {
         await dateService.respondToDate(date.id, action, date.scheduled_at);
+        if (action === 'accepted') {
+          const formattedDate = new Date(date.scheduled_at).toLocaleDateString(undefined, {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+          const content = `I've accepted the date proposal: ${formattedDate}${date.location ? ` at ${date.location}` : ''}`;
+          socket?.emit('chat:send', { to: date.other_user_id, content });
+        }
       }
       onUpdate();
     } catch (e) {

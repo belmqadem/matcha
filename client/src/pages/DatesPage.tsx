@@ -71,7 +71,7 @@ export default function DatesPage() {
           >
             <Bell className="w-4 h-4 text-primary flex-shrink-0" />
             <span className="text-sm text-primary">
-              {inboundPending} proposal{inboundPending > 1 ? 's' : ''} waiting for you 💌
+              {inboundPending} proposal{inboundPending > 1 ? 's' : ''} waiting for you
             </span>
           </button>
         )}

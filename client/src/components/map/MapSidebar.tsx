@@ -1,11 +1,10 @@
 // src/components/map/MapSidebar.tsx
 import { Star } from 'lucide-react';
 import { getInitials, fmtDist } from '@/utils/map';
-import type { MapUser, MapFilter } from '@/types/map';
+import type { MapUser } from '@/types/map';
 
 interface MapSidebarProps {
   users: MapUser[];
-  filter: MapFilter;
   radiusKm: number;
   loading: boolean;
   selectedUserId?: string;
@@ -14,7 +13,6 @@ interface MapSidebarProps {
 
 export default function MapSidebar({
   users,
-  filter,
   radiusKm,
   loading,
   selectedUserId,
@@ -23,13 +21,13 @@ export default function MapSidebar({
   return (
     <aside className="w-full md:w-[280px] h-[220px] md:h-full bg-surface border-t md:border-t-0 md:border-l border-border flex flex-col overflow-hidden shrink-0 z-10 shadow-sm relative">
       <div className="px-4 py-3 border-b border-border text-[11px] font-bold text-text-muted">
-        {users.length} {filter === 'online' ? 'online' : 'people'} within {radiusKm}km
+        {users.length} people within {radiusKm}km
       </div>
 
       <div className="overflow-y-auto flex-1 scrollbar-thin flex flex-col">
         {users.length === 0 && !loading && (
           <div className="py-10 px-5 text-center text-text-muted text-[13px] font-medium">
-            No {filter === 'online' ? 'online ' : ''}users nearby
+            No users nearby
           </div>
         )}
 
@@ -53,9 +51,6 @@ export default function MapSidebar({
                   getInitials(user.first_name, user.last_name)
                 )}
               </div>
-              {user.is_online && (
-                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-success border-2 border-surface" />
-              )}
             </div>
 
             <div className="flex-1 min-w-0">

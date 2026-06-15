@@ -7,7 +7,7 @@ import { useMapLikes } from '@/hooks/useMapLikes';
 import MapHeader from '@/components/map/MapHeader';
 import MapSidebar from '@/components/map/MapSidebar';
 import MapPopup from '@/components/map/MapPopup';
-import type { MapUser, MapFilter, RadiusKm } from '@/types/map';
+import type { MapUser, RadiusKm } from '@/types/map';
 
 export default function MapPage() {
   // Pure logic, managed completely by your separated custom hooks
@@ -16,7 +16,6 @@ export default function MapPage() {
 
   const { likeStates, handleLike, checkLikeStatus } = useMapLikes();
 
-  const [filter, setFilter] = useState<MapFilter>('all');
   const [selectedUser, setSelectedUser] = useState<MapUser | null>(null);
 
   useEffect(() => {
@@ -27,10 +26,8 @@ export default function MapPage() {
     }
   }, [selectedUser, checkLikeStatus]);
 
-  const filteredUsers = filter === 'online' ? users.filter((u) => u.is_online) : users;
-
   const { containerRef, panTo } = useLeafletMap({
-    users: filteredUsers,
+    users,
     center,
     radiusKm,
     onUserClick: setSelectedUser,
@@ -45,13 +42,11 @@ export default function MapPage() {
   return (
     <div className="flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] bg-background font-primary overflow-hidden">
       <MapHeader
-        userCount={filteredUsers.length}
+        userCount={users.length}
         loading={loading}
         radiusKm={radiusKm}
-        filter={filter}
         gpsLoading={gpsLoading}
         onRadiusChange={(km) => handleRadiusChange(km as RadiusKm)}
-        onFilterChange={setFilter}
         onGps={handleGps}
       />
 
@@ -75,8 +70,7 @@ export default function MapPage() {
         )}
 
         <MapSidebar
-          users={filteredUsers}
-          filter={filter}
+          users={users}
           radiusKm={radiusKm}
           loading={loading}
           selectedUserId={selectedUser?.id}

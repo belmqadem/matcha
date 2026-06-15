@@ -157,7 +157,7 @@ export function useChatActions({
         hour: '2-digit',
         minute: '2-digit',
       });
-      const content = `📅 I've proposed a date: ${formattedDate}${data.location ? ` at ${data.location}` : ''}`;
+      const content = `I've proposed a date: ${formattedDate}${data.location ? ` at ${data.location}` : ''}`;
       socket?.emit('chat:send', { to: activeConvo.id, content });
       appendOptimistic({
         id: Math.random(),

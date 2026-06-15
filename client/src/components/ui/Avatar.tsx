@@ -50,7 +50,7 @@ export default function Avatar({
       {online !== undefined && !grayscale && (
         <span
           className={`absolute bottom-0 right-0 ${dotMap[size]} rounded-full border-2 border-surface ${
-            online ? 'bg-green-500' : 'bg-border'
+            online ? 'bg-success' : 'bg-text-muted'
           }`}
         />
       )}

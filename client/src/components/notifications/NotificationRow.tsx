@@ -51,8 +51,7 @@ const TYPE_META: Record<
   },
   visit: {
     icon: Eye,
-    label: (n, count) =>
-      count > 1 ? `${n} visited your profile ${count} times` : `${n} visited your profile`,
+    label: (n) => `${n} visited your profile`,
     textCls: 'text-text',
     bgCls: 'bg-text/5',
     borderCls: 'border-text',

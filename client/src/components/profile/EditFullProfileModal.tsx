@@ -60,7 +60,11 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
       }
       onUpdate(updated);
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        onClose();
+        navigate('/profile/me');
+      }, 1500);
     } catch (e) {
       setIdentityError(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
@@ -104,7 +108,11 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         ...updated,
       });
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        onClose();
+        navigate('/profile/me');
+      }, 1500);
     } catch (e) {
       setAboutError(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
@@ -164,7 +172,11 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         location_city: cityInput.trim() || user.location_city,
       });
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        onClose();
+        navigate('/profile/me');
+      }, 1500);
     } catch (e) {
       setLocationError(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
@@ -192,7 +204,11 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
       const updated = await userService.updateTags(tags);
       onUpdate({ ...user, tags: updated });
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        onClose();
+        navigate('/profile/me');
+      }, 1500);
     } catch (e) {
       setTagsError(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
@@ -209,6 +225,12 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         if (e.target === e.currentTarget) onClose();
       }}
     >
+      {saveSuccess && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] bg-primary text-on-primary px-6 py-3 rounded-full flex items-center gap-2 text-xs sm:text-sm font-black shadow-xl shadow-primary/30 border border-primary-light/20 animate-in fade-in zoom-in-95 duration-200">
+          <Check className="w-4 h-4 shrink-0" />
+          <span>Saved successfully!</span>
+        </div>
+      )}
       <div className="bg-surface rounded-3xl w-full max-w-[640px] max-h-[85vh] flex flex-col overflow-hidden shadow-premium animate-in fade-in zoom-in-95 duration-200 border border-border/80 text-text">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-surface/85 backdrop-blur-md shrink-0">
@@ -271,12 +293,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
 
         {/* Tab content area */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 scrollbar-thin">
-          {saveSuccess && (
-            <div className="bg-success/15 border border-success/35 rounded-2xl p-3.5 flex items-center gap-2 text-success text-xs font-bold animate-in fade-in slide-in-from-top-2 duration-200 mb-4 shrink-0">
-              <Check className="w-4 h-4 shrink-0" />
-              <span>Saved successfully!</span>
-            </div>
-          )}
 
           {/* TAB 1: IDENTITY */}
           {activeTab === 'identity' && (

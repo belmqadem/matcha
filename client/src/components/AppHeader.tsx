@@ -112,19 +112,8 @@ export default function AppHeader() {
     setLoadingSearch(true);
 
     const fetchAll = async () => {
-      const usersList: BrowseUser[] = [];
       try {
-        let page = 1;
-        const limit = 50;
-        // Fetch up to 200 users for quick header search matching
-        while (page <= 4) {
-          const data = await userService.browseUsers({ page, limit });
-          if (!active) return;
-          if (!data.users || data.users.length === 0) break;
-          usersList.push(...data.users);
-          if (usersList.length >= (data.total ?? 0)) break;
-          page++;
-        }
+        const usersList = await userService.getQuickSearchUsers();
         if (active) {
           setAllUsers(usersList);
           setLoadingSearch(false);

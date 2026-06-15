@@ -4,7 +4,6 @@ import type { NotificationType } from '@/types/notification';
 export const NOTIFICATION_FILTERS: { key: string; label: string; types?: NotificationType[] }[] = [
   { key: 'all', label: 'All' },
   { key: 'social', label: 'Likes & Matches', types: ['like', 'match', 'unlike'] },
-  { key: 'visits', label: 'Visitors', types: ['visit'] },
   { key: 'messages', label: 'Messages', types: ['message'] },
   {
     key: 'dates',

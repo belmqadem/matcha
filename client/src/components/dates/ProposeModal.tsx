@@ -5,6 +5,7 @@ import { dateService } from '@/services/dateService';
 import type { Conversation } from '@/types/chat';
 import DatePicker from '@/components/DatePicker';
 import TimePicker from '@/components/TimePicker';
+import { useSocket } from '@/context/SocketContext';
 
 interface ProposeModalProps {
   onClose: () => void;
@@ -25,6 +26,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
   const [connections, setConnections] = useState<Conversation[]>([]);
   const [loadingConns, setLoadingConns] = useState(true);
   const [receiverId, setReceiverId] = useState('');
+  const { socket } = useSocket();
 
   const [date, setDate] = useState<Date | null>(null);
   const [hour, setHour] = useState(() => new Date(Date.now() + 3_600_000).getHours());
@@ -65,6 +67,15 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
         scheduled_at: selectedDate.toISOString(),
         location: location.trim() || undefined,
       });
+      const formattedDate = new Date(selectedDate).toLocaleDateString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      const content = `I've proposed a date: ${formattedDate}${location.trim() ? ` at ${location.trim()}` : ''}`;
+      socket?.emit('chat:send', { to: receiverId, content });
       onSuccess();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);

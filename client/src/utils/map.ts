@@ -20,14 +20,9 @@ export function makeUserIcon(user: MapUser): L.DivIcon {
     ? `<img src="${user.profile_picture_url}" class="w-full h-full object-cover rounded-full" />`
     : `<span class="text-[13px] font-black text-primary">${initials}</span>`;
 
-  const onlineDot = user.is_online
-    ? `<div class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-success border-2 border-surface"></div>`
-    : '';
-
   return L.divIcon({
     html: `<div class="w-10 h-10 rounded-full bg-primary/10 border-2 border-surface flex items-center justify-center shadow-md relative cursor-pointer overflow-hidden backdrop-blur-sm">
              ${inner}
-             ${onlineDot}
            </div>`,
     className: '', // Disables Leaflet's default white styling
     iconSize: [40, 40],

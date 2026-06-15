@@ -65,7 +65,7 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-2xl mb-1">💌</div>
+            <CalendarHeart className="w-8 h-8 text-primary mb-2 animate-pulse" />
             <h2 className="text-xl font-black text-text">Ask {receiverName} out</h2>
             <p className="text-[13px] text-text-muted font-medium mt-0.5">
               Propose a time and place

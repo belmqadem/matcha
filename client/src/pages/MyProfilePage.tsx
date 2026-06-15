@@ -17,17 +17,19 @@ import { userService } from '@/services/userService';
 import { authService } from '@/services/authService';
 import { useAuth } from '@/context/AuthContext';
 import type { UserProfile } from '@/types/user';
+import type { FullUser } from '@/types/auth';
 
 import { CityName } from '@/components/ui/CityName';
 import { PhotosPanel } from '@/components/profile/PhotosPanel';
 import { EditFullProfileModal } from '@/components/profile/EditFullProfileModal';
 import { GENDERS, PREFERENCES, DEFAULT_PREFERENCE } from '@/components/profile/profileConstants';
+import { ActivityPanel } from '@/components/profile/ActivityPanel';
 
 type ModalType = 'identity' | 'about' | 'tags' | 'location' | null;
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
-  const { logout: ctxLogout } = useAuth();
+  const { logout: ctxLogout, updateUser } = useAuth();
 
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,11 @@ const MyProfilePage = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleUpdateUser = (updated: UserProfile) => {
+    setUser(updated);
+    updateUser(updated as unknown as FullUser);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -50,10 +57,10 @@ const MyProfilePage = () => {
   useEffect(() => {
     userService
       .getMe()
-      .then(setUser)
+      .then(handleUpdateUser)
       .catch((e) => setFetchError(e instanceof Error ? e.message : 'Failed to load profile.'))
       .finally(() => setLoading(false));
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -102,14 +109,14 @@ const MyProfilePage = () => {
       {editModal && (
         <EditFullProfileModal
           user={user}
-          onUpdate={setUser}
+          onUpdate={handleUpdateUser}
           initialTab={editModal}
           onClose={() => setEditModal(null)}
         />
       )}
 
       {/* Main Unified Profile Card */}
-      <div className="w-full max-w-[880px] bg-surface border border-border/80 rounded-3xl shadow-premium flex flex-col md:h-[580px] overflow-hidden animate-fade-in-up">
+      <div className="w-full max-w-[1200px] bg-surface border border-border/80 rounded-3xl shadow-premium flex flex-col lg:h-[580px] overflow-hidden animate-fade-in-up">
         {/* Header */}
         <div className="flex items-center justify-end px-5 py-3 border-b border-border/60 bg-surface/85 backdrop-blur-md relative z-30 gap-2">
           {/* 3 Dots Actions Menu */}
@@ -156,15 +163,15 @@ const MyProfilePage = () => {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto md:overflow-y-hidden px-6 py-6 scrollbar-thin">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full items-stretch">
+        <div className="flex-1 overflow-y-auto lg:overflow-y-hidden px-6 py-6 scrollbar-thin">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full items-stretch">
             {/* Left Column (Photos) */}
-            <div className="md:col-span-6 flex flex-col h-full min-h-0 shrink-0">
-              <PhotosPanel user={user} onUpdate={setUser} />
+            <div className="lg:col-span-4 flex flex-col h-full min-h-0 shrink-0">
+              <PhotosPanel user={user} onUpdate={handleUpdateUser} />
             </div>
 
-            {/* Right Column (Details) */}
-            <div className="md:col-span-6 flex flex-col justify-between gap-4 h-full min-h-0">
+            {/* Middle Column (Details) */}
+            <div className="lg:col-span-4 flex flex-col justify-between gap-4 h-full min-h-0">
               {/* Top part: identity, location, bio, tags */}
               <div className="space-y-4">
                 <div>
@@ -173,12 +180,6 @@ const MyProfilePage = () => {
                       {user.first_name} {user.last_name}
                       {age ? <span className="font-normal text-text-muted">, {age}</span> : ''}
                     </h2>
-                    <div className="flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 shadow-sm shrink-0">
-                      <Flame className="w-3.5 h-3.5 text-primary fill-primary/10" />
-                      <span className="text-[11px] font-black text-primary">
-                        {Math.round(user.fame_rating)}
-                      </span>
-                    </div>
                   </div>
                   <p className="text-xs font-bold text-text-muted">@{user.username}</p>
 
@@ -293,12 +294,17 @@ const MyProfilePage = () => {
                         Fame Rating
                       </p>
                       <p className="text-xs font-bold text-primary mt-0.5 truncate leading-tight">
-                        {Math.round(user.fame_rating ?? 0)} pts
+                        {Math.round(user.fame_rating ?? 0)}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Right Column (Activity) */}
+            <div className="lg:col-span-4 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-border/60 pt-6 lg:pt-0 lg:pl-6 h-full min-h-0 overflow-y-auto scrollbar-thin">
+              <ActivityPanel />
             </div>
           </div>
         </div>

@@ -1,21 +1,12 @@
 // src/pages/NotificationsPage.tsx
-import { useState } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 
-import NotificationTabs from '@/components/notifications/NotificationTabs';
-import { NOTIFICATION_FILTERS } from '@/components/notifications/notificationConstants';
 import NotificationList from '@/components/notifications/NotificationList';
 import EmptyNotifications from '@/components/notifications/EmptyNotifications';
 
 export default function NotificationsPage() {
   const { notifications, loading, unreadCount, markRead, deleteOne, markAllRead } =
     useNotifications();
-  const [activeFilter, setActiveFilter] = useState('all');
-
-  const filterDef = NOTIFICATION_FILTERS.find((f) => f.key === activeFilter)!;
-  const filtered = filterDef.types
-    ? notifications.filter((n) => filterDef.types!.includes(n.type))
-    : notifications;
 
   return (
     <div className="relative min-h-[100dvh] bg-background font-primary overflow-x-hidden pb-10">
@@ -26,11 +17,6 @@ export default function NotificationsPage() {
             <h1 className="text-2xl sm:text-3xl font-black leading-tight text-text tracking-tight">
               Notifications
             </h1>
-            {/* {unreadCount > 0 && (
-              <p className="text-xs sm:text-sm mt-1 font-medium text-text-muted">
-                {unreadCount} unread
-              </p>
-            )} */}
           </div>
 
           {unreadCount > 0 && (
@@ -42,13 +28,6 @@ export default function NotificationsPage() {
             </button>
           )}
         </div>
-
-        <NotificationTabs
-          activeFilter={activeFilter}
-          setActiveFilter={setActiveFilter}
-          notifications={notifications}
-          unreadCount={unreadCount}
-        />
 
         {loading ? (
           <div className="flex flex-col gap-3 sm:gap-4">
@@ -70,12 +49,12 @@ export default function NotificationsPage() {
               );
             })}
           </div>
-        ) : filtered.length === 0 ? (
+        ) : notifications.length === 0 ? (
           <div className="animate-fade-in-up">
-            <EmptyNotifications filter={activeFilter} />
+            <EmptyNotifications filter="all" />
           </div>
         ) : (
-          <NotificationList notifications={filtered} onRead={markRead} onDelete={deleteOne} />
+          <NotificationList notifications={notifications} onRead={markRead} onDelete={deleteOne} />
         )}
       </div>
     </div>

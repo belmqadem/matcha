@@ -34,19 +34,8 @@ export function useSearch() {
     setError('');
 
     const fetchAll = async () => {
-      const usersList: BrowseUser[] = [];
       try {
-        let page = 1;
-        const limit = 50;
-        // Fetch up to 500 profiles to have a good pool of results for client-side search by name
-        while (page <= 10) {
-          const data = await userService.searchUsers({ page, limit });
-          if (!active) return;
-          if (!data.users || data.users.length === 0) break;
-          usersList.push(...data.users);
-          if (usersList.length >= (data.total ?? 0)) break;
-          page++;
-        }
+        const usersList = await userService.getSearchAll();
         if (active) {
           setAllUsers(usersList);
           setLoading(false);

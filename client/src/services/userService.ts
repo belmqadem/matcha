@@ -278,4 +278,32 @@ export const userService = {
       body: JSON.stringify({ reason: 'fake account' }),
       credentials: 'include',
     }).then((res) => handleResponse<void>(res)),
+
+  getQuickSearchUsers: async (): Promise<BrowseUser[]> => {
+    const usersList: BrowseUser[] = [];
+    let page = 1;
+    const limit = 50;
+    while (page <= 4) {
+      const data = await userService.browseUsers({ page, limit });
+      if (!data.users || data.users.length === 0) break;
+      usersList.push(...data.users);
+      if (usersList.length >= (data.total ?? 0)) break;
+      page++;
+    }
+    return usersList;
+  },
+
+  getSearchAll: async (): Promise<BrowseUser[]> => {
+    const usersList: BrowseUser[] = [];
+    let page = 1;
+    const limit = 50;
+    while (page <= 10) {
+      const data = await userService.searchUsers({ page, limit });
+      if (!data.users || data.users.length === 0) break;
+      usersList.push(...data.users);
+      if (usersList.length >= (data.total ?? 0)) break;
+      page++;
+    }
+    return usersList;
+  },
 };

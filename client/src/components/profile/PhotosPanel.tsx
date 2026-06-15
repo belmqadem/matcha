@@ -6,6 +6,7 @@ import * as profileService from '@/services/profileService';
 import type { UserProfile, Photo } from '@/types/user';
 import { PhotoEditorModal } from './PhotoEditorModal';
 import { ConfirmModal } from './ConfirmModal';
+import { PhotoGalleryViewer } from './PhotoGalleryViewer';
 import { photoBuster } from '@/utils/photoBuster';
 
 interface Props {
@@ -18,6 +19,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   // Drag and Drop States
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -82,10 +84,23 @@ export function PhotosPanel({ user, onUpdate }: Props) {
   };
 
   const handleSetMain = async (id: number) => {
+    const targetPhoto = photos.find((p) => p.id === id);
+    if (!targetPhoto) return;
+
+    const remaining = sorted.filter((p) => p.id !== id);
+    const newPhotos = [targetPhoto, ...remaining];
+
     try {
+      const updatedPhotos = await profileService.reorderPhotos(newPhotos.map((p) => p.id));
       await userService.setMainPhoto(id);
       photoBuster.regenerate();
-      onUpdate(photoBuster.bustUser({ ...user, profile_picture_id: id }));
+      onUpdate(
+        photoBuster.bustUser({
+          ...user,
+          photos: updatedPhotos,
+          profile_picture_id: id,
+        }),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed.');
     }
@@ -222,7 +237,14 @@ export function PhotosPanel({ user, onUpdate }: Props) {
               onDragOver={(e) => handleDragOver(e, 0)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, 0)}
-              onClick={() => !photo && fileRef.current?.click()}
+              onClick={() => {
+                if (photo) {
+                  const sortedIndex = sorted.findIndex((p) => p.id === photo.id);
+                  if (sortedIndex !== -1) setViewerIndex(sortedIndex);
+                } else {
+                  fileRef.current?.click();
+                }
+              }}
               className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group flex-1 min-h-[150px] aspect-[4/3] md:aspect-auto w-full mb-3 ${
                 isOver ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' : 'border-border'
               } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'}`}
@@ -309,7 +331,14 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                 onDragOver={(e) => handleDragOver(e, i)}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, i)}
-                onClick={() => !photo && fileRef.current?.click()}
+                onClick={() => {
+                  if (photo) {
+                    const sortedIndex = sorted.findIndex((p) => p.id === photo.id);
+                    if (sortedIndex !== -1) setViewerIndex(sortedIndex);
+                  } else {
+                    fileRef.current?.click();
+                  }
+                }}
                 className={`relative rounded-xl overflow-hidden bg-background/50 border-2 transition-all duration-300 group aspect-[3/4] w-full ${
                   isOver ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' : 'border-border'
                 } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'}`}
@@ -402,6 +431,15 @@ export function PhotosPanel({ user, onUpdate }: Props) {
           photo={selectedPhoto}
           onClose={() => setSelectedPhoto(null)}
           onSave={handleSavePhoto}
+        />
+      )}
+
+      {viewerIndex !== null && (
+        <PhotoGalleryViewer
+          photos={sorted}
+          currentIndex={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+          onChangeIndex={setViewerIndex}
         />
       )}
 

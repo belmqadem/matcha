@@ -112,8 +112,6 @@ export default function ChatThread({
               <p className="text-[0.65rem] sm:text-xs font-bold truncate">
                 {isBlocked ? (
                   <span className="text-error">Blocked</span>
-                ) : activeConvo.is_online && !forbidden ? (
-                  <span className="text-success">Active now</span>
                 ) : (
                   <span className="text-text-muted">@{activeConvo.username}</span>
                 )}
@@ -207,7 +205,7 @@ export default function ChatThread({
       {/* Input */}
       <div className="px-3 sm:px-5 py-3 sm:py-4 bg-surface border-t border-border shrink-0 z-20">
         <div
-          className={`flex items-end gap-2 sm:gap-3 bg-background border-2 rounded-2xl sm:rounded-3xl px-3 sm:px-4 py-2 sm:py-2.5 transition-all ${
+          className={`flex items-center gap-2 sm:gap-3 bg-background border-2 rounded-2xl sm:rounded-3xl px-3 sm:px-4 py-2 transition-all ${
             inputDisabled
               ? 'opacity-50 cursor-not-allowed border-border'
               : 'border-border focus-within:border-primary focus-within:bg-surface'
@@ -228,9 +226,9 @@ export default function ChatThread({
             }
             rows={Math.min(input.split('\n').length, 4)}
             maxLength={1000}
-            className="flex-1 bg-transparent text-sm sm:text-base font-medium text-text placeholder-text-muted resize-none outline-none leading-relaxed py-1.5 disabled:cursor-not-allowed scrollbar-thin"
+            className="flex-1 bg-transparent text-sm sm:text-base font-medium text-text placeholder-text-muted resize-none outline-none leading-relaxed py-1 disabled:cursor-not-allowed scrollbar-thin"
           />
-          <div className="flex items-center gap-2 shrink-0 pb-1 sm:pb-1.5">
+          <div className="flex items-center gap-2 shrink-0">
             {input.length > 900 && (
               <span className="text-[0.65rem] sm:text-xs font-black text-error">
                 {1000 - input.length}
