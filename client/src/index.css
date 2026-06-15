@@ -19,6 +19,8 @@
     #0c0d12 75%,
     #06070a 100%
   );
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
 }
 
 .light-theme {
@@ -37,6 +39,8 @@
     #fff0f3 75%,
     #fff9fa 100%
   );
+  --color-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.30);
 }
 
 @theme {
@@ -367,6 +371,29 @@
     background-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
     color: var(--color-surface);
   }
+
+  /* Global Custom Scrollbar for all scrollable containers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-scrollbar-thumb);
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-scrollbar-thumb-hover);
+  }
+
+  /* Firefox Support */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar-thumb) transparent;
+  }
 }
 
 @layer utilities {
@@ -380,5 +407,32 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: var(--color-border);
     border-radius: 9999px;
+  }
+
+  .logo-42 {
+    filter: invert(1);
+    transition: filter 0.3s ease;
+  }
+  .light-theme .logo-42 {
+    filter: invert(0);
+  }
+
+  /* Disable transitions on Leaflet elements to prevent dragging/panning lag */
+  .leaflet-container,
+  .leaflet-container *,
+  .leaflet-pane,
+  .leaflet-pane *,
+  .leaflet-tile,
+  .leaflet-marker-icon,
+  .leaflet-marker-shadow {
+    transition: none !important;
+  }
+
+  /* Make map tiles dark and beautiful in dark theme, normal in light theme */
+  .leaflet-tile-container {
+    filter: invert(90%) hue-rotate(180deg) brightness(90%) contrast(90%);
+  }
+  .light-theme .leaflet-tile-container {
+    filter: none;
   }
 }

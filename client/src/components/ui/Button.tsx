@@ -18,14 +18,14 @@ const Button = ({
   variant = 'primary',
   className = '',
   disabled = false,
-  withArrow = true,
+  withArrow = false,
 }: ButtonProps) => {
   if (variant === 'google') {
     return (
       <button
         type={type}
         onClick={onClick}
-        className={`w-full flex items-center justify-center gap-2 border border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
+        className={`w-full flex items-center justify-center gap-2 border border-text/80 rounded-full py-3 tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
         disabled={disabled}
       >
         <svg width="18" height="18" viewBox="0 0 48 48">
@@ -55,10 +55,10 @@ const Button = ({
       <button
         type={type}
         onClick={onClick}
-        className={`w-full flex items-center justify-center gap-2 border border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
+        className={`w-full flex items-center justify-center gap-2 border border-text/80 rounded-full py-3 tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
         disabled={disabled}
       >
-        <img src={logo42} alt="42" width={22} height={22} className="object-contain" />
+        <img src={logo42} alt="42" width={22} height={22} className="object-contain logo-42" />
       </button>
     );
   }
@@ -67,7 +67,7 @@ const Button = ({
     <button
       type={type}
       onClick={onClick}
-      className={`w-full flex items-center justify-center gap-2 rounded-full py-3 font-bold tracking-wider uppercase text-white transition-all hover:opacity-90 active:scale-95 bg-primary disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`w-full flex items-center justify-center gap-2 rounded-full py-3 sm:py-3.5 text-sm font-semibold text-text shadow-premium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] bg-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
       disabled={disabled}
     >
       {children}

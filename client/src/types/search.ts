@@ -24,8 +24,8 @@ export const DEFAULT_FILTERS: SearchFilters = {
 };
 
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: 'fame', label: '🔥 Fame' },
-  { value: 'age', label: '🎂 Age' },
-  { value: 'distance', label: '📍 Distance' },
-  { value: 'tags', label: '🏷 Common Tags' },
+  { value: 'fame', label: 'Fame' },
+  { value: 'age', label: 'Age' },
+  { value: 'distance', label: 'Distance' },
+  { value: 'tags', label: 'Common Tags' },
 ];

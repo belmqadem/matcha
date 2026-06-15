@@ -1,5 +1,5 @@
 // src/components/AppHeader.tsx
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
   Compass,
@@ -15,11 +15,15 @@ import {
   CalendarDays,
   Sun,
   Moon,
+  Loader2,
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
 import { authService } from '@/services/authService';
+import { userService } from '@/services/userService';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
+import type { BrowseUser } from '@/types/user';
 import MatchaLogo from '@/components/Logo';
 
 type BadgeKey = 'messages' | 'notifications';
@@ -34,6 +38,7 @@ const MAIN_NAV = [
 export default function AppHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { openProfile } = useProfileDrawer();
 
   // Separation of Concerns: Global state from Context instead of local fetches
   const { user: me, logout: ctxLogout } = useAuth();
@@ -66,6 +71,8 @@ export default function AppHeader() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [allUsers, setAllUsers] = useState<BrowseUser[]>([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
 
   const avatar = me?.photos?.find((p) => p.id === me.profile_picture_id)?.url ?? null;
   const initials = me ? `${me.first_name?.[0] ?? ''}${me.last_name?.[0] ?? ''}`.toUpperCase() : '?';
@@ -87,12 +94,63 @@ export default function AppHeader() {
         setProfileOpen(false);
       if (mobileRef.current && !mobileRef.current.contains(e.target as Node))
         setMobileMenuOpen(false);
-      if (searchRef.current && !searchRef.current.contains(e.target as Node))
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setSearchExpanded(false);
+        setSearchVal('');
+      }
     };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
   }, []);
+
+  // Fetch search users when header search is active
+  useEffect(() => {
+    if (!searchExpanded && !mobileMenuOpen) return;
+    if (allUsers.length > 0) return;
+
+    let active = true;
+    setLoadingSearch(true);
+
+    const fetchAll = async () => {
+      const usersList: BrowseUser[] = [];
+      try {
+        let page = 1;
+        const limit = 50;
+        // Fetch up to 200 users for quick header search matching
+        while (page <= 4) {
+          const data = await userService.browseUsers({ page, limit });
+          if (!active) return;
+          if (!data.users || data.users.length === 0) break;
+          usersList.push(...data.users);
+          if (usersList.length >= (data.total ?? 0)) break;
+          page++;
+        }
+        if (active) {
+          setAllUsers(usersList);
+          setLoadingSearch(false);
+        }
+      } catch {
+        if (active) setLoadingSearch(false);
+      }
+    };
+
+    fetchAll();
+
+    return () => {
+      active = false;
+    };
+  }, [searchExpanded, mobileMenuOpen, allUsers.length]);
+
+  const filteredSearchUsers = useMemo(() => {
+    const query = searchVal.toLowerCase().trim();
+    if (!query) return [];
+    return allUsers.filter(
+      (u) =>
+        u.first_name?.toLowerCase().includes(query) ||
+        u.last_name?.toLowerCase().includes(query) ||
+        u.username?.toLowerCase().includes(query)
+    );
+  }, [allUsers, searchVal]);
 
   // Close dropdowns and clear badges on navigation
   useEffect(() => {
@@ -106,9 +164,6 @@ export default function AppHeader() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const q = searchVal.trim();
-    if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
-    else navigate('/search');
   };
 
   const handleLogout = async () => {
@@ -167,7 +222,7 @@ export default function AppHeader() {
             <form
               ref={searchRef}
               onSubmit={handleSearch}
-              className="ml-2 relative flex items-center transition-all duration-300"
+              className="ml-2 relative flex items-center"
             >
               <div
                 className={`flex items-center transition-all duration-300 rounded-full border bg-surface ${
@@ -183,7 +238,7 @@ export default function AppHeader() {
                 }}
               >
                 <button
-                  type={searchExpanded ? 'submit' : 'button'}
+                  type="button"
                   className="focus:outline-none flex items-center justify-center shrink-0 cursor-pointer"
                 >
                   <Search
@@ -207,6 +262,58 @@ export default function AppHeader() {
                   />
                 )}
               </div>
+
+              {/* Desktop Search Results Dropdown */}
+              {searchExpanded && searchVal.trim() && (
+                <div className="absolute top-[calc(100%+8px)] left-0 w-[280px] bg-surface border-[1.5px] border-border rounded-[18px] shadow-xl p-2 animate-fade-in-up origin-top-left max-h-[300px] overflow-y-auto custom-scrollbar z-50">
+                  {loadingSearch ? (
+                    <div className="flex items-center justify-center py-6 gap-2 text-text-muted text-[13px]">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      Loading profiles…
+                    </div>
+                  ) : filteredSearchUsers.length === 0 ? (
+                    <div className="text-center py-6 text-text-muted text-[13px]">
+                      No profiles found
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1">
+                      {filteredSearchUsers.map((user) => {
+                        const avatarUrl = user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
+                        const userInitials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
+                        return (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => {
+                              openProfile(user.id);
+                              setSearchExpanded(false);
+                              setSearchVal('');
+                            }}
+                            className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-background transition-colors cursor-pointer border-none bg-transparent"
+                          >
+                            <div className="w-[34px] h-[34px] rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
+                              {avatarUrl ? (
+                                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-xs font-bold text-primary">{userInitials}</span>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[13px] font-bold text-text truncate">
+                                {user.first_name} {user.last_name}
+                              </div>
+                              <div className="text-[11px] text-text-muted truncate">@{user.username}</div>
+                            </div>
+                            <div className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">
+                              Fame: {Math.round(user.fame_rating)}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </form>
 
             {/* Bell */}
@@ -362,7 +469,7 @@ export default function AppHeader() {
                 )}
 
                 {/* Mobile search */}
-                <form onSubmit={handleSearch} className="px-3 py-2.5">
+                <form onSubmit={(e) => e.preventDefault()} className="px-3 py-2.5">
                   <div className="flex items-center gap-2 px-3.5 h-[38px] rounded-full border-[1.5px] border-primary/10 bg-primary/5 focus-within:border-primary focus-within:bg-surface transition-colors">
                     <Search size={14} className="text-primary shrink-0" />
                     <input
@@ -374,6 +481,55 @@ export default function AppHeader() {
                     />
                   </div>
                 </form>
+
+                {searchVal.trim() && (
+                  <div className="px-3 pb-3 max-h-[200px] overflow-y-auto custom-scrollbar flex flex-col gap-1 border-b border-border mb-2">
+                    {loadingSearch ? (
+                      <div className="flex items-center justify-center py-4 gap-2 text-text-muted text-[12px]">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                        Loading profiles…
+                      </div>
+                    ) : filteredSearchUsers.length === 0 ? (
+                      <div className="text-center py-4 text-text-muted text-[12px]">
+                        No profiles found
+                      </div>
+                    ) : (
+                      filteredSearchUsers.map((user) => {
+                        const avatarUrl = user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
+                        const userInitials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
+                        return (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => {
+                              openProfile(user.id);
+                              setMobileMenuOpen(false);
+                              setSearchVal('');
+                            }}
+                            className="w-full flex items-center gap-2.5 p-2 rounded-xl text-left hover:bg-background transition-colors cursor-pointer border-none bg-transparent"
+                          >
+                            <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
+                              {avatarUrl ? (
+                                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-[10px] font-bold text-primary">{userInitials}</span>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-[12px] font-bold text-text truncate">
+                                {user.first_name} {user.last_name}
+                              </div>
+                              <div className="text-[10px] text-text-muted truncate">@{user.username}</div>
+                            </div>
+                            <div className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">
+                              Fame: {Math.round(user.fame_rating)}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
 
                 <div className="h-[1px] bg-border mx-1.5 mb-1" />
 

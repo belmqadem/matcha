@@ -1,7 +1,7 @@
-// src/layout/AuthLayout.tsx
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import MatchaLogo from '@/components/Logo';
 import FloatingHearts from '@/components/FloatingHearts';
+import { Sun, Moon } from 'lucide-react';
 
 const heartPath =
   'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
@@ -42,44 +42,76 @@ interface AuthLayoutProps {
   header: string;
 }
 
-const AuthLayout = ({ children, header }: AuthLayoutProps) => (
-  <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden bg-background">
-    {/* Background blobs */}
-    <div className="pointer-events-none absolute rounded-full bg-primary/20 w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] -top-16 -right-16 blur-3xl animate-float-slow" />
-    <div className="pointer-events-none absolute rounded-full bg-primary/10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] -bottom-10 -left-12 blur-3xl animate-float-slow [animation-delay:2s]" />
-    <div className="pointer-events-none absolute rounded-full bg-primary/15 w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] top-[40%] left-[4%] blur-2xl animate-float-slow [animation-delay:4s]" />
+const AuthLayout = ({ children, header }: AuthLayoutProps) => {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+  });
 
-    <FloatingHearts />
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+  };
 
-    {/* Drifting hearts without inline styles */}
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {DRIFT_HEARTS.map((h, i) => (
-        <div key={i} className={`absolute -bottom-8 text-primary/40 ${h.classes}`}>
-          <Heart size={h.size} />
+  return (
+    <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden bg-background">
+      {/* Floating Theme Toggle */}
+      <div className="absolute top-4 right-4 z-20">
+        <button
+          onClick={toggleTheme}
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-surface text-text-muted hover:text-primary hover:border-primary/20 hover:bg-background transition-colors cursor-pointer"
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {theme === 'dark' ? (
+            <Sun size={17} strokeWidth={1.8} />
+          ) : (
+            <Moon size={17} strokeWidth={1.8} />
+          )}
+        </button>
+      </div>
+
+      {/* Background blobs */}
+      <div className="pointer-events-none absolute rounded-full bg-primary/20 w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] -top-16 -right-16 blur-3xl animate-float-slow" />
+      <div className="pointer-events-none absolute rounded-full bg-primary/10 w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] -bottom-10 -left-12 blur-3xl animate-float-slow [animation-delay:2s]" />
+      <div className="pointer-events-none absolute rounded-full bg-primary/15 w-[120px] h-[120px] sm:w-[160px] sm:h-[160px] top-[40%] left-[4%] blur-2xl animate-float-slow [animation-delay:4s]" />
+
+      <FloatingHearts />
+
+      {/* Drifting hearts without inline styles */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {DRIFT_HEARTS.map((h, i) => (
+          <div key={i} className={`absolute -bottom-8 text-primary/40 ${h.classes}`}>
+            <Heart size={h.size} />
+          </div>
+        ))}
+      </div>
+
+      {/* Sparkle stars without inline styles */}
+      {SPARKLES.map((s, i) => (
+        <div key={i} className={`pointer-events-none absolute text-primary/30 ${s.classes}`}>
+          <svg width={s.size} height={s.size} viewBox="0 0 10 10" fill="currentColor">
+            <polygon points="5,0 6,4 10,5 6,6 5,10 4,6 0,5 4,4" />
+          </svg>
         </div>
       ))}
-    </div>
 
-    {/* Sparkle stars without inline styles */}
-    {SPARKLES.map((s, i) => (
-      <div key={i} className={`pointer-events-none absolute text-primary/30 ${s.classes}`}>
-        <svg width={s.size} height={s.size} viewBox="0 0 10 10" fill="currentColor">
-          <polygon points="5,0 6,4 10,5 6,6 5,10 4,6 0,5 4,4" />
-        </svg>
+      {/* Main Card */}
+      <div className="relative w-full max-w-[95%] sm:max-w-md z-10 rounded-3xl px-6 py-8 sm:px-10 sm:py-10 bg-surface/90 border border-primary/20 backdrop-blur-xl shadow-xl animate-[authPopIn_0.6s_cubic-bezier(0.22,1,0.36,1)_both] flex flex-col items-center">
+        <MatchaLogo size="md" className="mb-4 sm:mb-6" />
+
+        <div className="text-center mb-6 sm:mb-8 w-full">
+          <p className="text-lg sm:text-xl font-bold text-text">{header}</p>
+        </div>
+
+        <div className="w-full">{children}</div>
       </div>
-    ))}
-
-    {/* Main Card */}
-    <div className="relative w-full max-w-[95%] sm:max-w-md z-10 rounded-3xl px-6 py-8 sm:px-10 sm:py-10 bg-surface/90 border border-primary/20 backdrop-blur-xl shadow-xl animate-[authPopIn_0.6s_cubic-bezier(0.22,1,0.36,1)_both] flex flex-col items-center">
-      <MatchaLogo size="md" className="mb-4 sm:mb-6" />
-
-      <div className="text-center mb-6 sm:mb-8 w-full">
-        <p className="text-lg sm:text-xl font-bold text-text">{header}</p>
-      </div>
-
-      <div className="w-full">{children}</div>
     </div>
-  </div>
-);
+  );
+};
 
 export default AuthLayout;

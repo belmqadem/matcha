@@ -6,8 +6,10 @@ export function getInitials(first: string, last: string) {
   return `${first[0] ?? ''}${last[0] ?? ''}`.toUpperCase();
 }
 
-export function fmtDist(km: number) {
-  return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+export function fmtDist(km: number | string) {
+  const num = typeof km === 'string' ? parseFloat(km) : km;
+  if (isNaN(num)) return '0m';
+  return num < 1 ? `${Math.round(num * 1000)}m` : `${num.toFixed(1)}km`;
 }
 
 export function makeUserIcon(user: MapUser): L.DivIcon {

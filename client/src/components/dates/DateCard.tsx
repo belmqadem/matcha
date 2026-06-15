@@ -114,29 +114,29 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
 
       {/* Actions */}
       {date.status === 'pending' && (
-        <div className="px-4 pb-3 flex gap-2 justify-end">
+        <div className="px-4 pb-3.5 flex gap-2 justify-end">
           {isReceiver ? (
             <>
               <button
                 onClick={() => handleAction('accepted')}
                 disabled={loading}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-border text-text-muted text-xs font-bold disabled:opacity-40 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] hover:border-primary hover:text-primary hover:bg-primary/5 cursor-pointer"
               >
-                <Check className="w-3 h-3" /> accept
+                <Check className="w-3.5 h-3.5" /> accept
               </button>
               <button
                 onClick={() => handleAction('declined')}
                 disabled={loading}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
+                className="flex items-center gap-1 px-4 py-1.5 rounded-full border border-border text-text-muted text-xs font-bold disabled:opacity-40 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] hover:border-error hover:text-error hover:bg-error/5 cursor-pointer"
               >
-                <X className="w-3 h-3" /> decline
+                <X className="w-3.5 h-3.5" /> decline
               </button>
             </>
           ) : (
             <button
               onClick={() => handleAction('cancel')}
               disabled={loading}
-              className="px-4 py-2 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
+              className="px-4 py-2 rounded-full border border-border text-text-muted text-xs font-bold disabled:opacity-40 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] hover:border-error hover:text-error hover:bg-error/5 cursor-pointer"
             >
               cancel proposal
             </button>
@@ -149,13 +149,13 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
           <button
             onClick={() => handleAction('cancel')}
             disabled={loading}
-            className="px-4 py-2 rounded-xl border border-border text-text-muted text-xs disabled:opacity-40 hover:bg-background active:scale-95 transition-all"
+            className="px-4 py-2 rounded-full border border-border text-text-muted text-xs font-bold disabled:opacity-40 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] hover:border-error hover:text-error hover:bg-error/5 cursor-pointer"
           >
             cancel
           </button>
           <Link
             to={`/chat/${date.other_user_id}`}
-            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-primary text-surface text-xs hover:opacity-90 active:scale-95 transition-all"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full bg-primary text-surface text-xs font-bold shadow-premium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
           >
             <MessageCircle className="w-3.5 h-3.5" /> chat
           </Link>

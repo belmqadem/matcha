@@ -74,7 +74,7 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
       <div className="flex gap-2 mt-4">
         <button
           onClick={onLike}
-          className={`flex-1 py-2 rounded-xl text-[12px] font-black transition-all border flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2.5 rounded-full text-[12px] font-bold transition-all border flex items-center justify-center gap-1.5 hover:scale-[1.03] active:scale-[0.97] cursor-pointer ${
             isLiked
               ? 'bg-primary border-primary text-surface shadow-md shadow-primary/20'
               : 'bg-transparent border-primary text-primary hover:bg-primary/10'
@@ -85,7 +85,7 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
         </button>
         <button
           onClick={() => openProfile(user.id)}
-          className="flex-1 py-2 rounded-xl text-[12px] font-black bg-text text-surface hover:bg-text/90 transition-colors text-center flex items-center justify-center shadow-md cursor-pointer"
+          className="flex-1 py-2.5 rounded-full text-[12px] font-bold bg-text text-surface hover:bg-text/90 transition-all hover:scale-[1.03] active:scale-[0.97] text-center flex items-center justify-center shadow-md cursor-pointer"
         >
           View Profile
         </button>

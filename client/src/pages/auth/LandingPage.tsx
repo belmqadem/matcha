@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import Logo, { Heart } from '@/components/Logo';
 import { Link } from 'react-router-dom';
+import { Sun, Moon } from 'lucide-react';
 
 interface FloatHeart {
   x: string;
@@ -200,8 +202,23 @@ const BearIllustration = () => (
 );
 
 const LandingPage = () => {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+  };
+
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white ">
+    <main className="relative min-h-screen overflow-hidden bg-transparent text-text font-primary">
       <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700&display=swap"
         rel="stylesheet"
@@ -212,6 +229,17 @@ const LandingPage = () => {
         <Logo />
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-surface text-text-muted hover:text-primary hover:border-primary/20 hover:bg-background transition-colors cursor-pointer"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? (
+              <Sun size={17} strokeWidth={1.8} />
+            ) : (
+              <Moon size={17} strokeWidth={1.8} />
+            )}
+          </button>
           <Link
             to="/login"
             className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-muted transition-colors hover:border-primary hover:text-primary"
@@ -220,7 +248,7 @@ const LandingPage = () => {
           </Link>
           <Link
             to="/register"
-            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-premium transition-transform hover:scale-105"
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-text shadow-premium transition-transform hover:scale-105"
           >
             Sign Up
           </Link>
@@ -243,7 +271,7 @@ const LandingPage = () => {
           <div className="flex items-center gap-5">
             <Link
               to="/register"
-              className="inline-flex items-center gap-2.5 rounded-full bg-primary px-9 py-3.5 text-[0.95rem] font-semibold text-white shadow-premium transition-transform hover:scale-105"
+              className="inline-flex items-center gap-2.5 rounded-full bg-primary px-9 py-3.5 text-[0.95rem] font-semibold text-text shadow-premium transition-transform hover:scale-105"
             >
               <Heart size={15} color="white" />
               Find my match

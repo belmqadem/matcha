@@ -42,7 +42,7 @@ export function LikerCard({ liker, index }: LikerCardProps) {
         )}
 
         {/* Time badge */}
-        <span className="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-black/55 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">
+        <span className="absolute bottom-2.5 right-2.5 flex items-center gap-1 bg-black/55 backdrop-blur-sm text-text text-[10px] font-semibold px-2.5 py-1 rounded-full">
           <Clock size={9} />
           {timeAgo(liker.created_at)}
         </span>

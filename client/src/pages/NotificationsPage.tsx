@@ -26,11 +26,11 @@ export default function NotificationsPage() {
             <h1 className="text-2xl sm:text-3xl font-black leading-tight text-text tracking-tight">
               Notifications
             </h1>
-            {unreadCount > 0 && (
+            {/* {unreadCount > 0 && (
               <p className="text-xs sm:text-sm mt-1 font-medium text-text-muted">
                 {unreadCount} unread
               </p>
-            )}
+            )} */}
           </div>
 
           {unreadCount > 0 && (

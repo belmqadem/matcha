@@ -23,6 +23,12 @@ export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafl
   useEffect(() => {
     if (mapRef.current || !containerRef.current) return;
 
+    // Safe cleanup of container leaflet id if hot reloaded
+    const container = containerRef.current as any;
+    if (container._leaflet_id) {
+      container._leaflet_id = null;
+    }
+
     const map = L.map(containerRef.current, {
       center: [48.8566, 2.3522],
       zoom: 12,
@@ -37,7 +43,13 @@ export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafl
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     mapRef.current = map;
 
+    // Force map container recalculation after layout settles
+    const timeoutId = setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+
     return () => {
+      clearTimeout(timeoutId);
       map.remove();
       mapRef.current = null;
     };
@@ -59,11 +71,12 @@ export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafl
         .bindTooltip('You', { direction: 'top', offset: [0, -10] });
     }
 
-    if (radiusCircleRef.current) {
-      radiusCircleRef.current.setLatLng([center.lat, center.lng]);
-      radiusCircleRef.current.setRadius(radiusKm * 1000);
+    let currentCircle = radiusCircleRef.current;
+    if (currentCircle) {
+      currentCircle.setLatLng([center.lat, center.lng]);
+      currentCircle.setRadius(radiusKm * 1000);
     } else {
-      radiusCircleRef.current = L.circle([center.lat, center.lng], {
+      currentCircle = L.circle([center.lat, center.lng], {
         radius: radiusKm * 1000,
         color: '#e94057',
         fillColor: '#e94057',
@@ -71,9 +84,15 @@ export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafl
         weight: 1,
         dashArray: '6 4',
       }).addTo(map);
+      radiusCircleRef.current = currentCircle;
     }
 
-    map.setView([center.lat, center.lng], 12, { animate: true });
+    map.invalidateSize();
+    if (currentCircle) {
+      map.fitBounds(currentCircle.getBounds(), { animate: true, padding: [20, 20] });
+    } else {
+      map.setView([center.lat, center.lng], 12, { animate: true });
+    }
   }, [center, radiusKm]);
 
   // ── Sync user markers ──────────────────────────────────────────────────────
@@ -93,7 +112,9 @@ export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafl
     // Add or update markers
     users.forEach((user) => {
       if (existing.has(user.id)) {
-        existing.get(user.id)!.setIcon(makeUserIcon(user));
+        const marker = existing.get(user.id)!;
+        marker.setLatLng([user.lat, user.lng]);
+        marker.setIcon(makeUserIcon(user));
       } else {
         const marker = L.marker([user.lat, user.lng], { icon: makeUserIcon(user) })
           .addTo(map)

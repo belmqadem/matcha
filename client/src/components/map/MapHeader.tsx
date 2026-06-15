@@ -79,7 +79,7 @@ export default function MapHeader({
         <button
           onClick={onGps}
           disabled={gpsLoading}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-[12px] font-bold bg-primary text-surface hover:opacity-90 active:scale-95 transition-all disabled:opacity-60"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold bg-primary text-surface hover:scale-[1.03] active:scale-[0.97] transition-all disabled:opacity-60 cursor-pointer"
         >
           {gpsLoading ? <Loader2 size={13} className="animate-spin" /> : <MapPin size={13} />}
           {gpsLoading ? 'Locating…' : 'Use GPS'}

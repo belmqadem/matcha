@@ -39,7 +39,7 @@ export const StepNavigation = ({
           <button
             type="button"
             onClick={onBack}
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl border-2 border-border bg-surface flex items-center justify-center cursor-pointer text-text-muted transition-all duration-150 hover:border-primary hover:text-primary hover:bg-primary/5 active:scale-95"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 border-border bg-surface flex items-center justify-center cursor-pointer text-text-muted transition-all duration-200 hover:border-primary hover:text-primary hover:scale-105 active:scale-95"
             aria-label="Go back"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -52,12 +52,12 @@ export const StepNavigation = ({
             disabled={loading}
             onClick={onNext}
             className={`
-              flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl text-xs sm:text-sm
-              font-semibold transition-all duration-200 active:scale-95
+              flex items-center gap-2 px-6 py-2.5 sm:px-7 sm:py-3 rounded-full text-xs sm:text-sm
+              font-semibold transition-all duration-200 hover:scale-105 active:scale-95
               ${
                 loading
                   ? 'bg-border text-text-muted cursor-not-allowed'
-                  : 'bg-primary text-surface shadow-lg shadow-primary/30 hover:-translate-y-0.5 hover:bg-primary-hover'
+                  : 'bg-primary text-surface shadow-premium'
               }
             `}
           >

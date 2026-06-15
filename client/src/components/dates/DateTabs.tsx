@@ -21,15 +21,15 @@ export default function DateTabs({ tab, setTab, dates, upcomingCount }: DateTabs
   ];
 
   return (
-    <div className="flex gap-1 p-1 rounded-2xl bg-surface border border-border/60">
+    <div className="flex gap-1 p-1.5 rounded-full bg-surface border border-border/60">
       {TABS.map((t) => {
         const active = tab === t.key;
         return (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs transition-all duration-150 ${
-              active ? 'bg-primary text-surface shadow-sm' : 'text-text-muted hover:text-text'
+            className={`flex-1 flex items-center justify-center gap-1 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer ${
+              active ? 'bg-primary text-surface shadow-md' : 'text-text-muted hover:bg-background hover:text-text'
             }`}
           >
             {t.label}

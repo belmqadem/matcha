@@ -180,7 +180,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
           <p className="text-sm font-bold text-text">{error || 'Profile not found.'}</p>
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
+            className="px-6 py-2 rounded-full bg-primary text-text text-xs font-bold uppercase tracking-wider cursor-pointer"
           >
             Close
           </button>
@@ -238,7 +238,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
       )}
 
       {/* Centered Modal Container */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-999 flex items-center justify-center p-4 pointer-events-none">
         <div className="pointer-events-auto w-full max-w-[480px] md:max-w-[860px] max-h-[90vh] md:max-h-none bg-surface border border-border/80 rounded-3xl shadow-premium flex flex-col overflow-hidden font-primary animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="flex items-center justify-end px-5 py-3 border-b border-border/60 bg-surface/85 backdrop-blur-md relative z-30 gap-2">
@@ -336,13 +336,13 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                   {/* Online indicator */}
                   <div className="absolute bottom-4 left-4 z-10">
                     {profile.is_online ? (
-                      <span className="flex items-center gap-2 bg-success text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-wider shadow-md">
+                      <span className="flex items-center gap-2 bg-success text-text text-[9px] font-black px-3 py-1.5 rounded-full tracking-wider shadow-md">
                         <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping absolute" />
                         <span className="w-1.5 h-1.5 bg-white rounded-full relative" />
                         ONLINE
                       </span>
                     ) : (
-                      <span className="bg-black/55 text-white text-[9px] font-black px-3 py-1.5 rounded-full tracking-wider backdrop-blur-xs">
+                      <span className="bg-black/55 text-text text-[9px] font-black px-3 py-1.5 rounded-full tracking-wider backdrop-blur-xs">
                         OFFLINE
                       </span>
                     )}
@@ -355,7 +355,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                         onClick={() =>
                           setActivePhoto((prev) => (prev > 0 ? prev - 1 : sortedPhotos.length - 1))
                         }
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-text flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                       >
                         <ChevronLeft size={16} />
                       </button>
@@ -363,7 +363,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                         onClick={() =>
                           setActivePhoto((prev) => (prev < sortedPhotos.length - 1 ? prev + 1 : 0))
                         }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-text flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -474,7 +474,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                             onClose();
                             navigate(`/chat/${profile.id}`);
                           }}
-                          className="w-full py-2.5 rounded-full bg-primary text-white hover:bg-primary-hover font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-md shadow-primary/20"
+                          className="w-full py-2.5 rounded-full bg-primary text-text hover:bg-primary-hover font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-md shadow-primary/20"
                         >
                           Send Message
                         </button>
@@ -485,7 +485,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                           className={`w-full py-2.5 rounded-full font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 ${
                             profile.liked_by_me
                               ? 'bg-transparent border border-primary text-primary hover:bg-primary/10'
-                              : 'bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20'
+                              : 'bg-primary text-text hover:bg-primary-hover shadow-md shadow-primary/20'
                           }`}
                         >
                           <Heart
