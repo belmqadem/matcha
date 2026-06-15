@@ -1,6 +1,7 @@
 // src/components/profile-setup/steps/Step0Birthdate.tsx
 import type { ProfileFormData } from '../../../types/profileSetup';
 import { calculateAge, getMinBirthdateInput, getMaxBirthdateInput } from '../../../utils/age';
+import DatePicker from '@/components/DatePicker';
 
 interface Step0BirthdateProps {
   form: ProfileFormData;
@@ -9,8 +10,21 @@ interface Step0BirthdateProps {
 
 export const Step0Birthdate = ({ form, setForm }: Step0BirthdateProps) => {
   const age = calculateAge(form.birthdate);
-  const maxDate = getMaxBirthdateInput();
-  const minDate = getMinBirthdateInput();
+  const maxStr = getMaxBirthdateInput();
+  const minStr = getMinBirthdateInput();
+  const maxDate = new Date(maxStr);
+  const minDate = new Date(minStr);
+
+  const parseDateString = (s: string): Date | null => {
+    if (!s) return null;
+    const parts = s.split('-');
+    if (parts.length !== 3) return null;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+    return new Date(y, m, d);
+  };
 
   return (
     <div className="w-full">
@@ -22,20 +36,22 @@ export const Step0Birthdate = ({ form, setForm }: Step0BirthdateProps) => {
         Date of birth
       </label>
 
-      <input
-        type="date"
-        autoComplete="new-birthdate"
-        value={form.birthdate}
-        onChange={(e) => setForm((p) => ({ ...p, birthdate: e.target.value }))}
-        min={minDate}
-        max={maxDate}
+      <DatePicker
+        value={parseDateString(form.birthdate)}
+        onChange={(date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          setForm((p) => ({ ...p, birthdate: `${year}-${month}-${day}` }));
+        }}
+        minDate={minDate}
+        maxDate={maxDate}
         className={`
-          w-full px-4 py-3 sm:py-4 rounded-xl border-2 text-text text-sm sm:text-base outline-none
-          transition-all duration-200
+          flex items-center gap-2 w-full px-4 py-3 sm:py-4 rounded-xl border-2 text-text text-sm sm:text-base outline-none text-left bg-surface transition-all duration-200 cursor-pointer
           ${
             form.birthdate
-              ? 'border-primary bg-surface shadow-md shadow-primary/20'
-              : 'border-border bg-surface focus:border-primary/50'
+              ? 'border-primary shadow-md shadow-primary/20'
+              : 'border-border focus:border-primary/50'
           }
         `}
       />

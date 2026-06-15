@@ -1,18 +1,5 @@
+import Logo, { Heart } from '@/components/Logo';
 import { Link } from 'react-router-dom';
-
-const heartPath =
-  'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
-
-interface HeartProps {
-  size?: number;
-  color?: string;
-}
-
-const Heart = ({ size = 24, color = 'var(--color-primary)' }: HeartProps) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-    <path d={heartPath} />
-  </svg>
-);
 
 interface FloatHeart {
   x: string;
@@ -214,20 +201,15 @@ const BearIllustration = () => (
 
 const LandingPage = () => {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-white font-poppins">
+    <main className="relative min-h-screen overflow-hidden bg-white ">
       <link
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700&display=swap"
         rel="stylesheet"
       />
 
       {/* NAVBAR */}
-      <nav className="relative z-20 flex items-center justify-between px-14 py-6">
-        <div className="flex items-center gap-2">
-          <Heart size={22} color="var(--color-primary)" />
-          <span className="text-xl font-bold tracking-tight text-text">
-            matcha<span className="text-primary">.</span>
-          </span>
-        </div>
+      <nav className="relative z-20 flex items-center justify-between px-4 md:px-8 lg:px-12 py-6">
+        <Logo />
 
         <div className="flex items-center gap-3">
           <Link
@@ -246,12 +228,11 @@ const LandingPage = () => {
       </nav>
 
       {/* HERO */}
-      <div className="flex items-center pl-14 min-h-[calc(100vh-80px)]">
+      <div className="flex items-center pl-4 md:pl-8 lg:pl-14 min-h-[calc(100vh-80px)]">
         {/* LEFT */}
         <div className="z-10 w-[44%] shrink-0 animate-slide-in-left">
           <h1 className="mb-5 text-[3.8rem] font-extrabold leading-[1.08] tracking-[-2px] text-text">
-            Find your{' '}
-            <span className="inline-block text-primary font-playfair italic">matchy matchy</span>
+            Find your <span className="inline-block text-primary italic">matchy matchy</span>
           </h1>
 
           <p className="mb-10 max-w-[360px] text-[0.96rem] leading-relaxed text-text-muted">

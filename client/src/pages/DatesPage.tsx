@@ -100,9 +100,9 @@ export default function DatesPage() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center py-20 text-center animate-fade-in-up">
-              <div className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center mb-4">
+              {/* <div className="w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center mb-4">
                 <span className="text-text-muted text-sm">—</span>
-              </div>
+              </div> */}
               <p className="text-sm text-text-muted">
                 {tab === 'upcoming' && 'nothing planned yet'}
                 {tab === 'pending' && 'no pending proposals'}

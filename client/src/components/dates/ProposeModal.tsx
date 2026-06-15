@@ -1,21 +1,37 @@
-// src/components/dates/ProposeModal.tsx
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { chatService } from '@/services/chatService';
 import { dateService } from '@/services/dateService';
-import { getMinDateTime } from '@/utils/dateUtils';
 import type { Conversation } from '@/types/chat';
+import DatePicker from '@/components/DatePicker';
+import TimePicker from '@/components/TimePicker';
 
 interface ProposeModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
 
+const SelectWrapper = ({ children }: { children: React.ReactNode }) => (
+  <div className="relative flex items-center">
+    {children}
+    <span className="pointer-events-none absolute right-2 text-text-muted text-[11px]">▾</span>
+  </div>
+);
+
+const selectCls =
+  'w-full appearance-none pr-6 p-2.5 rounded-xl border border-border bg-surface text-[13px] text-text font-medium outline-none focus:border-primary cursor-pointer';
+
 export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) {
   const [connections, setConnections] = useState<Conversation[]>([]);
   const [loadingConns, setLoadingConns] = useState(true);
   const [receiverId, setReceiverId] = useState('');
-  const [scheduledAt, setScheduledAt] = useState('');
+
+  const [date, setDate] = useState<Date | null>(null);
+  const [hour, setHour] = useState(() => new Date(Date.now() + 3_600_000).getHours());
+  const [minute, setMinute] = useState(
+    () => Math.floor(new Date(Date.now() + 3_600_000).getMinutes() / 5) * 5,
+  );
+
   const [location, setLocation] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,16 +45,24 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
   }, []);
 
   const handleSubmit = async () => {
-    if (!receiverId || !scheduledAt) return setError('Please select a person and date/time.');
-    if (new Date(scheduledAt) < new Date())
-      return setError('Scheduled time must be in the future.');
+    if (!receiverId) return setError('Please select a person.');
+    if (!date) return setError('Please select a date.');
+    const selectedDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      hour,
+      minute,
+      0,
+    );
+    if (selectedDate <= new Date()) return setError('Scheduled time must be in the future.');
 
     setSubmitting(true);
     setError(null);
     try {
       await dateService.proposeDate({
         receiver_id: receiverId,
-        scheduled_at: new Date(scheduledAt).toISOString(),
+        scheduled_at: selectedDate.toISOString(),
         location: location.trim() || undefined,
       });
       onSuccess();
@@ -53,8 +77,14 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 bg-text/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-5">
-      <div className="bg-surface rounded-3xl p-7 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 bg-text/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-5"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-surface rounded-3xl p-7 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200"
+      >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[18px] font-black text-text">Propose a date</h2>
           <button
@@ -72,6 +102,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
         )}
 
         <div className="flex flex-col gap-4">
+          {/* With */}
           <div>
             <label className="block text-[12px] font-bold text-text-muted mb-1.5">With</label>
             {loadingConns ? (
@@ -81,34 +112,46 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
                 No connections yet — match with someone first.
               </div>
             ) : (
-              <select
-                value={receiverId}
-                onChange={(e) => setReceiverId(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-border bg-surface text-[13px] text-text font-medium outline-none focus:border-primary"
-              >
-                <option value="">Select a match…</option>
-                {connections.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.first_name} {c.last_name} (@{c.username})
-                  </option>
-                ))}
-              </select>
+              <SelectWrapper>
+                <select
+                  value={receiverId}
+                  onChange={(e) => setReceiverId(e.target.value)}
+                  className={selectCls}
+                >
+                  <option value="">Select a match…</option>
+                  {connections.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.first_name} {c.last_name} (@{c.username})
+                    </option>
+                  ))}
+                </select>
+              </SelectWrapper>
             )}
           </div>
 
+          {/* Date & time */}
           <div>
             <label className="block text-[12px] font-bold text-text-muted mb-1.5">
-              Date & time
+              Date &amp; time
             </label>
-            <input
-              type="datetime-local"
-              min={getMinDateTime()}
-              value={scheduledAt}
-              onChange={(e) => setScheduledAt(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-border bg-surface text-[13px] text-text font-medium outline-none focus:border-primary"
-            />
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <DatePicker value={date} onChange={setDate} minDate={new Date()} />
+              </div>
+              <div style={{ width: 130 }}>
+                <TimePicker
+                  hour={hour}
+                  minute={minute}
+                  onChange={(h, m) => {
+                    setHour(h);
+                    setMinute(m);
+                  }}
+                />
+              </div>
+            </div>
           </div>
 
+          {/* Location */}
           <div>
             <label className="block text-[12px] font-bold text-text-muted mb-1.5">
               Location <span className="font-normal opacity-70">(optional)</span>

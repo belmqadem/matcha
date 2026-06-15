@@ -1,5 +1,4 @@
-// src/components/map/MapHeader.tsx
-import { MapPin, Loader2, Heart } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
 
 // Define the type here to avoid import errors from types/map.ts
 export type MapFilter = 'all' | 'online';
@@ -31,8 +30,8 @@ export default function MapHeader({
     <header className="flex items-center justify-between flex-wrap gap-3 px-5 py-3 bg-surface border-b border-border shrink-0">
       {/* Title */}
       <div className="flex items-center gap-2.5">
-        <Heart size={18} className="text-primary fill-primary" />
-        <h1 className="text-[18px] font-black text-text">Map</h1>
+        {/* <Heart size={18} className="text-primary fill-primary" />
+        <h1 className="text-[18px] font-black text-text">Map</h1> */}
         {!loading && (
           <span className="text-[12px] px-2.5 py-0.5 rounded-full bg-primary/10 text-primary font-bold">
             {userCount} nearby

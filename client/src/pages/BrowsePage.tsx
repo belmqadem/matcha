@@ -57,7 +57,7 @@ export default function BrowsePage() {
             {(
               [
                 ['all', 'All'],
-                ['liked', 'Liked'],
+                ['liked', 'I Liked'],
                 ['liked-me', 'Liked Me'],
                 ['matches', 'Matches'],
               ] as [TabValue, string][]
@@ -113,7 +113,7 @@ export default function BrowsePage() {
             )}
           </>
         ) : (
-          <div className="text-center py-16 sm:py-20 px-4 sm:px-5 bg-surface backdrop-blur-sm border border-border rounded-3xl shadow-sm relative z-10 animate-fade-in-up">
+          <div className="text-center py-16 sm:py-20 px-4 sm:px-5 relative z-10 animate-fade-in-up">
             <div className="flex justify-center mb-5 sm:mb-6 text-primary opacity-40 animate-pulse">
               <Heart className="w-16 h-16 sm:w-20 sm:h-20 fill-current" />
             </div>

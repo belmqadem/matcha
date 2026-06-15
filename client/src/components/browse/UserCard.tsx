@@ -1,22 +1,13 @@
 // src/components/browse/UserCard.tsx
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useProfileDrawer } from '@/hooks/useProfileDrawer';
-import { Heart, MessageCircle, MapPin, Sparkles, Circle } from 'lucide-react';
+import { Heart, MapPin, Sparkles } from 'lucide-react';
 
 import { Spinner } from '@/components/ui/Spinner';
 import { FameBadge } from './FameBadge';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import type { BrowseUser } from '@/types/user';
 
 /* --- Local Helpers --- */
-function timeAgo(iso?: string): string {
-  if (!iso) return 'Offline';
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return 'Just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
 
 function calcAge(birth_date?: string): number | null {
   if (!birth_date) return null;
@@ -60,7 +51,6 @@ interface UserCardProps {
 }
 
 export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
-  const navigate = useNavigate();
   const { openProfile } = useProfileDrawer();
   const [busy, setBusy] = useState(false);
   const age = calcAge(user.birth_date);
@@ -91,13 +81,17 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
     if (user.is_connected) {
       return (
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/chat/${user.id}`);
-          }}
-          className="flex-1 py-2 sm:py-2.5 rounded-full bg-primary text-surface text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-95"
+          onClick={handleUnlikeClick}
+          disabled={busy}
+          className="flex-1 py-2 sm:py-2.5 rounded-full bg-background text-error border border-error text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:bg-error/10 active:scale-95"
         >
-          <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Send message
+          {busy ? (
+            <Spinner size="sm" />
+          ) : (
+            <>
+              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" /> Unmatch
+            </>
+          )}
         </button>
       );
     }
@@ -118,28 +112,11 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
         </button>
       );
     }
-    if (user.liked_me) {
-      return (
-        <button
-          onClick={handleLikeClick}
-          disabled={busy}
-          className="flex-1 py-2 sm:py-2.5 rounded-full border-2 border-primary bg-surface text-primary text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:bg-primary hover:text-surface active:scale-95 shadow-sm"
-        >
-          {busy ? (
-            <Spinner size="sm" />
-          ) : (
-            <>
-              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Match
-            </>
-          )}
-        </button>
-      );
-    }
     return (
       <button
         onClick={handleLikeClick}
         disabled={busy}
-        className="flex-1 py-2 sm:py-2.5 rounded-full border-2 border-border bg-surface text-text-muted text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:border-primary hover:text-primary active:scale-95"
+        className="flex-1 py-2 sm:py-2.5 rounded-full border-2 border-border bg-primary text-surface text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-70 hover:border-primary hover:text-surface active:scale-95"
       >
         {busy ? (
           <Spinner size="sm" />
@@ -157,24 +134,9 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
       onClick={() => openProfile(user.id)}
       className="relative z-10 group bg-surface rounded-3xl overflow-hidden border border-border flex flex-col cursor-pointer transition-all duration-500 [transition-timing-function:cubic-bezier(0.175,0.885,0.32,1.275)] hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_12px_28px_rgba(233,64,87,0.18)]"
     >
-      <div className="relative aspect-[3/4] overflow-hidden bg-background rounded-t-3xl">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-t-3xl">
         <Avatar user={user} />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
-
-        <div
-          className={`absolute top-3 left-3 flex items-center gap-1.5 backdrop-blur-md px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full border shadow-sm ${
-            user.is_online
-              ? 'bg-surface/90 text-success border-success/30'
-              : 'bg-surface/20 text-surface border-surface/30'
-          }`}
-        >
-          <Circle
-            className={`w-1.5 h-1.5 sm:w-2 sm:h-2 fill-current ${user.is_online ? 'text-success animate-pulse' : 'text-surface'}`}
-          />
-          <span className="text-[0.6rem] sm:text-[0.65rem] font-bold uppercase tracking-wider drop-shadow-md">
-            {user.is_online ? 'Online' : timeAgo(user.last_seen)}
-          </span>
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/45 via-primary/15 to-transparent pointer-events-none" />
 
         <div className="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
           {user.is_connected && (
@@ -223,7 +185,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
           {(user.tags ?? []).slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-muted bg-background border border-border rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors group-hover:border-primary group-hover:text-primary"
+              className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-muted bg-background border border-border rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 transition-colors group-hover:text-primary/80"
             >
               {tag.startsWith('#') ? tag : `#${tag}`}
             </span>

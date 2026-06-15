@@ -43,7 +43,6 @@ export default function AppHeader() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchVal, setSearchVal] = useState('');
-  const [searchFocused, setSearchFocused] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -63,6 +62,10 @@ export default function AppHeader() {
 
   const profileRef = useRef<HTMLDivElement>(null);
   const mobileRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const [searchExpanded, setSearchExpanded] = useState(false);
 
   const avatar = me?.photos?.find((p) => p.id === me.profile_picture_id)?.url ?? null;
   const initials = me ? `${me.first_name?.[0] ?? ''}${me.last_name?.[0] ?? ''}`.toUpperCase() : '?';
@@ -77,13 +80,15 @@ export default function AppHeader() {
   const isActive = (to: string) =>
     location.pathname === to || location.pathname.startsWith(to + '/');
 
-  // Handle click outside for dropdowns
+  // Handle click outside for dropdowns and expandable search bar
   useEffect(() => {
     const h = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node))
         setProfileOpen(false);
       if (mobileRef.current && !mobileRef.current.contains(e.target as Node))
         setMobileMenuOpen(false);
+      if (searchRef.current && !searchRef.current.contains(e.target as Node))
+        setSearchExpanded(false);
     };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
@@ -119,14 +124,14 @@ export default function AppHeader() {
 
   return (
     <header className="sticky top-0 z-100 w-full border-b border-border bg-surface/80 shadow-sm backdrop-blur-md">
-      <div className="grid grid-cols-[auto_1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center h-16 px-4 md:px-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 items-center h-16 px-4 md:px-6 gap-4">
         {/* ── LEFT: Logo ── */}
         <div className="flex items-center">
           <MatchaLogo size="sm" showText={true} />
         </div>
 
         {/* ── CENTER: Nav links + Search ── */}
-        <div className="hidden lg:flex items-center justify-center gap-0.5">
+        <div className="hidden lg:flex items-center justify-center gap-2.5 ">
           {MAIN_NAV.map(({ to, label, Icon, badge }) => {
             const active = isActive(to);
             const count = getBadge(badge);
@@ -152,34 +157,58 @@ export default function AppHeader() {
               </NavLink>
             );
           })}
-
-          {/* ── Search ── */}
-          <form onSubmit={handleSearch} className="ml-2 min-w-[200px]">
-            <div
-              className={`flex items-center gap-2 px-4 h-[38px] rounded-full border-[1.5px] transition-all cursor-text ${
-                searchFocused
-                  ? 'border-primary bg-surface ring-2 ring-primary/10'
-                  : 'border-primary/10 bg-primary/5'
-              }`}
-            >
-              <Search size={14} className="text-primary shrink-0" />
-              <input
-                type="text"
-                value={searchVal}
-                onChange={(e) => setSearchVal(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                placeholder="Search people…"
-                className="border-none bg-transparent outline-none text-[13.5px] text-text w-full placeholder-text-muted"
-              />
-            </div>
-          </form>
         </div>
 
         {/* ── RIGHT: Bell + Avatar ── */}
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-2 ">
           {/* Desktop Right Side */}
           <div className="hidden lg:flex items-center gap-2">
+            {/* ── Search ── */}
+            <form
+              ref={searchRef}
+              onSubmit={handleSearch}
+              className="ml-2 relative flex items-center transition-all duration-300"
+            >
+              <div
+                className={`flex items-center transition-all duration-300 rounded-full border bg-surface ${
+                  searchExpanded
+                    ? 'w-60 h-[38px] px-4 border-primary ring-2 ring-primary/10'
+                    : 'w-10 h-10 items-center justify-center border-border hover:border-primary/20 hover:bg-background text-text-muted hover:text-primary cursor-pointer'
+                }`}
+                onClick={() => {
+                  if (!searchExpanded) {
+                    setSearchExpanded(true);
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                  }
+                }}
+              >
+                <button
+                  type={searchExpanded ? 'submit' : 'button'}
+                  className="focus:outline-none flex items-center justify-center shrink-0 cursor-pointer"
+                >
+                  <Search
+                    size={searchExpanded ? 14 : 17}
+                    className={`${
+                      searchExpanded
+                        ? 'text-primary'
+                        : 'text-text-muted hover:text-primary transition-colors'
+                    }`}
+                    strokeWidth={1.8}
+                  />
+                </button>
+                {searchExpanded && (
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={searchVal}
+                    onChange={(e) => setSearchVal(e.target.value)}
+                    placeholder="Search people…"
+                    className="ml-2 border-none bg-transparent outline-none text-[13.5px] text-text w-full placeholder-text-muted animate-fade-in"
+                  />
+                )}
+              </div>
+            </form>
+
             {/* Bell */}
             <div className="relative shrink-0">
               <NavLink

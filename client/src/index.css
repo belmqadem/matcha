@@ -1,14 +1,16 @@
 /* src/index.css */
-@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&family=Outfit:wght@100..900&family=Pacifico&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap');
 @import 'tailwindcss';
 
 :root {
   /* Default is Dark Theme - Elevated Deep Space */
+  --color-primary: #ec737e;
   --color-background: #06070a;
   --color-surface: #0e0f14;
   --color-text: #f3f4f6;
   --color-text-muted: #8e93ad;
   --color-border: #1d1e26;
+  --font-fraunces: 'Fraunces', serif;
   --body-gradient: linear-gradient(
     135deg,
     #06070a 0%,
@@ -21,6 +23,7 @@
 
 .light-theme {
   /* Light Theme Override */
+  --color-primary: #e94057;
   --color-background: #fff5f7;
   --color-surface: #ffffff;
   --color-text: #1a1a2e;
@@ -51,10 +54,7 @@
   --color-success: #10b981;
 
   /* Typography Tokens */
-  --font-primary: 'Outfit', sans-serif;
-  --font-logo: 'Comfortaa', sans-serif;
-  --font-poppins: 'Poppins', sans-serif;
-  --font-playfair: 'Playfair Display', serif;
+  --font-primary: 'Fraunces', serif;
 
   /* Premium Shadows */
   --shadow-premium: 0 20px 40px -15px rgba(233, 64, 87, 0.12), 0 1px 3px rgba(233, 64, 87, 0.04);

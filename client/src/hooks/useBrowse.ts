@@ -127,36 +127,24 @@ export function useBrowse() {
   const handleUnlike = async (id: string) => {
     const original = users.find((u) => u.id === id);
 
-    if (activeTab === 'liked' || activeTab === 'matches') {
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-      setTotal((prev) => Math.max(0, prev - 1));
-    } else {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
-      );
-    }
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
+    );
 
     try {
       await userService.unlike(id);
     } catch (err) {
-      if (activeTab === 'liked' || activeTab === 'matches') {
-        if (original) {
-          setUsers((prev) => [...prev, original]);
-          setTotal((prev) => prev + 1);
-        }
-      } else {
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === id
-              ? {
-                  ...u,
-                  liked_by_me: original?.liked_by_me ?? false,
-                  is_connected: original?.is_connected ?? false,
-                }
-              : u,
-          ),
-        );
-      }
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === id
+            ? {
+                ...u,
+                liked_by_me: original?.liked_by_me ?? false,
+                is_connected: original?.is_connected ?? false,
+              }
+            : u,
+        ),
+      );
       setError((err as Error).message);
     }
   };

@@ -1,5 +1,4 @@
-// src/pages/chat/ChatSidebar.tsx
-import { Heart, Search, Ban, Loader2 } from 'lucide-react';
+import { Search, Ban, Loader2 } from 'lucide-react';
 
 import ConvoItem from '@/components/chat/ConvoItem';
 import BlockedItem from '@/components/chat/BlockedItem';
@@ -42,10 +41,10 @@ export default function ChatSidebar({
     <>
       {/* Header */}
       <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-3 sm:pb-4 border-b border-border shrink-0 z-10">
-        <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+        {/* <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
           <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-primary fill-primary" />
           <h1 className="text-xl sm:text-[22px] font-black text-text">Messages</h1>
-        </div>
+        </div> */}
 
         {/* Tabs */}
         <div className="flex bg-background border border-border rounded-full p-1 mb-3 sm:mb-4 shadow-sm">
