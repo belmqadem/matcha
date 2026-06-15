@@ -47,7 +47,6 @@ const MyProfilePage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-
   useEffect(() => {
     userService
       .getMe()
@@ -159,7 +158,6 @@ const MyProfilePage = () => {
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto md:overflow-y-hidden px-6 py-6 scrollbar-thin">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full items-stretch">
-            
             {/* Left Column (Photos) */}
             <div className="md:col-span-6 flex flex-col h-full min-h-0 shrink-0">
               <PhotosPanel user={user} onUpdate={setUser} />
@@ -167,7 +165,6 @@ const MyProfilePage = () => {
 
             {/* Right Column (Details) */}
             <div className="md:col-span-6 flex flex-col justify-between gap-4 h-full min-h-0">
-              
               {/* Top part: identity, location, bio, tags */}
               <div className="space-y-4">
                 <div>
@@ -206,10 +203,12 @@ const MyProfilePage = () => {
                 {/* Bio */}
                 <div className="relative bg-primary/5 border-l-4 border-primary rounded-r-2xl p-3.5 my-1.5 overflow-hidden shadow-sm">
                   <Quote className="absolute right-2 top-2 w-10 h-10 text-primary/10 -rotate-12 pointer-events-none" />
-                  <p className="text-[10px] font-black text-primary/70 uppercase tracking-widest mb-1 relative z-10">Biography</p>
+                  <p className="text-[10px] font-black text-primary/70 uppercase tracking-widest mb-1 relative z-10">
+                    Biography
+                  </p>
                   <div className="max-h-[96px] overflow-y-auto scrollbar-thin pr-1 relative z-10">
                     {user.biography ? (
-                      <p className="text-xs sm:text-sm text-text leading-relaxed font-semibold italic opacity-95">
+                      <p className="text-xs sm:text-sm text-text leading-relaxed font-semibold italic opacity-95 whitespace-pre-wrap break-words">
                         "{user.biography}"
                       </p>
                     ) : (
@@ -220,7 +219,9 @@ const MyProfilePage = () => {
 
                 {/* Tags */}
                 <div className="pt-3 border-t border-border/55">
-                  <h3 className="text-xs font-black text-text-muted uppercase tracking-wider mb-2">My Tags</h3>
+                  <h3 className="text-xs font-black text-text-muted uppercase tracking-wider mb-2">
+                    My Tags
+                  </h3>
                   {(user.tags ?? []).length > 0 ? (
                     <div className="flex flex-wrap gap-1.5 max-h-[72px] overflow-y-auto scrollbar-thin">
                       {user.tags?.map((tag) => (
@@ -240,15 +241,21 @@ const MyProfilePage = () => {
 
               {/* Bottom part: profile info grid */}
               <div className="pt-3 border-t border-border/55 space-y-2">
-                <h3 className="text-[10px] font-black text-text-muted uppercase tracking-wider mb-2.5">Profile Info</h3>
+                <h3 className="text-[10px] font-black text-text-muted uppercase tracking-wider mb-2.5">
+                  Profile Info
+                </h3>
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
                     <div className="p-1.5 rounded-xl bg-primary/10 text-primary shrink-0">
                       <User size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Gender</p>
-                      <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">{genderLabel ?? 'Not set'}</p>
+                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                        Gender
+                      </p>
+                      <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">
+                        {genderLabel ?? 'Not set'}
+                      </p>
                     </div>
                   </div>
                   <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
@@ -256,8 +263,12 @@ const MyProfilePage = () => {
                       <Sparkles size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Looking for</p>
-                      <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">{prefLabel ?? 'Not set'}</p>
+                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                        Looking for
+                      </p>
+                      <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">
+                        {prefLabel ?? 'Not set'}
+                      </p>
                     </div>
                   </div>
                   <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
@@ -265,8 +276,12 @@ const MyProfilePage = () => {
                       <Calendar size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Age</p>
-                      <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">{user.birth_date ? `${age} yrs` : 'Not set'}</p>
+                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                        Age
+                      </p>
+                      <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">
+                        {user.birth_date ? `${age} yrs` : 'Not set'}
+                      </p>
                     </div>
                   </div>
                   <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
@@ -274,15 +289,17 @@ const MyProfilePage = () => {
                       <Flame size={14} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Fame Rating</p>
-                      <p className="text-xs font-bold text-primary mt-0.5 truncate leading-tight">{Math.round(user.fame_rating ?? 0)} pts</p>
+                      <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                        Fame Rating
+                      </p>
+                      <p className="text-xs font-bold text-primary mt-0.5 truncate leading-tight">
+                        {Math.round(user.fame_rating ?? 0)} pts
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
-
           </div>
         </div>
       </div>

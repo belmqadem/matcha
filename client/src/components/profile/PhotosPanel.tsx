@@ -6,6 +6,7 @@ import * as profileService from '@/services/profileService';
 import type { UserProfile, Photo } from '@/types/user';
 import { PhotoEditorModal } from './PhotoEditorModal';
 import { ConfirmModal } from './ConfirmModal';
+import { photoBuster } from '@/utils/photoBuster';
 
 interface Props {
   user: UserProfile;
@@ -31,8 +32,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
   const slots: (Photo | null)[] = [...sorted, ...Array(5 - sorted.length).fill(null)].slice(0, 5);
 
   const handleSavePhoto = (updatedPhoto: Photo) => {
+    photoBuster.regenerate();
     const updatedPhotos = photos.map((item) => (item.id === updatedPhoto.id ? updatedPhoto : item));
-    onUpdate({ ...user, photos: updatedPhotos });
+    onUpdate(photoBuster.bustUser({ ...user, photos: updatedPhotos }));
   };
 
   const handleUploadFiles = async (files: File[]) => {
@@ -51,7 +53,8 @@ export function PhotosPanel({ user, onUpdate }: Props) {
         updated = { ...updated, photos: [...updated.photos, p] };
         if (!updated.profile_picture_id) updated.profile_picture_id = p.id;
       }
-      onUpdate(updated);
+      photoBuster.regenerate();
+      onUpdate(photoBuster.bustUser(updated));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed.');
     } finally {
@@ -71,7 +74,8 @@ export function PhotosPanel({ user, onUpdate }: Props) {
       const remaining = photos.filter((p) => p.id !== id);
       const newPicId =
         id === user.profile_picture_id ? (remaining[0]?.id ?? null) : user.profile_picture_id;
-      onUpdate({ ...user, photos: remaining, profile_picture_id: newPicId });
+      photoBuster.regenerate();
+      onUpdate(photoBuster.bustUser({ ...user, photos: remaining, profile_picture_id: newPicId }));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Delete failed.');
     }
@@ -80,7 +84,8 @@ export function PhotosPanel({ user, onUpdate }: Props) {
   const handleSetMain = async (id: number) => {
     try {
       await userService.setMainPhoto(id);
-      onUpdate({ ...user, profile_picture_id: id });
+      photoBuster.regenerate();
+      onUpdate(photoBuster.bustUser({ ...user, profile_picture_id: id }));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed.');
     }
@@ -95,11 +100,21 @@ export function PhotosPanel({ user, onUpdate }: Props) {
 
   const handleDragEnter = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    if (e.dataTransfer.types.includes('Files')) {
+      e.dataTransfer.dropEffect = 'copy';
+    } else {
+      e.dataTransfer.dropEffect = 'move';
+    }
     setDragOverIndex(index);
   };
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
+    if (e.dataTransfer.types.includes('Files')) {
+      e.dataTransfer.dropEffect = 'copy';
+    } else {
+      e.dataTransfer.dropEffect = 'move';
+    }
     if (dragOverIndex !== index) {
       setDragOverIndex(index);
     }
@@ -121,11 +136,18 @@ export function PhotosPanel({ user, onUpdate }: Props) {
     try {
       const updatedPhotos = await profileService.reorderPhotos(newPhotos.map((p) => p.id));
       const newMainPhoto = newPhotos[0];
+      photoBuster.regenerate();
       if (newMainPhoto && newMainPhoto.id !== user.profile_picture_id) {
         await userService.setMainPhoto(newMainPhoto.id);
-        onUpdate({ ...user, photos: updatedPhotos, profile_picture_id: newMainPhoto.id });
+        onUpdate(
+          photoBuster.bustUser({
+            ...user,
+            photos: updatedPhotos,
+            profile_picture_id: newMainPhoto.id,
+          }),
+        );
       } else {
-        onUpdate({ ...user, photos: updatedPhotos });
+        onUpdate(photoBuster.bustUser({ ...user, photos: updatedPhotos }));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Reordering failed.');
@@ -180,7 +202,12 @@ export function PhotosPanel({ user, onUpdate }: Props) {
 
       <div
         className="flex-1 min-h-0 flex flex-col justify-between"
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          if (e.dataTransfer.types.includes('Files')) {
+            e.dataTransfer.dropEffect = 'copy';
+          }
+        }}
         onDrop={(e) => handleDrop(e, slots.findIndex((x) => x === null) ?? 4)}
       >
         {/* Big Main Image (Slot 0) */}
@@ -196,7 +223,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, 0)}
               onClick={() => !photo && fileRef.current?.click()}
-              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group flex-1 min-h-[220px] sm:min-h-[280px] aspect-[4/3] md:aspect-auto w-full mb-3 ${
+              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group flex-1 min-h-[150px] aspect-[4/3] md:aspect-auto w-full mb-3 ${
                 isOver ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' : 'border-border'
               } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'}`}
             >
@@ -346,9 +373,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                     ) : (
                       <Camera className="w-3.5 h-3.5" />
                     )}
-                    <span className="text-[8px] font-bold uppercase tracking-wider">
-                      Add
-                    </span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider">Add</span>
                   </div>
                 )}
               </div>

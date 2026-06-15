@@ -13,6 +13,8 @@ import {
   X,
   Search,
   CalendarDays,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
@@ -43,6 +45,21 @@ export default function AppHeader() {
   const [searchVal, setSearchVal] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return document.documentElement.classList.contains('light-theme') ? 'light' : 'dark';
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('theme', nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+  };
 
   const profileRef = useRef<HTMLDivElement>(null);
   const mobileRef = useRef<HTMLDivElement>(null);
@@ -102,7 +119,7 @@ export default function AppHeader() {
 
   return (
     <header className="sticky top-0 z-100 w-full border-b border-border bg-surface/80 shadow-sm backdrop-blur-md">
-      <div className="grid grid-cols-[auto_1fr_auto] lg:grid-cols-[180px_1fr_180px] items-center h-16 px-4 md:px-6 gap-2">
+      <div className="grid grid-cols-[auto_1fr_auto] lg:grid-cols-[auto_1fr_auto] items-center h-16 px-4 md:px-6 gap-4">
         {/* ── LEFT: Logo ── */}
         <div className="flex items-center">
           <MatchaLogo size="sm" showText={true} />
@@ -137,7 +154,7 @@ export default function AppHeader() {
           })}
 
           {/* ── Search ── */}
-          <form onSubmit={handleSearch} className="ml-2 flex-1 min-w-[200px]">
+          <form onSubmit={handleSearch} className="ml-2 min-w-[200px]">
             <div
               className={`flex items-center gap-2 px-4 h-[38px] rounded-full border-[1.5px] transition-all cursor-text ${
                 searchFocused
@@ -181,6 +198,19 @@ export default function AppHeader() {
                 </span>
               )}
             </div>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-surface text-text-muted hover:text-primary hover:border-primary/20 hover:bg-background transition-colors cursor-pointer"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? (
+                <Sun size={17} strokeWidth={1.8} />
+              ) : (
+                <Moon size={17} strokeWidth={1.8} />
+              )}
+            </button>
 
             {/* Profile pill */}
             {me && (
@@ -256,7 +286,16 @@ export default function AppHeader() {
           </div>
 
           {/* ── Mobile hamburger ── */}
-          <div className="lg:hidden relative" ref={mobileRef}>
+          <div className="lg:hidden flex items-center gap-2 relative" ref={mobileRef}>
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-[42px] h-[42px] rounded-xl border-[1.5px] border-border bg-surface flex items-center justify-center cursor-pointer text-text-muted hover:bg-background active:scale-95 transition-all"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
             <button
               onClick={() => setMobileMenuOpen((o) => !o)}
               className="w-[42px] h-[42px] rounded-xl border-[1.5px] border-border bg-surface flex items-center justify-center cursor-pointer text-text-muted hover:bg-background active:scale-95 transition-all"
@@ -318,7 +357,7 @@ export default function AppHeader() {
                       to={to}
                       className={`flex items-center gap-3 p-2.5 rounded-xl text-sm transition-all duration-300 ${
                         active
-                          ? 'font-semibold text-surface bg-gradient-to-r from-[#f27183] to-[#e94057] shadow-sm shadow-[#e94057]/20'
+                          ? 'font-semibold text-surface bg-gradient-to-r from-primary-light to-primary shadow-sm shadow-primary/20'
                           : 'font-normal text-text hover:bg-primary/5 hover:text-primary'
                       }`}
                     >

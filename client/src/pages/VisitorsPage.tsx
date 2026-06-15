@@ -78,15 +78,26 @@ export default function VisitorsPage() {
               <VisitorStats visitors={visitors} />
             </div>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-5 mt-4 sm:mt-6">
-              {sorted.map((visitor, i) => (
-                <div
-                  key={visitor.id}
-                  className="animate-fade-in-up"
-                  style={{ animationDelay: `${i * 0.05}s` }}
-                >
-                  <VisitorCard visitor={visitor} index={i} />
-                </div>
-              ))}
+              {sorted.map((visitor, i) => {
+                const delayClasses = [
+                  '[animation-delay:0ms]',
+                  '[animation-delay:50ms]',
+                  '[animation-delay:100ms]',
+                  '[animation-delay:150ms]',
+                  '[animation-delay:200ms]',
+                  '[animation-delay:250ms]',
+                  '[animation-delay:300ms]',
+                  '[animation-delay:350ms]',
+                  '[animation-delay:400ms]',
+                  '[animation-delay:450ms]',
+                ];
+                const delayClass = delayClasses[Math.min(i, delayClasses.length - 1)];
+                return (
+                  <div key={visitor.id} className={`animate-fade-in-up ${delayClass}`}>
+                    <VisitorCard visitor={visitor} index={i} />
+                  </div>
+                );
+              })}
             </div>
           </>
         )}

@@ -27,15 +27,30 @@ export default function NotificationList({
             <div className="flex-1 h-[2px] bg-border" />
           </div>
           <div className="flex flex-col gap-2 sm:gap-3">
-            {items.map((n, i) => (
-              <div
-                key={n.id}
-                className="animate-fade-in-up [animation-delay:var(--delay)] [animation-fill-mode:both]"
-                style={{ '--delay': `${i * 40}ms` } as React.CSSProperties}
-              >
-                <NotificationRow notification={n} onRead={onRead} onDelete={onDelete} />
-              </div>
-            ))}
+            {items.map((n, i) => {
+              const delayClasses = [
+                '[animation-delay:0ms]',
+                '[animation-delay:40ms]',
+                '[animation-delay:80ms]',
+                '[animation-delay:120ms]',
+                '[animation-delay:160ms]',
+                '[animation-delay:200ms]',
+                '[animation-delay:240ms]',
+                '[animation-delay:280ms]',
+                '[animation-delay:320ms]',
+                '[animation-delay:360ms]',
+              ];
+              const delayClass = delayClasses[Math.min(i, delayClasses.length - 1)];
+
+              return (
+                <div
+                  key={n.id}
+                  className={`animate-fade-in-up [animation-fill-mode:both] ${delayClass}`}
+                >
+                  <NotificationRow notification={n} onRead={onRead} onDelete={onDelete} />
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}

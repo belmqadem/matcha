@@ -58,13 +58,7 @@ const Button = ({
         className={`w-full flex items-center justify-center gap-2 border border-(--color-text)/80 rounded-full py-3 font-semibold text-(--color-text) tracking-wider uppercase hover:bg-(--color-primary)/10 transition-colors ${className}`}
         disabled={disabled}
       >
-        <img
-          src={logo42}
-          alt="42"
-          width={22}
-          height={22}
-          className="object-contain"
-        />
+        <img src={logo42} alt="42" width={22} height={22} className="object-contain" />
       </button>
     );
   }
@@ -73,8 +67,8 @@ const Button = ({
     <button
       type={type}
       onClick={onClick}
-      className={`w-full flex items-center justify-center gap-2 rounded-full py-3 font-bold tracking-wider uppercase text-white transition-all hover:opacity-90 active:scale-95 ${className}`}
-      style={{ background: 'linear-gradient(90deg, #C4364A, #e05570)' }}
+      className={`w-full flex items-center justify-center gap-2 rounded-full py-3 font-bold tracking-wider uppercase text-white transition-all hover:opacity-90 active:scale-95 bg-primary disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      disabled={disabled}
     >
       {children}
       {withArrow && <span className="text-[10px]">▶</span>}

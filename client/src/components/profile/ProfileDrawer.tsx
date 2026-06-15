@@ -14,7 +14,6 @@ import {
   User,
   Calendar,
   Flame,
-  Quote,
   Sparkles,
 } from 'lucide-react';
 import { userService } from '@/services/userService';
@@ -159,7 +158,9 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-xs">
         <div className="bg-surface border border-border p-8 rounded-3xl shadow-premium flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          <p className="text-xs font-bold text-text-muted uppercase tracking-wider">Loading Profile...</p>
+          <p className="text-xs font-bold text-text-muted uppercase tracking-wider">
+            Loading Profile...
+          </p>
         </div>
       </div>
     );
@@ -167,11 +168,20 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
 
   if (error || !profile) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-xs" onClick={onClose}>
-        <div className="bg-surface border border-border p-6 rounded-3xl shadow-premium flex flex-col items-center gap-4 max-w-sm text-center" onClick={e => e.stopPropagation()}>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-xs"
+        onClick={onClose}
+      >
+        <div
+          className="bg-surface border border-border p-6 rounded-3xl shadow-premium flex flex-col items-center gap-4 max-w-sm text-center"
+          onClick={(e) => e.stopPropagation()}
+        >
           <AlertCircle className="w-10 h-10 text-error animate-pulse" />
           <p className="text-sm font-bold text-text">{error || 'Profile not found.'}</p>
-          <button onClick={onClose} className="px-6 py-2 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-wider cursor-pointer">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
+          >
             Close
           </button>
         </div>
@@ -179,11 +189,14 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
     );
   }
 
-  const sortedPhotos = profile.photos.slice().sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  const sortedPhotos = profile.photos
+    .slice()
+    .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
   const activeUrl = sortedPhotos[activePhoto]?.url ?? sortedPhotos[0]?.url;
 
   const genderLabel = GENDERS.find((g) => g.value === profile.gender)?.label ?? 'Not specified';
-  const prefLabel = PREFERENCES.find((p) => p.value === profile.sexual_preference)?.label ?? 'Bisexual';
+  const prefLabel =
+    PREFERENCES.find((p) => p.value === profile.sexual_preference)?.label ?? 'Bisexual';
 
   return (
     <>
@@ -238,9 +251,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                   showMenu
                     ? 'border-primary text-primary shadow-sm shadow-primary/20'
                     : 'border-border/80 text-text-muted hover:border-primary hover:text-primary'
-                } ${
-                  (likeLoading || blockLoading) ? 'opacity-60 cursor-not-allowed' : ''
-                }`}
+                } ${likeLoading || blockLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 {likeLoading || blockLoading ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
@@ -301,11 +312,10 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
           </div>
 
           {/* Content Area */}
-          <div className="flex-1 overflow-y-auto md:overflow-y-hidden px-6 py-6 md:h-[580px] scrollbar-thin">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden md:overflow-y-hidden px-6 py-6 md:h-[580px] scrollbar-thin">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 h-full items-stretch">
-              
               {/* Left Column (Photos) */}
-              <div className="md:col-span-5 flex flex-col gap-3 h-full min-h-0">
+              <div className="md:col-span-5 flex flex-col gap-3 h-auto md:h-full min-h-0">
                 {/* Big Main Image */}
                 <div className="relative w-full aspect-[3/4] md:aspect-auto md:flex-1 min-h-0 rounded-2xl overflow-hidden bg-background border border-border/50 shadow-md group">
                   {activeUrl ? (
@@ -342,13 +352,17 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                   {sortedPhotos.length > 1 && (
                     <>
                       <button
-                        onClick={() => setActivePhoto((prev) => (prev > 0 ? prev - 1 : sortedPhotos.length - 1))}
+                        onClick={() =>
+                          setActivePhoto((prev) => (prev > 0 ? prev - 1 : sortedPhotos.length - 1))
+                        }
                         className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                       >
                         <ChevronLeft size={16} />
                       </button>
                       <button
-                        onClick={() => setActivePhoto((prev) => (prev < sortedPhotos.length - 1 ? prev + 1 : 0))}
+                        onClick={() =>
+                          setActivePhoto((prev) => (prev < sortedPhotos.length - 1 ? prev + 1 : 0))
+                        }
                         className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                       >
                         <ChevronRight size={16} />
@@ -378,14 +392,18 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
               </div>
 
               {/* Right Column (Details) */}
-              <div className="md:col-span-7 flex flex-col justify-between gap-4 h-full min-w-0">
+              <div className="md:col-span-7 flex flex-col justify-between gap-4 h-auto md:h-full min-w-0">
                 {/* Upper section */}
                 <div className="space-y-3">
                   <div>
                     <div className="flex items-center justify-between gap-3">
                       <h2 className="text-xl sm:text-2xl font-black text-text tracking-tight flex items-center gap-1.5 truncate">
                         {profile.first_name} {profile.last_name}
-                        {profile.age ? <span className="font-normal text-text-muted">, {profile.age}</span> : ''}
+                        {profile.age ? (
+                          <span className="font-normal text-text-muted">, {profile.age}</span>
+                        ) : (
+                          ''
+                        )}
                       </h2>
                       <div className="flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 shadow-sm shrink-0">
                         <Flame className="w-3.5 h-3.5 text-primary fill-primary/10" />
@@ -404,7 +422,6 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                     )}
                   </div>
 
-
                   {!profile.is_connected && profile.liked_me && !profile.liked_by_me && (
                     <div className="flex items-center gap-1.5 bg-primary/10 border border-primary/25 rounded-full px-3.5 py-1.5 w-max">
                       <Heart className="w-3 h-3 text-primary fill-current animate-pulse" />
@@ -416,14 +433,13 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
 
                   {/* Bio */}
                   {profile.biography && (
-                    <div className="relative bg-primary/5 border-l-4 border-primary rounded-r-2xl p-3.5 my-1.5 overflow-hidden shadow-sm">
-                      <Quote className="absolute right-2 top-2 w-10 h-10 text-primary/10 -rotate-12 pointer-events-none" />
-                      <p className="text-[10px] font-black text-primary/70 uppercase tracking-widest mb-1 relative z-10">Biography</p>
-                      <div className="max-h-[110px] overflow-y-auto scrollbar-thin pr-1 relative z-10">
-                        <p className="text-xs sm:text-sm text-text leading-relaxed font-semibold italic opacity-95">
-                          "{profile.biography}"
-                        </p>
-                      </div>
+                    <div className="pt-3 border-t border-border/55">
+                      <h3 className="text-xs font-black text-text-muted uppercase tracking-wider mb-2">
+                        Biography
+                      </h3>
+                      <p className="text-sm text-text leading-relaxed whitespace-pre-wrap">
+                        {profile.biography}
+                      </p>
                     </div>
                   )}
 
@@ -446,7 +462,11 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                 <div className="space-y-3 mt-auto">
                   {/* Actions Block */}
                   <div className="pt-2 border-t border-border/55">
-                    {actionError && <p className="text-xs text-error font-medium mb-3 text-center">{actionError}</p>}
+                    {actionError && (
+                      <p className="text-xs text-error font-medium mb-3 text-center">
+                        {actionError}
+                      </p>
+                    )}
                     <div className="flex gap-3">
                       {profile.is_connected ? (
                         <button
@@ -468,7 +488,9 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                               : 'bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20'
                           }`}
                         >
-                          <Heart className={`w-4 h-4 ${profile.liked_by_me ? 'fill-primary text-primary' : ''}`} />
+                          <Heart
+                            className={`w-4 h-4 ${profile.liked_by_me ? 'fill-primary text-primary' : ''}`}
+                          />
                           {profile.liked_by_me ? 'Unlike' : 'Like'}
                         </button>
                       )}
@@ -477,15 +499,21 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
 
                   {/* Profile Details Grid */}
                   <div className="pt-3 border-t border-border/55 space-y-2.5">
-                    <h3 className="text-[10px] font-black text-text-muted uppercase tracking-wider">Profile Info</h3>
+                    <h3 className="text-[10px] font-black text-text-muted uppercase tracking-wider">
+                      Profile Info
+                    </h3>
                     <div className="grid grid-cols-2 gap-2.5">
                       <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
                         <div className="p-1.5 rounded-xl bg-primary/10 text-primary shrink-0">
                           <User size={14} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Gender</p>
-                          <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">{genderLabel}</p>
+                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                            Gender
+                          </p>
+                          <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">
+                            {genderLabel}
+                          </p>
                         </div>
                       </div>
                       <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
@@ -493,8 +521,12 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                           <Sparkles size={14} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Looking for</p>
-                          <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">{prefLabel}</p>
+                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                            Looking for
+                          </p>
+                          <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">
+                            {prefLabel}
+                          </p>
                         </div>
                       </div>
                       <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
@@ -502,8 +534,12 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                           <Calendar size={14} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Age</p>
-                          <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">{profile.age || 'N/A'} yrs</p>
+                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                            Age
+                          </p>
+                          <p className="text-xs font-bold text-text mt-0.5 truncate leading-tight">
+                            {profile.age || 'N/A'} yrs
+                          </p>
                         </div>
                       </div>
                       <div className="bg-background/40 border border-border/50 p-2.5 rounded-2xl hover:scale-102 transition-transform duration-200 shadow-sm flex items-center gap-2">
@@ -511,15 +547,18 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                           <Flame size={14} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">Fame Rating</p>
-                          <p className="text-xs font-bold text-primary mt-0.5 truncate leading-tight">{profile.fame_rating} pts</p>
+                          <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
+                            Fame Rating
+                          </p>
+                          <p className="text-xs font-bold text-primary mt-0.5 truncate leading-tight">
+                            {profile.fame_rating} pts
+                          </p>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>

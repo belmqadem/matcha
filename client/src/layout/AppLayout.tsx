@@ -23,9 +23,7 @@ export default function AppLayout() {
       </main>
 
       {/* Global Profile Drawer overlay */}
-      {activeProfileId && (
-        <ProfileDrawer profileId={activeProfileId} onClose={closeProfile} />
-      )}
+      {activeProfileId && <ProfileDrawer profileId={activeProfileId} onClose={closeProfile} />}
     </div>
   );
 }

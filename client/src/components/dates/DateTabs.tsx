@@ -15,9 +15,9 @@ export default function DateTabs({ tab, setTab, dates, upcomingCount }: DateTabs
 
   const TABS: { key: TabFilter; label: string; count?: number }[] = [
     { key: 'upcoming', label: 'upcoming', count: upcomingCount },
-    { key: 'pending',  label: 'pending',  count: pendingCount  },
-    { key: 'past',     label: 'past'                           },
-    { key: 'all',      label: 'all',      count: dates.length  },
+    { key: 'pending', label: 'pending', count: pendingCount },
+    { key: 'past', label: 'past' },
+    { key: 'all', label: 'all', count: dates.length },
   ];
 
   return (
@@ -29,9 +29,7 @@ export default function DateTabs({ tab, setTab, dates, upcomingCount }: DateTabs
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs transition-all duration-150 ${
-              active
-                ? 'bg-primary text-surface shadow-sm'
-                : 'text-text-muted hover:text-text'
+              active ? 'bg-primary text-surface shadow-sm' : 'text-text-muted hover:text-text'
             }`}
           >
             {t.label}

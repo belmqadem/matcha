@@ -28,7 +28,9 @@ export default function MatchaLogo({
   const content = (
     <div className={`flex items-center gap-2 select-none ${className}`}>
       <Heart size={HEART_SIZES[size]} className="text-primary fill-primary shrink-0" />
-      <span className={`font-primary font-bold tracking-tight text-text ${TEXT_SIZE_CLASSES[size]}`}>
+      <span
+        className={`font-primary font-bold tracking-tight text-text ${TEXT_SIZE_CLASSES[size]}`}
+      >
         matcha<span className="text-primary">.</span>
       </span>
     </div>

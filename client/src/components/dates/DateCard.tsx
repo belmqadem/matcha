@@ -9,9 +9,9 @@ import type { DateEntry, DateStatus } from '@/types/date';
 import { useAuth } from '@/context/AuthContext';
 
 const STATUS_META: Record<DateStatus, { label: string; color: string }> = {
-  pending:   { label: 'pending',    color: 'text-primary' },
-  accepted:  { label: 'confirmed', color: 'text-primary' },
-  declined:  { label: 'declined',  color: 'text-error'   },
+  pending: { label: 'pending', color: 'text-primary' },
+  accepted: { label: 'confirmed', color: 'text-primary' },
+  declined: { label: 'declined', color: 'text-error' },
   cancelled: { label: 'cancelled', color: 'text-text-muted' },
 };
 
@@ -58,7 +58,10 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
     >
       {/* Main content */}
       <div className="p-4 flex gap-3 items-start">
-        <div onClick={() => openProfile(date.other_user_id)} className="flex-shrink-0 mt-0.5 cursor-pointer">
+        <div
+          onClick={() => openProfile(date.other_user_id)}
+          className="flex-shrink-0 mt-0.5 cursor-pointer"
+        >
           <Avatar
             photoUrl={date.other_profile_picture_url || undefined}
             first={date.other_first_name}
@@ -85,7 +88,9 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
               <span>·</span>
               <span>{formatTime(date.scheduled_at)}</span>
               {past && date.status === 'accepted' && (
-                <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted">past</span>
+                <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted">
+                  past
+                </span>
               )}
             </div>
 
@@ -105,9 +110,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       </div>
 
       {/* Error */}
-      {error && (
-        <p className="px-4 pb-3 -mt-1 text-xs text-error">{error}</p>
-      )}
+      {error && <p className="px-4 pb-3 -mt-1 text-xs text-error">{error}</p>}
 
       {/* Actions */}
       {date.status === 'pending' && (

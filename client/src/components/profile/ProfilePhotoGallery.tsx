@@ -38,13 +38,10 @@ export function ProfilePhotoGallery({
     <div className="relative w-full md:w-80 shrink-0 aspect-[3/4] md:aspect-[3/4] flex flex-col items-center justify-center p-3 sm:p-4 bg-surface/40 backdrop-blur-md border border-border/40 rounded-3xl md:rounded-[2rem]">
       {/* Ambient Blurred Backlight matching the active photo */}
       {activeUrl && (
-        <div
-          className="absolute inset-0 -z-10 rounded-[2rem] blur-[40px] opacity-[0.25] transition-all duration-1000 scale-95 pointer-events-none"
-          style={{
-            backgroundImage: `url(${activeUrl})`,
-            backgroundPosition: 'center',
-            backgroundSize: 'cover',
-          }}
+        <img
+          src={activeUrl}
+          alt=""
+          className="absolute inset-0 -z-10 rounded-[2rem] blur-[40px] opacity-[0.25] transition-all duration-1000 scale-95 pointer-events-none object-cover w-full h-full"
         />
       )}
 

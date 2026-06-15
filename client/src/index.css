@@ -3,19 +3,19 @@
 @import 'tailwindcss';
 
 :root {
-  /* Default is Dark Theme */
-  --color-background: #090a0f;
-  --color-surface: #14151b;
-  --color-text: #ffffff;
-  --color-text-muted: #9499b0;
-  --color-border: #232533;
+  /* Default is Dark Theme - Elevated Deep Space */
+  --color-background: #06070a;
+  --color-surface: #0e0f14;
+  --color-text: #f3f4f6;
+  --color-text-muted: #8e93ad;
+  --color-border: #1d1e26;
   --body-gradient: linear-gradient(
     135deg,
-    #090a0f 0%,
-    #12131a 25%,
-    #1b1222 50%,
-    #12131a 75%,
-    #090a0f 100%
+    #06070a 0%,
+    #0c0d12 25%,
+    #140b1a 50%,
+    #0c0d12 75%,
+    #06070a 100%
   );
 }
 
@@ -53,6 +53,8 @@
   /* Typography Tokens */
   --font-primary: 'Outfit', sans-serif;
   --font-logo: 'Comfortaa', sans-serif;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-playfair: 'Playfair Display', serif;
 
   /* Premium Shadows */
   --shadow-premium: 0 20px 40px -15px rgba(233, 64, 87, 0.12), 0 1px 3px rgba(233, 64, 87, 0.04);
@@ -73,20 +75,57 @@
   --animate-bear-bob: bearBob 3s ease-in-out infinite;
   --animate-float-bob: floatBob 2.8s ease-in-out infinite;
   --animate-heart-pulse: heartPulse 1.8s ease-in-out infinite;
+  --animate-slide-in-left: slideInLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fadeIn 0.9s ease both;
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-40px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 
   @keyframes bearBob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
   }
 
   @keyframes floatBob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
   }
 
   @keyframes heartPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.12); }
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.12);
+    }
   }
 
   @keyframes gradientMove {
@@ -272,6 +311,29 @@
     background-attachment: fixed;
     color: var(--color-text);
     font-family: var(--font-primary);
+    transition:
+      background 0.4s ease,
+      color 0.4s ease,
+      border-color 0.4s ease,
+      box-shadow 0.4s ease;
+  }
+
+  /* Transition helper to smooth color changes during theme toggling */
+  body,
+  header,
+  div,
+  p,
+  span,
+  button,
+  input,
+  select,
+  textarea,
+  svg {
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .bg-primary:not(:disabled) {

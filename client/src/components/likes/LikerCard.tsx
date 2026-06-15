@@ -1,6 +1,6 @@
 import { Clock } from 'lucide-react';
 import { useProfileDrawer } from '@/hooks/useProfileDrawer';
-import { timeAgo, formatVisitDate, avatarColorFor } from '@/utils/visitors';
+import { timeAgo, formatVisitDate } from '@/utils/visitors';
 import type { Liker } from '@/types/user';
 
 interface LikerCardProps {
@@ -11,7 +11,16 @@ interface LikerCardProps {
 export function LikerCard({ liker, index }: LikerCardProps) {
   const { openProfile } = useProfileDrawer();
   const initials = `${liker.first_name[0]}${liker.last_name?.[0] ?? ''}`.toUpperCase();
-  const color = avatarColorFor(index);
+
+  const AVATAR_STYLES = [
+    { bg: 'bg-primary/15', text: 'text-primary' },
+    { bg: 'bg-primary-light/15', text: 'text-primary-light' },
+    { bg: 'bg-primary-accent/15', text: 'text-primary-accent' },
+    { bg: 'bg-success/15', text: 'text-success' },
+    { bg: 'bg-text-muted/15', text: 'text-text-muted' },
+    { bg: 'bg-error/15', text: 'text-error' },
+  ];
+  const { bg: bgClass, text: textClass } = AVATAR_STYLES[index % AVATAR_STYLES.length];
 
   return (
     <div
@@ -27,13 +36,8 @@ export function LikerCard({ liker, index }: LikerCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div
-            className="w-full h-full flex items-center justify-center"
-            style={{ background: `${color}15` }}
-          >
-            <span className="text-4xl font-black" style={{ color }}>
-              {initials}
-            </span>
+          <div className={`w-full h-full flex items-center justify-center ${bgClass}`}>
+            <span className={`text-4xl font-black ${textClass}`}>{initials}</span>
           </div>
         )}
 

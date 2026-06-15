@@ -1,7 +1,7 @@
 // src/components/visitors/VisitorCard.tsx
 import { Clock } from 'lucide-react';
 import { useProfileDrawer } from '@/hooks/useProfileDrawer';
-import { timeAgo, formatVisitDate, avatarColorFor } from '@/utils/visitors';
+import { timeAgo, formatVisitDate } from '@/utils/visitors';
 import type { Visitor } from '@/types/user';
 
 interface VisitorCardProps {
@@ -12,7 +12,16 @@ interface VisitorCardProps {
 export function VisitorCard({ visitor, index }: VisitorCardProps) {
   const { openProfile } = useProfileDrawer();
   const initials = `${visitor.first_name[0]}${visitor.last_name[0]}`.toUpperCase();
-  const color = avatarColorFor(index);
+
+  const AVATAR_STYLES = [
+    { bg: 'bg-primary/15', text: 'text-primary' },
+    { bg: 'bg-primary-light/15', text: 'text-primary-light' },
+    { bg: 'bg-primary-accent/15', text: 'text-primary-accent' },
+    { bg: 'bg-success/15', text: 'text-success' },
+    { bg: 'bg-text-muted/15', text: 'text-text-muted' },
+    { bg: 'bg-error/15', text: 'text-error' },
+  ];
+  const { bg: bgClass, text: textClass } = AVATAR_STYLES[index % AVATAR_STYLES.length];
 
   return (
     <div
@@ -27,16 +36,8 @@ export function VisitorCard({ visitor, index }: VisitorCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div
-            className="w-full h-full flex items-center justify-center bg-[color-mix(in_srgb,var(--avatar-color)_15%,transparent)]"
-            style={{ '--avatar-color': color } as React.CSSProperties}
-          >
-            <span
-              className="text-3xl sm:text-4xl font-black text-[var(--avatar-color)]"
-              style={{ '--avatar-color': color } as React.CSSProperties}
-            >
-              {initials}
-            </span>
+          <div className={`w-full h-full flex items-center justify-center ${bgClass}`}>
+            <span className={`text-3xl sm:text-4xl font-black ${textClass}`}>{initials}</span>
           </div>
         )}
 

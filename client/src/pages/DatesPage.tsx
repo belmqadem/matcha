@@ -33,12 +33,12 @@ export default function DatesPage() {
   });
 
   const inboundPending = dates.filter(
-    (d) => d.status === 'pending' && currentUser && String(d.receiver_id) === String(currentUser.id),
+    (d) =>
+      d.status === 'pending' && currentUser && String(d.receiver_id) === String(currentUser.id),
   ).length;
 
   return (
     <div className="min-h-[100dvh] font-primary pb-16">
-
       {/* Header */}
       <header className="sticky top-0 z-20 bg-surface/75 backdrop-blur-xl border-b border-border/60">
         <div className="max-w-2xl mx-auto px-5 h-14 flex items-center justify-between">
@@ -63,7 +63,6 @@ export default function DatesPage() {
       </header>
 
       <div className="max-w-2xl mx-auto px-5">
-
         {/* Pending banner */}
         {inboundPending > 0 && (
           <button
@@ -84,19 +83,20 @@ export default function DatesPage() {
 
         {/* List */}
         <div className="mt-4">
-          {error && (
-            <p className="text-sm text-error mb-3">{error}</p>
-          )}
+          {error && <p className="text-sm text-error mb-3">{error}</p>}
 
           {loading ? (
             <div className="flex flex-col gap-3">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-24 rounded-2xl bg-surface border border-border animate-pulse"
-                  style={{ opacity: 1 - i * 0.2 }}
-                />
-              ))}
+              {[...Array(3)].map((_, i) => {
+                const opacityClasses = ['opacity-100', 'opacity-80', 'opacity-60'];
+                const opacityClass = opacityClasses[Math.min(i, opacityClasses.length - 1)];
+                return (
+                  <div
+                    key={i}
+                    className={`h-24 rounded-2xl bg-surface border border-border animate-pulse ${opacityClass}`}
+                  />
+                );
+              })}
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center py-20 text-center animate-fade-in-up">
@@ -120,15 +120,26 @@ export default function DatesPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {filtered.map((d, i) => (
-                <div
-                  key={d.id}
-                  className="animate-fade-in-up"
-                  style={{ '--delay': `${i * 40}ms` } as React.CSSProperties}
-                >
-                  <DateCard date={d} onUpdate={fetchDates} />
-                </div>
-              ))}
+              {filtered.map((d, i) => {
+                const delayClasses = [
+                  '[animation-delay:0ms]',
+                  '[animation-delay:40ms]',
+                  '[animation-delay:80ms]',
+                  '[animation-delay:120ms]',
+                  '[animation-delay:160ms]',
+                  '[animation-delay:200ms]',
+                  '[animation-delay:240ms]',
+                  '[animation-delay:280ms]',
+                  '[animation-delay:320ms]',
+                  '[animation-delay:360ms]',
+                ];
+                const delayClass = delayClasses[Math.min(i, delayClasses.length - 1)];
+                return (
+                  <div key={d.id} className={`animate-fade-in-up ${delayClass}`}>
+                    <DateCard date={d} onUpdate={fetchDates} />
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -137,7 +148,10 @@ export default function DatesPage() {
       {showModal && (
         <ProposeModal
           onClose={() => setShowModal(false)}
-          onSuccess={() => { setShowModal(false); fetchDates(); }}
+          onSuccess={() => {
+            setShowModal(false);
+            fetchDates();
+          }}
         />
       )}
     </div>

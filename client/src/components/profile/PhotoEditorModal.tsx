@@ -83,12 +83,10 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
   };
 
   // Combine local rotation + filter preview into a single CSS transform/filter.
-  const imgStyle: React.CSSProperties = {
-    ...(localRotation
-      ? { transform: `rotate(${localRotation}deg)`, transition: 'transform 0.3s ease' }
-      : {}),
-    ...(previewFilter ? { filter: previewFilter } : {}),
-  };
+  const imgStyle = {
+    '--rotation': `${localRotation}deg`,
+    '--filter': previewFilter || 'none',
+  } as React.CSSProperties;
 
   const isDirty = localRotation !== 0 || activeFilter !== '';
 
@@ -100,7 +98,7 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
           <img
             src={serverSrc}
             alt="Preview"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-300 [transform:rotate(var(--rotation))] [filter:var(--filter)]"
             style={imgStyle}
           />
           {saving && (

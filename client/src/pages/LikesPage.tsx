@@ -72,15 +72,26 @@ export default function LikesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 sm:gap-5">
-            {sorted.map((liker, i) => (
-              <div
-                key={liker.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${i * 0.05}s` }}
-              >
-                <LikerCard liker={liker} index={i} />
-              </div>
-            ))}
+            {sorted.map((liker, i) => {
+              const delayClasses = [
+                '[animation-delay:0ms]',
+                '[animation-delay:50ms]',
+                '[animation-delay:100ms]',
+                '[animation-delay:150ms]',
+                '[animation-delay:200ms]',
+                '[animation-delay:250ms]',
+                '[animation-delay:300ms]',
+                '[animation-delay:350ms]',
+                '[animation-delay:400ms]',
+                '[animation-delay:450ms]',
+              ];
+              const delayClass = delayClasses[Math.min(i, delayClasses.length - 1)];
+              return (
+                <div key={liker.id} className={`animate-fade-in-up ${delayClass}`}>
+                  <LikerCard liker={liker} index={i} />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

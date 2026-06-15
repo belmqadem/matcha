@@ -160,4 +160,3 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
     </div>
   );
 }
-

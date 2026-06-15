@@ -18,45 +18,49 @@ export function useBrowse() {
     return { page: pageNum, limit: 20 };
   }, []);
 
-  const fetchTab = useCallback((tab: TabValue) => {
-    setLoading(true);
-    setError(null);
-    setPage(1);
-    setActiveTab(tab);
+  const fetchTab = useCallback(
+    (tab: TabValue) => {
+      setLoading(true);
+      setError(null);
+      setPage(1);
+      setActiveTab(tab);
 
-    const fetchPromise = (() => {
-      if (tab === 'all') {
-        return userService.browseUsers(buildParams(1));
-      } else if (tab === 'liked') {
-        return userService.getLikedUsers();
-      } else if (tab === 'liked-me') {
-        return userService.getLikedByUsers();
-      } else {
-        return userService.getMatches();
-      }
-    })();
+      const fetchPromise = (() => {
+        if (tab === 'all') {
+          return userService.browseUsers(buildParams(1));
+        } else if (tab === 'liked') {
+          return userService.getLikedUsers();
+        } else if (tab === 'liked-me') {
+          return userService.getLikedByUsers();
+        } else {
+          return userService.getMatches();
+        }
+      })();
 
-    fetchPromise
-      .then((data) => {
-        const sanitizedUsers = (data.users ?? []).map((u) => ({
-          ...u,
-          liked_by_me: Boolean(u.liked_by_me),
-          liked_me: Boolean(u.liked_me),
-          is_connected: Boolean(u.is_connected),
-        }));
-        setUsers(sanitizedUsers);
-        setTotal(data.total ?? 0);
-        setLoading(false);
-      })
-      .catch((err: Error) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [buildParams]);
+      fetchPromise
+        .then((data) => {
+          const sanitizedUsers = (data.users ?? []).map((u) => ({
+            ...u,
+            liked_by_me: Boolean(u.liked_by_me),
+            liked_me: Boolean(u.liked_me),
+            is_connected: Boolean(u.is_connected),
+          }));
+          setUsers(sanitizedUsers);
+          setTotal(data.total ?? 0);
+          setLoading(false);
+        })
+        .catch((err: Error) => {
+          setError(err.message);
+          setLoading(false);
+        });
+    },
+    [buildParams],
+  );
 
   useEffect(() => {
     let active = true;
-    userService.browseUsers({ page: 1, limit: 20 })
+    userService
+      .browseUsers({ page: 1, limit: 20 })
       .then((data) => {
         if (!active) return;
         const sanitizedUsers = (data.users ?? []).map((u) => ({

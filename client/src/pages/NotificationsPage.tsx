@@ -52,13 +52,23 @@ export default function NotificationsPage() {
 
         {loading ? (
           <div className="flex flex-col gap-3 sm:gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="h-[72px] sm:h-[84px] rounded-2xl sm:rounded-3xl bg-surface border border-border animate-pulse"
-                style={{ '--delay': `${i * 60}ms` } as React.CSSProperties}
-              />
-            ))}
+            {[...Array(6)].map((_, i) => {
+              const delayClasses = [
+                '[animation-delay:0ms]',
+                '[animation-delay:60ms]',
+                '[animation-delay:120ms]',
+                '[animation-delay:180ms]',
+                '[animation-delay:240ms]',
+                '[animation-delay:300ms]',
+              ];
+              const delayClass = delayClasses[Math.min(i, delayClasses.length - 1)];
+              return (
+                <div
+                  key={i}
+                  className={`h-[72px] sm:h-[84px] rounded-2xl sm:rounded-3xl bg-surface border border-border animate-pulse ${delayClass}`}
+                />
+              );
+            })}
           </div>
         ) : filtered.length === 0 ? (
           <div className="animate-fade-in-up">

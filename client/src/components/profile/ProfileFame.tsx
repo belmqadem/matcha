@@ -13,10 +13,10 @@ export function ProfileFame({ fameRating }: ProfileFameProps) {
   let tierColor = 'text-text-muted bg-background/50 border-border/40';
   if (fame >= 80) {
     tier = 'Elite Match';
-    tierColor = 'text-[#d97706] bg-[#fef3c7] border-[#fde68a]';
+    tierColor = 'text-primary-accent bg-primary-accent/10 border-primary-accent/20';
   } else if (fame >= 50) {
     tier = 'Popular';
-    tierColor = 'text-[#8b5cf6] bg-[#ede9fe] border-[#ddd6fe]';
+    tierColor = 'text-primary-light bg-primary-light/10 border-primary-light/20';
   } else if (fame >= 20) {
     tier = 'Rising Star';
     tierColor = 'text-primary bg-primary/10 border-primary/20';
@@ -35,7 +35,7 @@ export function ProfileFame({ fameRating }: ProfileFameProps) {
       {/* Progress Bar with safe Custom Properties */}
       <div className="h-2 rounded-full bg-background/50 overflow-hidden mb-2.5">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-primary to-[#ff758c] shadow-[0_0_8px_rgba(233,64,87,0.3)] transition-all duration-1000 ease-out w-[var(--fame-width)]"
+          className="h-full rounded-full bg-gradient-to-r from-primary to-primary-accent shadow-[0_0_8px_rgba(233,64,87,0.3)] transition-all duration-1000 ease-out w-[var(--fame-width)]"
           style={{ '--fame-width': `${fame}%` } as React.CSSProperties}
         />
       </div>

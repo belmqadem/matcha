@@ -1,17 +1,7 @@
 // src/components/profile/EditFullProfileModal.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  User,
-  Sparkles,
-  MapPin,
-  Tag,
-  Shield,
-  Loader2,
-  ChevronDown,
-  X,
-  Check,
-} from 'lucide-react';
+import { User, Sparkles, MapPin, Tag, Shield, Loader2, ChevronDown, X, Check } from 'lucide-react';
 import { userService } from '@/services/userService';
 import { authService } from '@/services/authService';
 import type { UserProfile } from '@/types/user';
@@ -32,7 +22,9 @@ interface Props {
 
 export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'identity' }: Props) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'identity' | 'about' | 'location' | 'tags'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'identity' | 'about' | 'location' | 'tags'>(
+    initialTab,
+  );
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   // --- TAB 1: IDENTITY STATE ---
@@ -218,7 +210,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
       }}
     >
       <div className="bg-surface rounded-3xl w-full max-w-[640px] max-h-[85vh] flex flex-col overflow-hidden shadow-premium animate-in fade-in zoom-in-95 duration-200 border border-border/80 text-text">
-        
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-surface/85 backdrop-blur-md shrink-0">
           <h3 className="text-lg sm:text-xl font-black text-text tracking-tight">Edit Profile</h3>
@@ -279,14 +270,14 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         </div>
 
         {/* Tab content area */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 scrollbar-thin">
           {saveSuccess && (
             <div className="bg-success/15 border border-success/35 rounded-2xl p-3.5 flex items-center gap-2 text-success text-xs font-bold animate-in fade-in slide-in-from-top-2 duration-200 mb-4 shrink-0">
               <Check className="w-4 h-4 shrink-0" />
               <span>Saved successfully!</span>
             </div>
           )}
-          
+
           {/* TAB 1: IDENTITY */}
           {activeTab === 'identity' && (
             <form
@@ -333,7 +324,8 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
                   className={inputCls}
                 />
                 <p className="text-[10px] font-bold text-error/85 mt-2 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5" /> Changing your email will require log out and re-verification.
+                  <Shield className="w-3.5 h-3.5" /> Changing your email will require log out and
+                  re-verification.
                 </p>
               </div>
 
@@ -395,7 +387,9 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
                 <div className="relative">
                   <select
                     value={aboutForm.sexual_preference}
-                    onChange={(e) => setAboutForm((p) => ({ ...p, sexual_preference: e.target.value }))}
+                    onChange={(e) =>
+                      setAboutForm((p) => ({ ...p, sexual_preference: e.target.value }))
+                    }
                     className={`${inputCls} appearance-none pr-10 cursor-pointer`}
                   >
                     <option value="">Bisexual (Default)</option>
@@ -575,7 +569,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
               </div>
             </form>
           )}
-
         </div>
       </div>
     </div>
