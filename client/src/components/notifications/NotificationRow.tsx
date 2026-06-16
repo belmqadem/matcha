@@ -74,9 +74,9 @@ const TYPE_META: Record<
   date_accepted: {
     icon: Check,
     label: (n) => `${n} accepted your date`,
-    textCls: 'text-success',
-    bgCls: 'bg-green-500/10',
-    borderCls: 'border-green-500',
+    textCls: 'text-primary',
+    bgCls: 'bg-primary/10',
+    borderCls: 'border-primary',
   },
   date_declined: {
     icon: X,

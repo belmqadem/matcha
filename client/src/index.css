@@ -308,6 +308,10 @@
 }
 
 @layer base {
+  html {
+    font-family: var(--font-primary);
+  }
+
   body {
     background: var(--body-gradient);
     background-size: 400% 400%;
@@ -363,7 +367,9 @@
 
   input,
   select,
-  textarea {
+  textarea,
+  button {
+    font-family: inherit;
     outline: none;
   }
 

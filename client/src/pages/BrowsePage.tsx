@@ -24,9 +24,11 @@ import type { SortKey } from '@/types/search';
 
 type TabValue = 'all' | 'liked' | 'liked-me' | 'matches';
 
+import { Heart as LogoHeart } from '@/components/Logo';
+
 const TABS: { value: TabValue; label: string; icon: React.ReactNode }[] = [
-  { value: 'all', label: 'All', icon: <Heart className="w-3.5 h-3.5" /> },
-  { value: 'liked', label: 'I Liked', icon: <Heart className="w-3.5 h-3.5" /> },
+  { value: 'all', label: 'All', icon: <LogoHeart size={14} /> },
+  { value: 'liked', label: 'I Liked', icon: <LogoHeart size={14} /> },
   { value: 'liked-me', label: 'Liked Me', icon: <Users className="w-3.5 h-3.5" /> },
   { value: 'matches', label: 'Matches', icon: <Sparkles className="w-3.5 h-3.5" /> },
 ];
