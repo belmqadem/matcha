@@ -2,7 +2,7 @@ import { useState } from 'react';
 import * as profileService from '../services/profileService';
 import type { UserProfile, Photo } from '../types/user';
 
-export function useProfilePhotos(user: UserProfile, onUpdate: (u: UserProfile) => void) {
+export function useProfilePhotos(user: UserProfile, onUpdate: (_u: UserProfile) => void) {
   const [loading, setLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [error, setError] = useState('');

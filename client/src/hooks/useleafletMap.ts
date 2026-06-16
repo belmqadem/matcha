@@ -9,7 +9,7 @@ interface UseLeafletMapParams {
   users: MapUser[];
   center: { lat: number; lng: number } | null;
   radiusKm: number;
-  onUserClick: (user: MapUser) => void;
+  onUserClick: (_user: MapUser) => void;
 }
 
 export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafletMapParams) {
@@ -24,7 +24,7 @@ export function useLeafletMap({ users, center, radiusKm, onUserClick }: UseLeafl
     if (mapRef.current || !containerRef.current) return;
 
     // Safe cleanup of container leaflet id if hot reloaded
-    const container = containerRef.current as any;
+    const container = containerRef.current as HTMLDivElement & { _leaflet_id?: number | null };
     if (container._leaflet_id) {
       container._leaflet_id = null;
     }

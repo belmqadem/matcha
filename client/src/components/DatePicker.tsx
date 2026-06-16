@@ -19,7 +19,7 @@ const MONTH_NAMES = [
 
 interface Props {
   value: Date | null;
-  onChange: (d: Date) => void;
+  onChange: (_d: Date) => void;
   minDate?: Date;
   maxDate?: Date;
   className?: string;
@@ -66,6 +66,7 @@ export default function DatePicker({ value, onChange, minDate, maxDate, classNam
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShowMonthPanel(false);
       setShowYearPanel(false);
     }

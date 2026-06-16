@@ -109,9 +109,9 @@ export default function AppHeader() {
     if (allUsers.length > 0) return;
 
     let active = true;
-    setLoadingSearch(true);
 
     const fetchAll = async () => {
+      setLoadingSearch(true);
       try {
         const usersList = await userService.getQuickSearchUsers();
         if (active) {

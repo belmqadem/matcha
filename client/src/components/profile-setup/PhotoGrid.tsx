@@ -5,8 +5,8 @@ import { MAX_PHOTOS } from './profileSetupConstants';
 
 interface PhotoGridProps {
   photos: File[];
-  onAddPhotos: (files: File[]) => void;
-  onRemovePhoto: (index: number) => void;
+  onAddPhotos: (_files: File[]) => void;
+  onRemovePhoto: (_index: number) => void;
 }
 
 export const PhotoGrid = ({ photos, onAddPhotos, onRemovePhoto }: PhotoGridProps) => {

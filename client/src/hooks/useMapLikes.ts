@@ -5,8 +5,8 @@ import { userService } from '@/services/userService';
 
 interface UseMapLikesReturn {
   likeStates: Record<string, boolean>;
-  handleLike: (userId: string) => Promise<void>;
-  checkLikeStatus: (userId: string) => Promise<void>;
+  handleLike: (_userId: string) => Promise<void>;
+  checkLikeStatus: (_userId: string) => Promise<void>;
 }
 
 export function useMapLikes(): UseMapLikesReturn {

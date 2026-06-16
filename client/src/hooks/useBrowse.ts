@@ -82,6 +82,7 @@ export function useBrowse() {
   );
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTab(activeTab);
   }, [activeTab, sort, order]); // eslint-disable-line react-hooks/exhaustive-deps
 

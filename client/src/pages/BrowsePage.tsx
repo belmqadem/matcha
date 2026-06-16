@@ -53,7 +53,7 @@ interface QuickDropdownProps {
   icon: React.ReactNode;
   value: string;
   options: string[];
-  onSelect: (v: string) => void;
+  onSelect: (_v: string) => void;
 }
 function QuickDropdown({ label, icon, value, options, onSelect }: QuickDropdownProps) {
   const [open, setOpen] = useState(false);

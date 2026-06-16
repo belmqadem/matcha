@@ -22,7 +22,7 @@ const TYPE_META: Record<
   NotificationType,
   {
     icon: LucideIcon;
-    label: (n: string, count: number) => string;
+    label: (_n: string, _count: number) => string;
     textCls: string;
     bgCls: string;
     borderCls: string;
@@ -96,8 +96,8 @@ const TYPE_META: Record<
 
 interface NotificationRowProps {
   notification: Notification;
-  onRead: (id: number) => void | Promise<void>;
-  onDelete: (id: number) => void;
+  onRead: (_id: number) => void | Promise<void>;
+  onDelete: (_id: number) => void;
 }
 
 export default function NotificationRow({ notification, onRead, onDelete }: NotificationRowProps) {

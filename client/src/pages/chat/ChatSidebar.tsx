@@ -6,16 +6,16 @@ import type { Conversation, BlockedUser, SidebarTab } from '@/types/chat';
 
 interface ChatSidebarProps {
   tab: SidebarTab;
-  onTabChange: (tab: SidebarTab) => void;
+  onTabChange: (_tab: SidebarTab) => void;
   search: string;
-  onSearchChange: (v: string) => void;
+  onSearchChange: (_v: string) => void;
   convos: Conversation[];
   blockedUsers: BlockedUser[];
   activeConvoId: string | null;
   myId: string;
   loading: boolean;
-  onSelectConvo: (convo: Conversation) => void;
-  onUnblock: (id: string) => Promise<void>;
+  onSelectConvo: (_convo: Conversation) => void;
+  onUnblock: (_id: string) => Promise<void>;
 }
 
 export default function ChatSidebar({

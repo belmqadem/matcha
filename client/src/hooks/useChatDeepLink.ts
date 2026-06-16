@@ -9,9 +9,9 @@ interface UseChatDeepLinkParams {
   convos: Conversation[];
   loading: boolean; // ← add this
   setConvos: React.Dispatch<React.SetStateAction<Conversation[]>>;
-  setActiveConvo: (convo: Conversation) => void;
-  setMobileView: (view: 'list' | 'chat') => void;
-  onError: (msg: string) => void; // ← add this (already in ChatPage.tsx)
+  setActiveConvo: (_convo: Conversation) => void;
+  setMobileView: (_view: 'list' | 'chat') => void;
+  onError: (_msg: string) => void; // ← add this (already in ChatPage.tsx)
 }
 
 export function useChatDeepLink({

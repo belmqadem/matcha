@@ -7,7 +7,7 @@ import TimePicker from '@/components/TimePicker';
 interface ProposeModalProps {
   receiverName: string;
   onClose: () => void;
-  onPropose: (data: Omit<DateProposal, 'receiver_id'>) => Promise<void>;
+  onPropose: (_data: Omit<DateProposal, 'receiver_id'>) => Promise<void>;
 }
 
 export default function ProposeModal({ receiverName, onClose, onPropose }: ProposeModalProps) {

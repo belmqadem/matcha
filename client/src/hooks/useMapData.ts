@@ -11,9 +11,9 @@ interface UseMapDataReturn {
   gpsLoading: boolean;
   error: string | null;
   clearError: () => void;
-  fetchMapData: (km?: RadiusKm) => Promise<void>;
+  fetchMapData: (_km?: RadiusKm) => Promise<void>;
   handleGps: () => void;
-  handleRadiusChange: (km: RadiusKm) => void;
+  handleRadiusChange: (_km: RadiusKm) => void;
 }
 
 export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {

@@ -11,7 +11,7 @@ import { photoBuster } from '@/utils/photoBuster';
 
 interface Props {
   user: UserProfile;
-  onUpdate: (u: UserProfile) => void;
+  onUpdate: (_u: UserProfile) => void;
 }
 
 export function PhotosPanel({ user, onUpdate }: Props) {

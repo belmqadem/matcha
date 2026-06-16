@@ -8,8 +8,8 @@ import type { BrowseUser } from '@/types/user';
 
 interface UserCardProps {
   user: BrowseUser;
-  onLike: (id: string) => Promise<{ connected: boolean }>;
-  onUnlike: (id: string) => Promise<void>;
+  onLike: (_id: string) => Promise<{ connected: boolean }>;
+  onUnlike: (_id: string) => Promise<void>;
 }
 
 export function UserCard({ user, onLike, onUnlike }: UserCardProps) {

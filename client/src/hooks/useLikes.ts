@@ -10,7 +10,7 @@ interface UseLikesReturn {
   loading: boolean;
   error: string;
   sort: SortOrder;
-  setSort: (sort: SortOrder) => void;
+  setSort: (_sort: SortOrder) => void;
 }
 
 export function useLikes(): UseLikesReturn {

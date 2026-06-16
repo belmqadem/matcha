@@ -5,8 +5,8 @@ import type { SearchFilters } from '@/types/search';
 interface FilterSidebarProps {
   filters: SearchFilters;
   activeCount: number;
-  onChange: (key: keyof SearchFilters, value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onChange: (_key: keyof SearchFilters, _value: string) => void;
+  onSubmit: (_e: React.FormEvent) => void;
   onClear: () => void;
 }
 

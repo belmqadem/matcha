@@ -4,7 +4,7 @@ import type { Photo } from '@/types/user';
 interface ProfileLightboxProps {
   photos: Photo[];
   lightboxPhoto: number;
-  setLightboxPhoto: (idx: number | null) => void;
+  setLightboxPhoto: (_idx: number | null) => void;
 }
 
 export function ProfileLightbox({ photos, lightboxPhoto, setLightboxPhoto }: ProfileLightboxProps) {

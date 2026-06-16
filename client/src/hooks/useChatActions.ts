@@ -9,22 +9,22 @@ interface UseChatActionsParams {
   activeConvo: Conversation | null;
   isBlocked: boolean;
   isForbidden: boolean;
-  appendOptimistic: (msg: Message) => void;
+  appendOptimistic: (_msg: Message) => void;
   setConvos: React.Dispatch<React.SetStateAction<Conversation[]>>;
   setBlockedUsers: React.Dispatch<React.SetStateAction<BlockedUser[]>>;
-  setActiveConvo: (convo: Conversation | null) => void;
-  setMobileView: (view: 'list' | 'chat') => void;
+  setActiveConvo: (_convo: Conversation | null) => void;
+  setMobileView: (_view: 'list' | 'chat') => void;
 }
 
 interface UseChatActionsReturn {
   sending: boolean;
   error: string;
   clearError: () => void;
-  sendMessage: (content: string) => void;
+  sendMessage: (_content: string) => void;
   handleBlock: () => Promise<void>;
-  handleUnblock: (id?: string) => Promise<void>;
+  handleUnblock: (_id?: string) => Promise<void>;
   handleUnmatch: () => Promise<void>;
-  handleProposeDate: (data: Omit<DateProposal, 'receiver_id'>) => Promise<void>;
+  handleProposeDate: (_data: Omit<DateProposal, 'receiver_id'>) => Promise<void>;
 }
 
 export function useChatActions({

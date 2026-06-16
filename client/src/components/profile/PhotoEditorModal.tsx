@@ -8,7 +8,7 @@ import { userService } from '@/services/userService';
 interface PhotoEditorModalProps {
   photo: Photo;
   onClose: () => void;
-  onSave: (updatedPhoto: Photo) => void;
+  onSave: (_updatedPhoto: Photo) => void;
 }
 
 const FILTERS = ['grayscale', 'sepia', 'blur', 'brighten', 'darken'] as const;

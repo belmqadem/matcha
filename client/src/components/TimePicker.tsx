@@ -4,7 +4,7 @@ import { Clock } from 'lucide-react';
 interface Props {
   hour: number;
   minute: number;
-  onChange: (h: number, m: number) => void;
+  onChange: (_h: number, _m: number) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -19,9 +19,9 @@ function DrumColumn({
 }: {
   items: number[];
   selected: number;
-  onSelect: (v: number) => void;
+  onSelect: (_v: number) => void;
   label: string;
-  format: (v: number) => string;
+  format: (_v: number) => string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 

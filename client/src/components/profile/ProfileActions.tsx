@@ -11,7 +11,7 @@ interface ProfileActionsProps {
   actionError: string;
   onLike: () => void;
   onChat: () => void;
-  onConfirmAction: (action: 'block' | 'unblock' | 'report') => void;
+  onConfirmAction: (_action: 'block' | 'unblock' | 'report') => void;
   firstName: string;
 }
 

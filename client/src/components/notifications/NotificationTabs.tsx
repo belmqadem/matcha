@@ -4,7 +4,7 @@ import { NOTIFICATION_FILTERS } from './notificationConstants';
 
 interface NotificationTabsProps {
   activeFilter: string;
-  setActiveFilter: (key: string) => void;
+  setActiveFilter: (_key: string) => void;
   notifications: Notification[];
   unreadCount: number;
 }

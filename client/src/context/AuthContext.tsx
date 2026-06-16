@@ -8,10 +8,10 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   // login returns the User so the calling component can decide where to route
-  login: (credentials: LoginCredentials) => Promise<User>;
+  login: (_credentials: LoginCredentials) => Promise<User>;
   // logout clears the local user state
   logout: () => void;
-  updateUser: (user: User) => void;
+  updateUser: (_user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);

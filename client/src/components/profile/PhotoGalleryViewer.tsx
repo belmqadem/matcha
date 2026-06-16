@@ -7,7 +7,7 @@ interface PhotoGalleryViewerProps {
   photos: Photo[];
   currentIndex: number;
   onClose: () => void;
-  onChangeIndex: (index: number) => void;
+  onChangeIndex: (_index: number) => void;
 }
 
 export function PhotoGalleryViewer({

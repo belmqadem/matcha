@@ -41,6 +41,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         setUnreadNotifications(notifData.unread_count || 0);
         hasFetchedInitial = true;
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('Failed to fetch notification counts', error);
       }
     };

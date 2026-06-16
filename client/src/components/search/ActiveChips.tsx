@@ -4,7 +4,7 @@ import type { SearchFilters } from '@/types/search';
 
 interface ActiveChipsProps {
   filters: SearchFilters;
-  onRemove: (key: keyof SearchFilters | 'location') => void;
+  onRemove: (_key: keyof SearchFilters | 'location') => void;
 }
 
 export function ActiveChips({ filters, onRemove }: ActiveChipsProps) {

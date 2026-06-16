@@ -5,8 +5,8 @@ import type { Notification } from '@/types/notification';
 
 interface NotificationListProps {
   notifications: Notification[];
-  onRead: (id: number) => void;
-  onDelete: (id: number) => void;
+  onRead: (_id: number) => void;
+  onDelete: (_id: number) => void;
 }
 
 export default function NotificationList({

@@ -5,7 +5,7 @@ export type TabFilter = 'upcoming' | 'pending' | 'past' | 'all';
 
 interface DateTabsProps {
   tab: TabFilter;
-  setTab: (t: TabFilter) => void;
+  setTab: (_t: TabFilter) => void;
   dates: DateEntry[];
   upcomingCount: number;
 }

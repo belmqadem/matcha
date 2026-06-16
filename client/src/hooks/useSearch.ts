@@ -15,6 +15,7 @@ export function useSearch() {
 
   // Sync state if URL param changes (e.g. from navbar search submission)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setQ(urlQ);
   }, [urlQ]);
 
@@ -33,10 +34,10 @@ export function useSearch() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError('');
 
     const fetchAll = async () => {
+      setLoading(true);
+      setError('');
       try {
         const usersList = await userService.getSearchAll();
         if (active) {

@@ -7,7 +7,7 @@ interface MapHeaderProps {
   loading: boolean;
   radiusKm: number;
   gpsLoading: boolean;
-  onRadiusChange: (km: number) => void;
+  onRadiusChange: (_km: number) => void;
   onGps: () => void;
 }
 

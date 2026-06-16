@@ -52,8 +52,8 @@ function Avatar({ user, isHovered }: { user: BrowseUser; isHovered: boolean }) {
 /* --- Main Card Component --- */
 interface UserCardProps {
   user: BrowseUser;
-  onLike: (id: string) => Promise<void>;
-  onUnlike: (id: string) => Promise<void>;
+  onLike: (_id: string) => Promise<void>;
+  onUnlike: (_id: string) => Promise<void>;
 }
 
 export function UserCard({ user, onLike, onUnlike }: UserCardProps) {

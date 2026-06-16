@@ -32,9 +32,9 @@ interface ChatThreadProps {
   bottomRef: React.RefObject<HTMLDivElement | null>;
   onBack: () => void;
   onLoadOlder: () => void;
-  onSend: (content: string) => void;
+  onSend: (_content: string) => void;
   onAskOut: () => void;
-  onConfirmAction: (action: ConfirmAction) => void;
+  onConfirmAction: (_action: ConfirmAction) => void;
 }
 
 export default function ChatThread({

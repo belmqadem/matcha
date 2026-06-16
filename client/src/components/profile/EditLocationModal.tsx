@@ -13,7 +13,7 @@ const labelCls =
 
 interface Props {
   user: UserProfile;
-  onUpdate: (u: UserProfile) => void;
+  onUpdate: (_u: UserProfile) => void;
   onClose: () => void;
 }
 

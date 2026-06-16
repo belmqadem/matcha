@@ -13,14 +13,14 @@ interface UseMessagesReturn {
   loadingOlder: boolean;
   forbidden: boolean;
   loadOlder: () => Promise<void>;
-  appendOptimistic: (msg: Message) => void;
+  appendOptimistic: (_msg: Message) => void;
   threadRef: React.RefObject<HTMLDivElement | null>;
   bottomRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export function useMessages(
   activeConvo: Conversation | null,
-  onConvoUpdate: (convoId: string, patch: Partial<Conversation>) => void,
+  onConvoUpdate: (_convoId: string, _patch: Partial<Conversation>) => void,
 ): UseMessagesReturn {
   const { socket } = useSocket();
   const [messages, setMessages] = useState<Message[]>([]);

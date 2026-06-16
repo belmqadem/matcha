@@ -7,7 +7,7 @@ interface InputProps {
   type?: string;
   label: string;
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (_e: React.ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   icon?: LucideIcon;
   showPasswordIcon?: ReactNode;

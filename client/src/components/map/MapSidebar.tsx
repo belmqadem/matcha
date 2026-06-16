@@ -8,7 +8,7 @@ interface MapSidebarProps {
   radiusKm: number;
   loading: boolean;
   selectedUserId?: string;
-  onUserSelect: (user: MapUser) => void;
+  onUserSelect: (_user: MapUser) => void;
 }
 
 export default function MapSidebar({

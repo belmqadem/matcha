@@ -7,7 +7,7 @@ import type { BlockedUser } from '@/types/chat';
 
 interface BlockedItemProps {
   user: BlockedUser;
-  onUnblock: (id: string) => Promise<void>;
+  onUnblock: (_id: string) => Promise<void>;
   onClick?: () => void;
 }
 
