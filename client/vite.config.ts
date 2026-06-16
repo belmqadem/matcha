@@ -13,11 +13,9 @@ export default defineConfig({
       '@assets': '/src/assets',
     },
   },
-  build: {
-    outDir: 'dist-local',
-  },
   server: {
     port: 5173,
+    allowedHosts: ['matcha.1337.dev', 'localhost'],
     proxy: {
       '/api': {
         target: 'http://matcha_server:3000',
