@@ -42,7 +42,14 @@ export function useMessages(
       if (aborted) return;
       setMessages([]);
       setPage(1);
-      setForbidden(false);
+
+      const isConnected = activeConvo.is_connected !== false;
+      setForbidden(!isConnected);
+
+      if (!isConnected) {
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       chatService
@@ -76,7 +83,7 @@ export function useMessages(
       aborted = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeConvo?.id]);
+  }, [activeConvo?.id, activeConvo?.is_connected]);
 
   const scrollToBottom = useCallback(() => {
     if (threadRef.current) {

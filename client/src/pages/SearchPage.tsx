@@ -3,17 +3,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { UserCard } from '@/components/browse/UserCard';
 
 export default function SearchPage() {
-  const {
-    users,
-    total,
-    loading,
-    error,
-    setError,
-    q,
-    setQ,
-    like,
-    unlike,
-  } = useSearch();
+  const { users, total, loading, error, setError, q, setQ, like, unlike } = useSearch();
 
   const handleLike = async (id: string) => {
     await like(id);

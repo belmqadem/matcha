@@ -29,7 +29,9 @@ export default function DateTabs({ tab, setTab, dates, upcomingCount }: DateTabs
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex-1 flex items-center justify-center gap-1 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer ${
-              active ? 'bg-primary text-surface shadow-md' : 'text-text-muted hover:bg-background hover:text-text'
+              active
+                ? 'bg-primary text-surface shadow-md'
+                : 'text-text-muted hover:bg-background hover:text-text'
             }`}
           >
             {t.label}

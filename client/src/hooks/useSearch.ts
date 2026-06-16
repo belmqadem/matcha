@@ -19,14 +19,17 @@ export function useSearch() {
   }, [urlQ]);
 
   // Update URL param when local state changes
-  const handleSetQ = useCallback((val: string) => {
-    setQ(val);
-    setSearchParams((prev) => {
-      if (val) prev.set('q', val);
-      else prev.delete('q');
-      return prev;
-    });
-  }, [setSearchParams]);
+  const handleSetQ = useCallback(
+    (val: string) => {
+      setQ(val);
+      setSearchParams((prev) => {
+        if (val) prev.set('q', val);
+        else prev.delete('q');
+        return prev;
+      });
+    },
+    [setSearchParams],
+  );
 
   useEffect(() => {
     let active = true;
@@ -62,14 +65,14 @@ export function useSearch() {
       (u) =>
         u.first_name?.toLowerCase().includes(query) ||
         u.last_name?.toLowerCase().includes(query) ||
-        u.username?.toLowerCase().includes(query)
+        u.username?.toLowerCase().includes(query),
     );
   }, [allUsers, q]);
 
   const like = useCallback(async (id: string) => {
     const res = await userService.like(id);
     setAllUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u))
+      prev.map((u) => (u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u)),
     );
     return { connected: res.connected };
   }, []);
@@ -77,7 +80,7 @@ export function useSearch() {
   const unlike = useCallback(async (id: string) => {
     await userService.unlike(id);
     setAllUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u))
+      prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
     );
   }, []);
 

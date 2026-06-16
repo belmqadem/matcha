@@ -100,4 +100,5 @@ export interface PublicProfile {
   is_connected: boolean;
   is_blocked_by_me: boolean;
   is_fake_reported: boolean;
+  is_blocked?: boolean;
 }

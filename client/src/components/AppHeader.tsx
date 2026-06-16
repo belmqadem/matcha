@@ -137,7 +137,7 @@ export default function AppHeader() {
       (u) =>
         u.first_name?.toLowerCase().includes(query) ||
         u.last_name?.toLowerCase().includes(query) ||
-        u.username?.toLowerCase().includes(query)
+        u.username?.toLowerCase().includes(query),
     );
   }, [allUsers, searchVal]);
 
@@ -267,8 +267,10 @@ export default function AppHeader() {
                   ) : (
                     <div className="flex flex-col gap-1">
                       {filteredSearchUsers.map((user) => {
-                        const avatarUrl = user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
-                        const userInitials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
+                        const avatarUrl =
+                          user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
+                        const userInitials =
+                          `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
                         return (
                           <button
                             key={user.id}
@@ -282,16 +284,24 @@ export default function AppHeader() {
                           >
                             <div className="w-[34px] h-[34px] rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
                               {avatarUrl ? (
-                                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                                <img
+                                  src={avatarUrl}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
-                                <span className="text-xs font-bold text-primary">{userInitials}</span>
+                                <span className="text-xs font-bold text-primary">
+                                  {userInitials}
+                                </span>
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-[13px] font-bold text-text truncate">
                                 {user.first_name} {user.last_name}
                               </div>
-                              <div className="text-[11px] text-text-muted truncate">@{user.username}</div>
+                              <div className="text-[11px] text-text-muted truncate">
+                                @{user.username}
+                              </div>
                             </div>
                             <div className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">
                               Fame: {Math.round(user.fame_rating)}
@@ -484,8 +494,10 @@ export default function AppHeader() {
                       </div>
                     ) : (
                       filteredSearchUsers.map((user) => {
-                        const avatarUrl = user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
-                        const userInitials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
+                        const avatarUrl =
+                          user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
+                        const userInitials =
+                          `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
                         return (
                           <button
                             key={user.id}
@@ -499,16 +511,24 @@ export default function AppHeader() {
                           >
                             <div className="w-[30px] h-[30px] rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
                               {avatarUrl ? (
-                                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                                <img
+                                  src={avatarUrl}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
                               ) : (
-                                <span className="text-[10px] font-bold text-primary">{userInitials}</span>
+                                <span className="text-[10px] font-bold text-primary">
+                                  {userInitials}
+                                </span>
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="text-[12px] font-bold text-text truncate">
                                 {user.first_name} {user.last_name}
                               </div>
-                              <div className="text-[10px] text-text-muted truncate">@{user.username}</div>
+                              <div className="text-[10px] text-text-muted truncate">
+                                @{user.username}
+                              </div>
                             </div>
                             <div className="text-[9px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full shrink-0">
                               Fame: {Math.round(user.fame_rating)}

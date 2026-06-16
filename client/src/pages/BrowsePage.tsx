@@ -251,8 +251,7 @@ export default function BrowsePage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-black text-text tracking-tight mb-2 flex items-center gap-2">
-            Discover People{' '}
-            <span className="inline-block animate-heart-beat">🌸</span>
+            Discover People <span className="inline-block animate-heart-beat">🌸</span>
           </h1>
           <p className="text-sm font-semibold text-text-muted">
             {loading ? (
@@ -419,26 +418,30 @@ export default function BrowsePage() {
           {/* Results column */}
           <div>
             {/* Active filter chips */}
-            {activeTab === 'all' && (
-              <ActiveChips filters={filters} onRemove={removeFilter} />
-            )}
+            {activeTab === 'all' && <ActiveChips filters={filters} onRemove={removeFilter} />}
 
             {/* Grid */}
             {loading ? (
-              <div className={activeTab === 'all' && showAdvancedFilters
-                ? 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-                : 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-              }>
+              <div
+                className={
+                  activeTab === 'all' && showAdvancedFilters
+                    ? 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                    : 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                }
+              >
                 {Array.from({ length: 8 }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))}
               </div>
             ) : displayed.length > 0 ? (
               <>
-                <div className={activeTab === 'all' && showAdvancedFilters
-                  ? 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-                  : 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                }>
+                <div
+                  className={
+                    activeTab === 'all' && showAdvancedFilters
+                      ? 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                      : 'grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                  }
+                >
                   {displayed.map((user) => (
                     <div key={user.id} className="animate-fade-in-up">
                       <UserCard user={user} onLike={handleLike} onUnlike={handleUnlike} />
@@ -503,10 +506,7 @@ export default function BrowsePage() {
                   d="M30 52s-28-18-28-34C2 9.3 9.3 2 18 2c5.5 0 10.4 2.8 12 7 1.6-4.2 6.5-7 12-7 8.7 0 16 7.3 16 16C58 34 30 52 30 52z"
                 />
               </svg>
-              <svg
-                viewBox="0 0 60 56"
-                className="w-8 h-8 absolute left-4 top-3 opacity-60"
-              >
+              <svg viewBox="0 0 60 56" className="w-8 h-8 absolute left-4 top-3 opacity-60">
                 <path
                   fill="#f9a8c4"
                   d="M30 52s-28-18-28-34C2 9.3 9.3 2 18 2c5.5 0 10.4 2.8 12 7 1.6-4.2 6.5-7 12-7 8.7 0 16 7.3 16 16C58 34 30 52 30 52z"
@@ -517,9 +517,8 @@ export default function BrowsePage() {
             <div className="min-w-0">
               <p className="text-sm font-black text-text leading-tight">Want better matches?</p>
               <p className="text-xs text-text-muted font-medium">
-                Complete your{' '}
-                <span className="text-primary font-bold">profile</span> to get more likes and
-                matches!
+                Complete your <span className="text-primary font-bold">profile</span> to get more
+                likes and matches!
               </p>
             </div>
           </div>

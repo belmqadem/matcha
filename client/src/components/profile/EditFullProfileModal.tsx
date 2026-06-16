@@ -293,7 +293,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
 
         {/* Tab content area */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 scrollbar-thin">
-
           {/* TAB 1: IDENTITY */}
           {activeTab === 'identity' && (
             <form

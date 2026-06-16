@@ -67,6 +67,11 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
       .getPublicProfile(String(profileId))
       .then((p) => {
         if (aborted) return;
+        if (p.is_blocked) {
+          setError('User not found.');
+          setLoading(false);
+          return;
+        }
         setProfile(p);
         if (p.profile_picture_id) {
           const idx = p.photos.findIndex((ph) => ph.id === p.profile_picture_id);
@@ -332,7 +337,6 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
 
                   {/* Gradient overlay at bottom */}
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-
 
                   {/* Navigation Chevrons */}
                   {sortedPhotos.length > 1 && (

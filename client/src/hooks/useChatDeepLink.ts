@@ -72,6 +72,7 @@ export function useChatDeepLink({
           last_message_at: new Date().toISOString(),
           last_message_sender_id: '',
           unread_count: 0,
+          is_connected: u.is_connected ?? false,
         };
 
         setConvos((prev) =>

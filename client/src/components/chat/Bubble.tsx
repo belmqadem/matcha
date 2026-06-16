@@ -12,8 +12,8 @@ interface BubbleProps {
 export default function Bubble({ msg, mine }: BubbleProps) {
   const navigate = useNavigate();
 
-  const isProposal = msg.content.includes("proposed a date");
-  const isAcceptance = msg.content.includes("accepted the date proposal");
+  const isProposal = msg.content.includes('proposed a date');
+  const isAcceptance = msg.content.includes('accepted the date proposal');
   const isDateMsg = isProposal || isAcceptance;
 
   const handleClick = () => {
@@ -39,9 +39,11 @@ export default function Bubble({ msg, mine }: BubbleProps) {
         }`}
       >
         {isDateMsg && (
-          <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider mb-1 px-2.5 py-0.5 rounded-full ${
-            mine ? 'bg-surface/20 text-on-primary' : 'bg-primary/10 text-primary'
-          }`}>
+          <span
+            className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider mb-1 px-2.5 py-0.5 rounded-full ${
+              mine ? 'bg-surface/20 text-on-primary' : 'bg-primary/10 text-primary'
+            }`}
+          >
             Date Details
           </span>
         )}

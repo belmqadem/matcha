@@ -27,11 +27,11 @@ export default defineConfig({
         target: 'http://matcha_server:3000',
         changeOrigin: true,
       },
-      // 👇 THIS IS THE MISSING PIECE FOR CHAT 👇
       '/socket.io': {
-        target: 'http://matcha_server:3000',
+        target: 'ws://matcha_server:3000',
         changeOrigin: true,
         ws: true, // This tells Vite to proxy WebSocket connections!
+        rewriteWsOrigin: true,
       },
     },
   },

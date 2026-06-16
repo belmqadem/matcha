@@ -76,7 +76,7 @@ export function PhotoGalleryViewer({
         )}
 
         {/* Image Display */}
-        <div 
+        <div
           className="relative max-w-full max-h-[75vh] flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl bg-black/40 border border-white/10"
           onClick={(e) => e.stopPropagation()}
         >

@@ -40,7 +40,7 @@
     #fff9fa 100%
   );
   --color-scrollbar-thumb: rgba(0, 0, 0, 0.15);
-  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.30);
+  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
 }
 
 @theme {

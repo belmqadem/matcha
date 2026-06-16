@@ -11,6 +11,7 @@ export interface Conversation {
   last_message_at: string;
   last_message_sender_id: string;
   unread_count: number;
+  is_connected?: boolean;
 }
 
 export interface BlockedUser {
