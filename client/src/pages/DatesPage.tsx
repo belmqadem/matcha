@@ -54,7 +54,7 @@ export default function DatesPage() {
 
           <button
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary text-surface text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-primary/25"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary text-white text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-primary/25"
           >
             <Plus className="w-3.5 h-3.5" />
             propose
@@ -112,7 +112,7 @@ export default function DatesPage() {
               {(tab === 'upcoming' || tab === 'all') && (
                 <button
                   onClick={() => setShowModal(true)}
-                  className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-surface text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-primary/25"
+                  className="mt-5 flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary text-white text-xs hover:opacity-90 active:scale-95 transition-all shadow-sm shadow-primary/25"
                 >
                   <Plus className="w-3.5 h-3.5" /> propose a date
                 </button>

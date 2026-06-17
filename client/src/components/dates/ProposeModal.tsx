@@ -188,7 +188,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
           <button
             onClick={handleSubmit}
             disabled={submitting || connections.length === 0}
-            className="flex-1 p-2.5 rounded-xl bg-primary text-surface font-bold text-[13px] disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="flex-1 p-2.5 rounded-xl bg-primary text-white font-bold text-[13px] disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             {submitting ? 'Sending…' : 'Send proposal'}
           </button>

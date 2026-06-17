@@ -16,27 +16,39 @@ export function useBrowse() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabValue>('all');
 
+  const [resetKey, setResetKey] = useState(0);
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SortKey>('fame');
-  const [order, setOrder] = useState<OrderKey>('desc');
+  const [sort, setSort] = useState<SortKey>('distance');
+  const [order, setOrder] = useState<OrderKey>('asc');
 
   const buildParams = useCallback(
-    (pageNum: number) => {
-      const p: Record<string, string | number> = { sort, order, page: pageNum, limit: 20 };
-      if (filters.age_min) p.age_min = filters.age_min;
-      if (filters.age_max) p.age_max = filters.age_max;
-      if (filters.fame_min) p.fame_min = filters.fame_min;
-      if (filters.fame_max) p.fame_max = filters.fame_max;
-      if (filters.location_mode === 'km' && filters.max_km) p.max_km = filters.max_km;
-      if (filters.location_mode === 'city' && filters.city) p.city = filters.city;
-      if (filters.tags) p.tags = filters.tags.replace(/#/g, '').replace(/\s+/g, '');
+    (pageNum: number, nextSort = sort, nextOrder = order, nextFilters = filters) => {
+      const p: Record<string, string | number> = {
+        sort: nextSort,
+        order: nextOrder,
+        page: pageNum,
+        limit: 20,
+      };
+      if (nextFilters.age_min) p.age_min = nextFilters.age_min;
+      if (nextFilters.age_max) p.age_max = nextFilters.age_max;
+      if (nextFilters.fame_min) p.fame_min = nextFilters.fame_min;
+      if (nextFilters.fame_max) p.fame_max = nextFilters.fame_max;
+      if (nextFilters.location_mode === 'km' && nextFilters.max_km) p.max_km = nextFilters.max_km;
+      if (nextFilters.location_mode === 'city' && nextFilters.city) p.city = nextFilters.city;
+      if (nextFilters.tags) p.tags = nextFilters.tags.replace(/#/g, '').replace(/\s+/g, '');
       return p;
     },
     [sort, order, filters],
   );
 
   const fetchTab = useCallback(
-    (tab: TabValue, isLoadMore = false) => {
+    (
+      tab: TabValue,
+      isLoadMore = false,
+      nextSort = sort,
+      nextOrder = order,
+      nextFilters = filters,
+    ) => {
       const targetPage = isLoadMore ? page + 1 : 1;
       if (isLoadMore) {
         setLoadingMore(true);
@@ -44,11 +56,12 @@ export function useBrowse() {
         setLoading(true);
         setError(null);
         setPage(1);
+        setResetKey((k) => k + 1);
       }
 
       const fetchPromise = (() => {
         if (tab === 'all') {
-          return userService.browseUsers(buildParams(targetPage));
+          return userService.browseUsers(buildParams(targetPage, nextSort, nextOrder, nextFilters));
         } else if (tab === 'liked') {
           return userService.getLikedUsers();
         } else if (tab === 'liked-me') {
@@ -66,7 +79,11 @@ export function useBrowse() {
             liked_me: Boolean(u.liked_me),
             is_connected: Boolean(u.is_connected),
           }));
-          setUsers((prev) => (isLoadMore ? [...prev, ...sanitizedUsers] : sanitizedUsers));
+          setUsers((prev) => {
+            if (!isLoadMore) return sanitizedUsers;
+            const seen = new Set(prev.map((u) => u.id));
+            return [...prev, ...sanitizedUsers.filter((u) => !seen.has(u.id))];
+          });
           setTotal(data.total ?? 0);
           if (isLoadMore) setPage(targetPage);
           setLoading(false);
@@ -90,13 +107,25 @@ export function useBrowse() {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const applyFilters = useCallback(() => {
-    fetchTab(activeTab);
-  }, [fetchTab, activeTab]);
+  const applyFilters = useCallback(
+    (nextSort?: SortKey, nextOrder?: OrderKey, nextFilters?: SearchFilters) => {
+      const resolvedSort = nextSort ?? sort;
+      const resolvedOrder = nextOrder ?? order;
+      const resolvedFilters = nextFilters ?? filters;
+
+      setSort(resolvedSort);
+      setOrder(resolvedOrder);
+      setFilters(resolvedFilters);
+      fetchTab(activeTab, false, resolvedSort, resolvedOrder, resolvedFilters);
+    },
+    [fetchTab, activeTab, sort, order, filters],
+  );
 
   const clearFilters = useCallback(() => {
     setFilters(DEFAULT_FILTERS);
-    setTimeout(() => fetchTab(activeTab), 0);
+    setSort('distance');
+    setOrder('asc');
+    fetchTab(activeTab, false, 'distance', 'asc', DEFAULT_FILTERS);
   }, [fetchTab, activeTab]);
 
   const removeFilter = useCallback(
@@ -110,7 +139,7 @@ export function useBrowse() {
       } else {
         setFilters((prev) => ({ ...prev, [key]: '' }));
       }
-      setTimeout(() => fetchTab(activeTab), 0);
+      setTimeout(() => fetchTab(activeTab, false), 0);
     },
     [fetchTab, activeTab],
   );
@@ -130,11 +159,13 @@ export function useBrowse() {
           u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u,
         ),
       );
+      return res;
     } catch (err) {
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
       );
       setError((err as Error).message);
+      return null;
     }
   };
 
@@ -147,6 +178,7 @@ export function useBrowse() {
 
     try {
       await userService.unlike(id);
+      return true;
     } catch (err) {
       setUsers((prev) =>
         prev.map((u) =>
@@ -160,6 +192,7 @@ export function useBrowse() {
         ),
       );
       setError((err as Error).message);
+      return false;
     }
   };
 
@@ -169,6 +202,7 @@ export function useBrowse() {
 
   return {
     users,
+    resetKey,
     total,
     loading,
     loadingMore,

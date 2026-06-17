@@ -57,7 +57,7 @@ export const StepNavigation = ({
               ${
                 loading
                   ? 'bg-border text-text-muted cursor-not-allowed'
-                  : 'bg-primary text-surface shadow-premium'
+                  : 'bg-primary text-white shadow-premium'
               }
             `}
           >
@@ -65,7 +65,7 @@ export const StepNavigation = ({
               'Saving…'
             ) : isLast ? (
               <>
-                <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current text-surface" />
+                <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current text-text" />
                 Complete
               </>
             ) : (

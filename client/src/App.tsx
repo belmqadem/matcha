@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 // Global Context Providers
 import { AuthProvider } from '@/context/AuthContext';
@@ -19,13 +19,15 @@ import ChatPage from './pages/ChatPage';
 import NotificationsPage from './pages/NotificationsPage';
 import MapPage from './pages/MapPage';
 import MyProfilePage from './pages/MyProfilePage';
-// import EditProfilePage from './pages/EditProfilePage';
 import ProfilePage from './pages/ProfilePage';
 import VisitorsPage from './pages/VisitorsPage';
 import DatesPage from './pages/DatesPage';
 
 // Setup page
 import ProfileSetupPage from './pages/Profilesetuppage';
+
+// Not Found page
+import NotFoundPage from './pages/NotFoundPage';
 
 // Layout & guards (Updated Import!)
 import AppLayout from './layout/AppLayout';
@@ -77,7 +79,7 @@ const App = () => {
             </Route>
 
             {/* ── Fallback ── */}
-            <Route path="*" element={<Navigate to="/browse" replace />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </SocketProvider>
       </AuthProvider>

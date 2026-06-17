@@ -5,19 +5,18 @@
 :root {
   /* Default is Dark Theme - Elevated Deep Space */
   --color-primary: #ec737e;
-  --color-background: #06070a;
-  --color-surface: #0e0f14;
-  --color-text: #f3f4f6;
-  --color-text-muted: #8e93ad;
-  --color-border: #1d1e26;
-  --font-fraunces: 'Fraunces', serif;
+  --color-background: #080910;
+  --color-surface: #12141f;
+  --color-text: #f0f1f8;
+  --color-text-muted: #9ba3c2;
+  --color-border: #2a2d3e;
   --body-gradient: linear-gradient(
     135deg,
-    #06070a 0%,
-    #0c0d12 25%,
-    #140b1a 50%,
-    #0c0d12 75%,
-    #06070a 100%
+    #080910 0%,
+    #0e1018 25%,
+    #160d1e 50%,
+    #0e1018 75%,
+    #080910 100%
   );
   --color-scrollbar-thumb: rgba(255, 255, 255, 0.16);
   --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
