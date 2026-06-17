@@ -7,6 +7,7 @@ import { getMe } from "./users.service.js";
 import { get as redisGet, set as redisSet } from "../db/redis.js";
 import { CacheKeys } from "../utils/cacheKeys.js";
 import {
+	invalidateBrowseForUser,
   invalidateProfileCache,
   invalidateUserCaches,
   invalidateUserProfileCaches,
@@ -843,6 +844,7 @@ export const likeUser = async (likerId, likedId) => {
     await invalidateUserCaches(likerId);
     await invalidateUserCaches(likedId);
     await invalidateProfileCache(likedId);
+		await invalidateBrowseForUser(likerId);
 
     return { liked: true, connected: isConnected };
   } catch (err) {

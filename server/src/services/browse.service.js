@@ -162,6 +162,11 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
       WHERE (b.blocker_id = u.id AND b.blocked_id = ${currentUserIdParam}::uuid)
          OR (b.blocker_id = ${currentUserIdParam}::uuid AND b.blocked_id = u.id)
     )`,
+		`NOT EXISTS (
+			SELECT 1 FROM likes
+			WHERE liker_id = ${currentUserIdParam}::uuid
+				AND liked_id = u.id
+		)`,
   ];
 
   const orientation = buildOrientationFilter(currentUser, addParam);
@@ -269,6 +274,14 @@ export const getSuggestedProfiles = async (currentUserId, queryParams) => {
         WHERE ut1.user_id = ${currentUserIdParam}
           AND ut2.user_id = u.id
       ) AS shared_tags,
+			EXISTS (
+				SELECT 1 FROM likes
+				WHERE liker_id = ${currentUserIdParam}::uuid AND liked_id = u.id
+			) AS liked_by_me,
+			EXISTS (
+				SELECT 1 FROM likes
+				WHERE liker_id = u.id AND liked_id = ${currentUserIdParam}::uuid
+			) AS liked_me,
       COALESCE(
         (SELECT json_agg(p ORDER BY p.order_index) FROM photos p WHERE p.user_id = u.id),
         '[]'
