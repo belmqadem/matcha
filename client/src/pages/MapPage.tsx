@@ -40,7 +40,7 @@ export default function MapPage() {
 
   // Pure rendering layout - No inline styles anywhere
   return (
-    <div className="flex flex-col h-[calc(100dvh-8rem)] md:h-[calc(100dvh-4rem)] bg-background font-primary overflow-hidden">
+    <div className="flex flex-col flex-1 overflow-hidden">
       <MapHeader
         userCount={users.length}
         loading={loading}

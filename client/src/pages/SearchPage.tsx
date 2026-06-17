@@ -14,7 +14,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background font-primary pb-12">
+    <div className="flex flex-col flex-1 pb-12">
       <div className="w-full max-w-7xl mx-auto py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8 flex flex-col items-center text-center">

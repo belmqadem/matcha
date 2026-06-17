@@ -9,7 +9,7 @@ export default function NotificationsPage() {
     useNotifications();
 
   return (
-    <div className="relative min-h-[100dvh] bg-background font-primary overflow-x-hidden pb-10">
+    <div className="flex flex-col flex-1 relative overflow-x-hidden pb-10">
       <div className="relative z-10 w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {/* Header */}
         <div className="flex items-end justify-between mb-6 sm:mb-8">

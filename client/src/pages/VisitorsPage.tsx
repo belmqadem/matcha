@@ -10,7 +10,7 @@ export default function VisitorsPage() {
   const { visitors, sorted, loading, error, sort, setSort } = useVisitors();
 
   return (
-    <div className="min-h-[100dvh] bg-background font-primary pb-10">
+    <div className="flex flex-col flex-1 pb-10">
       <div className="max-w-6xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 sm:mb-8">

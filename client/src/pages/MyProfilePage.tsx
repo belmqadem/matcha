@@ -75,14 +75,14 @@ const MyProfilePage = () => {
 
   if (loading)
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+      <div className="flex flex-1 items-center justify-center">
         <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin" />
       </div>
     );
 
   if (fetchError || !user)
     return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 bg-background">
+      <div className="flex flex-col flex-1 items-center justify-center gap-4">
         <p className="text-sm sm:text-base font-medium text-text-muted">
           {fetchError || 'Profile not found.'}
         </p>
@@ -105,7 +105,7 @@ const MyProfilePage = () => {
     PREFERENCES.find((p) => p.value === DEFAULT_PREFERENCE)?.label;
 
   return (
-    <div className="min-h-[calc(100dvh-4rem)] flex items-center justify-center bg-transparent p-4 font-primary">
+    <div className="flex flex-col flex-1 items-center justify-center bg-transparent p-4 font-primary">
       {editModal && (
         <EditFullProfileModal
           user={user}

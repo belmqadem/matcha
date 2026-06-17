@@ -38,7 +38,7 @@ export default function DatesPage() {
   ).length;
 
   return (
-    <div className="min-h-[100dvh] font-primary pb-16">
+    <div className="flex flex-col flex-1 pb-16">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-surface/75 backdrop-blur-xl border-b border-border/60">
         <div className="max-w-2xl mx-auto px-5 h-14 flex items-center justify-between">

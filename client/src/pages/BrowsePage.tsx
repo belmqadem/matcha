@@ -47,7 +47,7 @@ export default function BrowsePage() {
   }, [reset, clearFilters]);
 
   return (
-    <div className="flex flex-col items-center bg-transparent pt-4 px-4">
+    <div className="flex flex-col flex-1 items-center bg-transparent pt-4 px-4">
       {/* Top bar */}
       <div className="w-full max-w-sm flex items-center justify-between mb-5">
         <h1 className="text-xl font-black text-text">Discover</h1>
