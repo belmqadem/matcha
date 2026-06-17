@@ -9,9 +9,7 @@ interface SwipeCardProps {
   user: BrowseUser;
   onLike: () => Promise<unknown> | unknown;
   onPass: () => void;
-  onUnlike: () => Promise<unknown> | unknown;
   onViewProfile?: () => void;
-  /** Pixels to translate for a button-triggered exit animation (set by SwipeStack). */
   exitX?: number;
   style?: React.CSSProperties;
   isTop: boolean;
@@ -28,7 +26,7 @@ function getPhoto(user: BrowseUser): string | null {
   return (main ?? user.photos[0])?.url ?? null;
 }
 
-export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX, style, isTop }: SwipeCardProps) {
+export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, isTop }: SwipeCardProps) {
   const [imgErr, setImgErr] = useState(false);
   const [busy, setBusy] = useState(false);
   const clickStartX = useRef(0);
@@ -37,14 +35,12 @@ export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX
   const photo = getPhoto(user);
   const initials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`;
 
-  // Gesture swipe is disabled while a button-triggered exit is in flight
   const { dragX, dragY, isDragging, handlers } = useSwipe({
     onSwipeRight: onLike,
     onSwipeLeft: onPass,
     enabled: isTop && exitX === undefined,
   });
 
-  // Button-triggered exitX takes priority over the gesture drag value
   const tx = exitX !== undefined ? exitX : dragX;
   const ty = exitX !== undefined ? 0 : dragY;
   const rot = tx * 0.08;
@@ -70,14 +66,8 @@ export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX
     onPass();
   };
 
-  const handleUnlike = () => {
-    if (busy) return;
-    setBusy(true);
-    Promise.resolve(onUnlike()).finally(() => setBusy(false));
-  };
-
   return (
-    <div className="flex flex-col gap-4" style={style}>
+    <div className="flex flex-col" style={style}>
       {/* ── Card ── */}
       <div
         className="relative w-full rounded-3xl overflow-hidden bg-surface border border-border shadow-2xl select-none"
@@ -86,7 +76,6 @@ export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX
           transform: isTop
             ? `translateX(${tx}px) translateY(${ty}px) rotate(${rot}deg)`
             : undefined,
-          // Always animate when exiting via button; no transition while dragging
           transition:
             exitX !== undefined
               ? 'transform 0.35s ease'
@@ -132,33 +121,33 @@ export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX
         </div>
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-linear-to-t from-black/75 via-black/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
 
         {/* FameBadge */}
         <div className="absolute top-4 right-4 pointer-events-none">
           <FameBadge rating={user.fame_rating} />
         </div>
 
-        {/* LIKE badge */}
+        {/* LIKE color-wash */}
         {likeOpacity > 0 && (
           <div
-            className="absolute top-12 left-5 -rotate-12 pointer-events-none"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-green-500/20"
             style={{ opacity: likeOpacity }}
           >
-            <span className="text-2xl font-black text-green-400 border-4 border-green-400 px-4 py-1 rounded-xl tracking-widest">
-              YES
+            <span className="text-4xl font-black tracking-widest text-green-400 drop-shadow-lg">
+              LIKE
             </span>
           </div>
         )}
 
-        {/* PASS badge */}
+        {/* SKIP color-wash */}
         {passOpacity > 0 && (
           <div
-            className="absolute top-12 right-5 rotate-12 pointer-events-none"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-error/20"
             style={{ opacity: passOpacity }}
           >
-            <span className="text-2xl font-black text-error border-4 border-error px-4 py-1 rounded-xl tracking-widest">
-              NOPE
+            <span className="text-4xl font-black tracking-widest text-error drop-shadow-lg">
+              SKIP
             </span>
           </div>
         )}
@@ -179,7 +168,9 @@ export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX
             <p className="text-white/80 text-sm flex items-center gap-1 mb-3 drop-shadow">
               <MapPin className="w-4 h-4 shrink-0" />
               {distanceLabel}
-              {distanceLabel && user.location_city && <span className="opacity-50 mx-0.5">·</span>}
+              {distanceLabel && user.location_city && (
+                <span className="opacity-50 mx-0.5">·</span>
+              )}
               {user.location_city}
             </p>
           )}
@@ -201,28 +192,30 @@ export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX
 
       {/* ── Action buttons (top card only) ── */}
       {isTop && (
-        <div className="mt-4 flex items-center justify-center gap-4 sm:gap-8">
+        <div className="mt-5 flex items-center justify-center gap-6">
           {/* Pass */}
           <button
             onClick={handlePass}
             disabled={busy}
-            className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-border bg-surface text-text-muted shadow-md transition-all hover:border-primary hover:text-primary active:scale-95 disabled:opacity-50"
             aria-label="Pass"
+						title='Pass'
+            className="flex h-13 w-13 items-center justify-center rounded-full border-2 border-border bg-surface text-text-muted shadow-md transition-all duration-150 hover:border-error hover:text-error  hover:shadow-lg active:scale-90 disabled:opacity-40"
           >
             <X className="w-6 h-6" />
           </button>
 
-          {/* Like / Unlike */}
+          {/* Like */}
           <button
-            onClick={user.liked_by_me ? handleUnlike : handleLike}
+            onClick={handleLike}
             disabled={busy}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_4px_20px_rgba(233,64,87,0.45)] transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-            aria-label={user.liked_by_me ? 'Unlike' : 'Like'}
+            aria-label="Like"
+						title='Like'
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white shadow-[0_6px_28px_rgba(233,64,87,0.45)] transition-all duration-150 hover:scale-110 hover:shadow-[0_8px_36px_rgba(233,64,87,0.65)] active:scale-95 disabled:opacity-40"
           >
             {busy ? (
               <Spinner size="sm" />
             ) : (
-              <Heart className={`w-6 h-6 ${user.liked_by_me ? 'fill-current' : ''}`} />
+              <Heart className={`w-7 h-7 ${user.liked_by_me ? 'fill-current' : ''}`} />
             )}
           </button>
         </div>

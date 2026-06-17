@@ -208,71 +208,73 @@ export default function ProfilePage() {
       )}
 
       {/* Page header */}
-      <div className="sticky top-0 z-20 flex items-center justify-between px-5 py-3 border-b border-border/60 bg-surface/85 backdrop-blur-md gap-2">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-8 h-8 rounded-full border border-border/80 bg-surface flex items-center justify-center text-text-muted hover:border-primary hover:text-primary transition-all active:scale-90 cursor-pointer"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-
-        <div className="relative" ref={menuRef}>
+      <div className="sticky top-0 z-20 px-5 py-3">
+        <div className="max-w-215 flex items-center justify-between gap-2 mx-auto">
           <button
-            disabled={likeLoading || blockLoading}
-            onClick={() => setShowMenu(!showMenu)}
-            className={`w-8 h-8 rounded-full border bg-surface flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
-              showMenu
-                ? 'border-primary text-primary shadow-sm shadow-primary/20'
-                : 'border-border/80 text-text-muted hover:border-primary hover:text-primary'
-            } ${likeLoading || blockLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            onClick={() => navigate(-1)}
+            className="w-8 h-8 rounded-full border border-border/80 bg-surface flex items-center justify-center text-text-muted hover:border-primary hover:text-primary transition-all active:scale-90 cursor-pointer"
           >
-            {likeLoading || blockLoading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-            ) : (
-              <MoreVertical className="w-4 h-4" />
-            )}
+            <ChevronLeft className="w-4 h-4" />
           </button>
 
-          {showMenu && (
-            <div className="absolute right-0 mt-2 w-48 bg-surface/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-premium py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
-              {profile.is_connected && (
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    handleLike();
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-bold text-error hover:bg-error/10 hover:text-error transition-colors flex items-center gap-2 cursor-pointer border-b border-border/40 pb-2.5 mb-1"
-                >
-                  <Heart className="w-3.5 h-3.5 text-error fill-current" />
-                  Unmatch
-                </button>
+          <div className="relative" ref={menuRef}>
+            <button
+              disabled={likeLoading || blockLoading}
+              onClick={() => setShowMenu(!showMenu)}
+              className={`w-8 h-8 rounded-full border bg-surface flex items-center justify-center transition-all active:scale-90 cursor-pointer ${
+                showMenu
+                  ? 'border-primary text-primary shadow-sm shadow-primary/20'
+                  : 'border-border/80 text-text-muted hover:border-primary hover:text-primary'
+              } ${likeLoading || blockLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+            >
+              {likeLoading || blockLoading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+              ) : (
+                <MoreVertical className="w-4 h-4" />
               )}
+            </button>
 
-              <button
-                onClick={() => {
-                  setShowMenu(false);
-                  setConfirm(profile.is_blocked_by_me ? 'unblock' : 'block');
-                }}
-                className="w-full px-4 py-2.5 text-left text-xs font-bold text-text hover:bg-error/10 hover:text-error transition-colors flex items-center gap-2 cursor-pointer"
-              >
-                <Ban className="w-3.5 h-3.5 text-text-muted" />
-                {profile.is_blocked_by_me ? 'Unblock User' : 'Block User'}
-              </button>
+            {showMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-surface/90 backdrop-blur-md border border-border/80 rounded-2xl shadow-premium py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-150">
+                {profile.is_connected && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      handleLike();
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-error hover:bg-error/10 hover:text-error transition-colors flex items-center gap-2 cursor-pointer border-b border-border/40 pb-2.5 mb-1"
+                  >
+                    <Heart className="w-3.5 h-3.5 text-error fill-current" />
+                    Unmatch
+                  </button>
+                )}
 
-              {!profile.is_fake_reported && (
                 <button
                   onClick={() => {
                     setShowMenu(false);
-                    setConfirm('report');
+                    setConfirm(profile.is_blocked_by_me ? 'unblock' : 'block');
                   }}
                   className="w-full px-4 py-2.5 text-left text-xs font-bold text-text hover:bg-error/10 hover:text-error transition-colors flex items-center gap-2 cursor-pointer"
                 >
-                  <Flag className="w-3.5 h-3.5 text-text-muted" />
-                  Report Fake
+                  <Ban className="w-3.5 h-3.5 text-text-muted" />
+                  {profile.is_blocked_by_me ? 'Unblock User' : 'Block User'}
                 </button>
-              )}
-            </div>
-          )}
+
+                {!profile.is_fake_reported && (
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setConfirm('report');
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-xs font-bold text-text hover:bg-error/10 hover:text-error transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <Flag className="w-3.5 h-3.5 text-text-muted" />
+                    Report Fake
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -301,9 +303,7 @@ export default function ProfilePage() {
                   <>
                     <button
                       onClick={() =>
-                        setActivePhoto((prev) =>
-                          prev > 0 ? prev - 1 : sortedPhotos.length - 1,
-                        )
+                        setActivePhoto((prev) => (prev > 0 ? prev - 1 : sortedPhotos.length - 1))
                       }
                       className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-text flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                     >
@@ -311,9 +311,7 @@ export default function ProfilePage() {
                     </button>
                     <button
                       onClick={() =>
-                        setActivePhoto((prev) =>
-                          prev < sortedPhotos.length - 1 ? prev + 1 : 0,
-                        )
+                        setActivePhoto((prev) => (prev < sortedPhotos.length - 1 ? prev + 1 : 0))
                       }
                       className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-text flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                     >

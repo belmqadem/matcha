@@ -160,6 +160,7 @@ export default function AppHeader() {
                     ? 'text-primary border-primary/30 bg-primary/5'
                     : 'text-text-muted border-border hover:bg-border/50 hover:text-text'
                 }`}
+								title='notifications'
               >
                 <Bell size={15} strokeWidth={1.8} />
               </NavLink>

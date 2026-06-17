@@ -1,8 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { userService } from '@/services/userService';
 import type { BrowseUser } from '@/types/user';
 import type { BrowseFilters } from '@/types/browse';
 import { DEFAULT_BROWSE_FILTERS } from '@/types/browse';
+import { BROWSE_FILTERS_KEY } from './useBrowseFilters';
+
+function loadSavedFilters(): BrowseFilters {
+  try {
+    const raw = localStorage.getItem(BROWSE_FILTERS_KEY);
+    if (!raw) return DEFAULT_BROWSE_FILTERS;
+    return { ...DEFAULT_BROWSE_FILTERS, ...(JSON.parse(raw) as Partial<BrowseFilters>) };
+  } catch {
+    return DEFAULT_BROWSE_FILTERS;
+  }
+}
 
 const LIMIT = 20;
 
@@ -29,7 +40,9 @@ export function useBrowse() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
-  const [activeFilters, setActiveFilters] = useState<BrowseFilters>(DEFAULT_BROWSE_FILTERS);
+  // Initialise with persisted filters so loadMore continues using the right params
+  const [activeFilters, setActiveFilters] = useState<BrowseFilters>(loadSavedFilters);
+  const initialFilters = useRef(loadSavedFilters());
 
   const fetchBrowse = useCallback(
     async (filters: BrowseFilters, isLoadMore: boolean, currentPage: number) => {
@@ -69,7 +82,7 @@ export function useBrowse() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchBrowse(DEFAULT_BROWSE_FILTERS, false, 1);
+    void fetchBrowse(initialFilters.current, false, 1);
   }, [fetchBrowse]);
 
   const loadMore = useCallback(() => {

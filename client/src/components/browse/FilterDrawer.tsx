@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { BrowseFilters } from '@/types/browse';
 
@@ -10,6 +11,12 @@ interface FilterDrawerProps {
   onReset: () => void;
 }
 
+interface FilterErrors {
+  age?: string;
+  fame?: string;
+  tags?: string;
+}
+
 const SORT_OPTIONS: { value: BrowseFilters['sort']; label: string }[] = [
   { value: 'distance', label: 'Distance' },
   { value: 'fame', label: 'Fame' },
@@ -18,12 +25,69 @@ const SORT_OPTIONS: { value: BrowseFilters['sort']; label: string }[] = [
 ];
 
 const labelCls = 'block text-[0.65rem] font-bold tracking-widest uppercase text-text-muted mb-2';
-const inputCls =
-  'w-full bg-background border-2 border-transparent rounded-2xl px-4 py-2.5 text-sm font-bold text-text placeholder-text-muted outline-none focus:border-primary transition-all';
+
+function inputCls(hasError: boolean) {
+  return `w-full bg-background border-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-text placeholder-text-muted outline-none transition-all ${
+    hasError
+      ? 'border-error focus:border-error'
+      : 'border-transparent focus:border-primary'
+  }`;
+}
+
+function validate(f: BrowseFilters): FilterErrors {
+  const errs: FilterErrors = {};
+
+  const ageMin = f.age_min != null ? Number(f.age_min) : null;
+  const ageMax = f.age_max != null ? Number(f.age_max) : null;
+
+  if (ageMin != null && ageMin < 18) {
+    errs.age = 'Minimum age is 18';
+  } else if (ageMax != null && ageMax > 99) {
+    errs.age = 'Maximum age is 99';
+  } else if (ageMin != null && ageMax != null && ageMin > ageMax) {
+    errs.age = 'Min age must be less than max';
+  }
+
+  const fameMin = f.fame_min != null ? Number(f.fame_min) : 0;
+  const fameMax = f.fame_max != null ? Number(f.fame_max) : 100;
+  if (fameMin > fameMax) {
+    errs.fame = 'Min fame must be less than max';
+  }
+
+  if (f.tags) {
+    const cleaned = f.tags.replace(/#/g, '').replace(/\s+/g, '');
+    if (!/^[a-zA-Z0-9,]*$/.test(cleaned)) {
+      errs.tags = 'Tags can only contain letters, numbers and commas';
+    }
+  }
+
+  return errs;
+}
 
 export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onReset }: FilterDrawerProps) {
-  const set = <K extends keyof BrowseFilters>(key: K, value: BrowseFilters[K]) =>
-    onChange({ ...filters, [key]: value });
+  const [errors, setErrors] = useState<FilterErrors>({});
+
+  const set = <K extends keyof BrowseFilters>(key: K, value: BrowseFilters[K]) => {
+    const next = { ...filters, [key]: value };
+    onChange(next);
+    setErrors(validate(next));
+  };
+
+  const handleApply = () => {
+    const errs = validate(filters);
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+    onApply();
+    onClose();
+  };
+
+  const handleReset = () => {
+    setErrors({});
+    onReset();
+    onClose();
+  };
+
+  const hasErrors = Object.keys(errors).length > 0;
 
   return (
     <>
@@ -37,7 +101,7 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
 
       {/* Drawer */}
       <div
-        className={`fixed right-0 top-0 h-full z-50 w-full sm:w-[340px] bg-surface border-l border-border flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`fixed right-0 top-0 h-full z-50 w-full sm:w-85 bg-surface border-l border-border flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
       >
@@ -46,7 +110,7 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
           <h2 className="text-base font-black text-text">Filters</h2>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => { onReset(); onClose(); }}
+              onClick={handleReset}
               className="text-xs font-bold text-text-muted hover:text-primary transition-colors"
             >
               Reset
@@ -137,8 +201,10 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
                 max={99}
                 placeholder="Min"
                 value={filters.age_min ?? ''}
-                onChange={(e) => set('age_min', e.target.value ? Number(e.target.value) : undefined)}
-                className={inputCls}
+                onChange={(e) =>
+                  set('age_min', e.target.value ? Number(e.target.value) : undefined)
+                }
+                className={inputCls(!!errors.age)}
               />
               <span className="text-text-muted font-bold shrink-0">–</span>
               <input
@@ -147,17 +213,22 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
                 max={99}
                 placeholder="Max"
                 value={filters.age_max ?? ''}
-                onChange={(e) => set('age_max', e.target.value ? Number(e.target.value) : undefined)}
-                className={inputCls}
+                onChange={(e) =>
+                  set('age_max', e.target.value ? Number(e.target.value) : undefined)
+                }
+                className={inputCls(!!errors.age)}
               />
             </div>
+            {errors.age && (
+              <p className="mt-1.5 text-xs text-error font-medium">{errors.age}</p>
+            )}
           </div>
 
           {/* Fame range */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className={labelCls} style={{ marginBottom: 0 }}>Fame range</span>
-              <span className="text-xs font-bold text-primary">
+              <span className={`text-xs font-bold ${errors.fame ? 'text-error' : 'text-primary'}`}>
                 {filters.fame_min ?? 0} – {filters.fame_max ?? 100}
               </span>
             </div>
@@ -168,7 +239,7 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
                 max={100}
                 value={filters.fame_min ?? 0}
                 onChange={(e) => set('fame_min', Number(e.target.value))}
-                className="w-full accent-primary"
+                className={`w-full ${errors.fame ? 'accent-error' : 'accent-primary'}`}
               />
               <input
                 type="range"
@@ -176,9 +247,12 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
                 max={100}
                 value={filters.fame_max ?? 100}
                 onChange={(e) => set('fame_max', Number(e.target.value))}
-                className="w-full accent-primary"
+                className={`w-full ${errors.fame ? 'accent-error' : 'accent-primary'}`}
               />
             </div>
+            {errors.fame && (
+              <p className="mt-1.5 text-xs text-error font-medium">{errors.fame}</p>
+            )}
           </div>
 
           {/* Tags */}
@@ -189,16 +263,20 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
               placeholder="#vegan, #geek"
               value={filters.tags ?? ''}
               onChange={(e) => set('tags', e.target.value || undefined)}
-              className={inputCls}
+              className={inputCls(!!errors.tags)}
             />
+            {errors.tags && (
+              <p className="mt-1.5 text-xs text-error font-medium">{errors.tags}</p>
+            )}
           </div>
         </div>
 
         {/* Footer */}
         <div className="shrink-0 px-5 py-4 border-t border-border">
           <button
-            onClick={() => { onApply(); onClose(); }}
-            className="w-full py-3.5 rounded-full bg-primary text-white text-sm font-black shadow-md hover:opacity-90 active:scale-95 transition-all"
+            onClick={handleApply}
+            disabled={hasErrors}
+            className="w-full py-3.5 rounded-full bg-primary text-white text-sm font-black shadow-md transition-all hover:opacity-90 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Apply filters
           </button>

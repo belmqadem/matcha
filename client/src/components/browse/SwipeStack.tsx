@@ -8,7 +8,6 @@ interface SwipeStackProps {
   users: BrowseUser[];
   resetKey: number;
   onLike: (_id: string) => Promise<{ liked: boolean; connected: boolean } | null>;
-  onUnlike: (_id: string) => Promise<boolean>;
   onViewProfile: (_id: string) => void;
   onLoadMore: () => void;
   isLoading: boolean;
@@ -27,7 +26,6 @@ export function SwipeStack({
   users,
   resetKey,
   onLike,
-  onUnlike,
   onViewProfile,
   onLoadMore,
   isLoading,
@@ -87,16 +85,6 @@ export function SwipeStack({
     dismiss('left');
   }, [dismiss]);
 
-  const handleUnlike = useCallback(
-    async (user: BrowseUser) => {
-      const success = await onUnlike(user.id);
-      if (success) {
-        dismiss('left');
-      }
-    },
-    [onUnlike, dismiss],
-  );
-
   if (isLoading && users.length === 0) {
     return (
       <div className="relative w-full" style={{ height: CARD_HEIGHT }}>
@@ -154,7 +142,6 @@ export function SwipeStack({
                 isTop={isTop}
                 onLike={() => handleLike(user)}
                 onPass={handlePass}
-                onUnlike={() => handleUnlike(user)}
                 onViewProfile={() => onViewProfile(user.id)}
                 exitX={isTop && exitX !== null ? exitX : undefined}
                 style={{ height: '100%' }}

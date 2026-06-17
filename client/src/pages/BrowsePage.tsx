@@ -10,7 +10,7 @@ import { FilterDrawer } from '@/components/browse/FilterDrawer';
 export default function BrowsePage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { users, resetKey, loading, hasMore, loadMore, handleLike, handleUnlike, applyFilters, clearFilters } =
+  const { users, resetKey, loading, hasMore, loadMore, handleLike, applyFilters, clearFilters } =
     useBrowse();
 
   const { filters, setFilters, apply, reset, activeCount } = useBrowseFilters();
@@ -27,7 +27,7 @@ export default function BrowsePage() {
   }, [reset, clearFilters]);
 
   return (
-    <div className="flex flex-col flex-1 items-center bg-transparent pt-4 px-4">
+    <div className="flex flex-col flex-1 items-center py-4 px-4">
       {/* Top bar */}
       <div className="w-full max-w-sm flex items-center justify-between mb-5">
         <h1 className="text-xl font-black text-text">Discover</h1>
@@ -51,7 +51,6 @@ export default function BrowsePage() {
           users={users}
           resetKey={resetKey}
           onLike={handleLike}
-          onUnlike={handleUnlike}
           onViewProfile={openProfile}
           onLoadMore={loadMore}
           isLoading={loading}

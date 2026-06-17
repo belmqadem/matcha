@@ -1,9 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  MapPin, Edit2, Loader2, LogOut, Flame, User, Sparkles, Calendar,
-  Quote, MoreVertical, Camera, Eye, Heart, Tag, CheckCircle2,
-  AlertTriangle, Navigation,
+  MapPin,
+  Edit2,
+  Loader2,
+  LogOut,
+  Flame,
+  User,
+  Sparkles,
+  Calendar,
+  Quote,
+  MoreVertical,
+  Camera,
+  Eye,
+  Heart,
+  Tag,
+  CheckCircle2,
+  AlertTriangle,
+  Navigation,
 } from 'lucide-react';
 
 import { userService } from '@/services/userService';
@@ -34,7 +48,11 @@ function timeAgo(dateStr: string): string {
 }
 
 function PersonRow({
-  src, initials, name, username, time,
+  src,
+  initials,
+  name,
+  username,
+  time,
 }: {
   src: string | null;
   initials: string;
@@ -45,9 +63,11 @@ function PersonRow({
   return (
     <div className="flex items-center gap-3 py-3 px-4 hover:bg-background rounded-2xl transition-colors">
       <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
-        {src
-          ? <img src={src} alt={name} className="w-full h-full object-cover" />
-          : <span className="text-sm font-bold text-primary">{initials}</span>}
+        {src ? (
+          <img src={src} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-sm font-bold text-primary">{initials}</span>
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-text truncate">{name}</p>
@@ -88,8 +108,7 @@ const MyProfilePage = () => {
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node))
-        setShowMenu(false);
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
     };
     document.addEventListener('mousedown', h);
     return () => document.removeEventListener('mousedown', h);
@@ -112,7 +131,9 @@ const MyProfilePage = () => {
         try {
           const data = await userService.getVisitors();
           setVisitors(data);
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         setVisitorsLoaded(true);
         setVisitorsLoading(false);
       };
@@ -124,7 +145,9 @@ const MyProfilePage = () => {
         try {
           const data = await userService.getLikedBy();
           setLikedBy(data);
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         setLikedByLoaded(true);
         setLikedByLoading(false);
       };
@@ -134,7 +157,11 @@ const MyProfilePage = () => {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    try { await authService.logout(); } catch { /* ignore */ }
+    try {
+      await authService.logout();
+    } catch {
+      /* ignore */
+    }
     ctxLogout();
     navigate('/login');
   };
@@ -205,10 +232,8 @@ const MyProfilePage = () => {
         ? 'text-amber-400 border-amber-400/30 bg-amber-400/10'
         : 'text-text-muted border-border';
 
-  const avatar =
-    user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
-  const initials =
-    `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
+  const avatar = user.photos?.find((p) => p.id === user.profile_picture_id)?.url ?? null;
+  const initials = `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.toUpperCase();
 
   const completionSteps = [
     Boolean(user.gender),
@@ -251,9 +276,11 @@ const MyProfilePage = () => {
           {/* Avatar */}
           <div className="relative shrink-0">
             <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-primary bg-primary/10 flex items-center justify-center">
-              {avatar
-                ? <img src={avatar} alt={user.first_name} className="w-full h-full object-cover" />
-                : <span className="text-2xl font-black text-primary">{initials}</span>}
+              {avatar ? (
+                <img src={avatar} alt={user.first_name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-2xl font-black text-primary">{initials}</span>
+              )}
             </div>
             {user.is_online && (
               <span className="absolute bottom-0.5 right-0.5 sm:bottom-1 sm:right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-green-400 border-2 border-surface shadow" />
@@ -267,13 +294,9 @@ const MyProfilePage = () => {
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-2xl font-black text-text leading-tight truncate">
                   {user.first_name} {user.last_name}
-                  {age !== null && (
-                    <span className="font-normal text-text-muted">, {age}</span>
-                  )}
+                  {age !== null && <span className="font-normal text-text-muted">, {age}</span>}
                 </h1>
-                <p className="text-xs sm:text-sm text-text-muted font-medium">
-                  @{user.username}
-                </p>
+                <p className="text-xs sm:text-sm text-text-muted font-medium">@{user.username}</p>
                 {(user.location_city ?? user.latitude) && (
                   <p className="text-xs text-text-muted flex items-center gap-1 mt-0.5">
                     <MapPin size={11} className="text-primary shrink-0" />
@@ -321,9 +344,11 @@ const MyProfilePage = () => {
                         disabled={loggingOut}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/10 transition-colors text-left disabled:opacity-50"
                       >
-                        {loggingOut
-                          ? <Loader2 size={13} className="animate-spin" />
-                          : <LogOut size={13} />}
+                        {loggingOut ? (
+                          <Loader2 size={13} className="animate-spin" />
+                        ) : (
+                          <LogOut size={13} />
+                        )}
                         {loggingOut ? 'Signing out…' : 'Sign out'}
                       </button>
                     </div>
@@ -334,7 +359,9 @@ const MyProfilePage = () => {
 
             {/* Fame pill + completion bar */}
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              <span className={`inline-flex items-center gap-1.5 text-xs font-bold border rounded-full px-3 py-1 ${fameColorClass}`}>
+              <span
+                className={`inline-flex items-center gap-1.5 text-xs font-bold border rounded-full px-3 py-1 ${fameColorClass}`}
+              >
                 <Flame size={11} /> {Math.round(fame)}/100
               </span>
               {completionPct === 100 ? (
@@ -381,14 +408,11 @@ const MyProfilePage = () => {
       {/* ── Tab content ── */}
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
-
           {/* ── Profile tab ── */}
           {activeTab === 'profile' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
               {/* Left column */}
               <div className="flex flex-col gap-6">
-
                 {/* Photos */}
                 <div className="bg-surface border border-border/80 rounded-2xl p-4">
                   <div className="flex items-center justify-between mb-4">
@@ -423,7 +447,7 @@ const MyProfilePage = () => {
                     </button>
                   </div>
 
-                  {user.location_city ?? user.latitude ? (
+                  {(user.location_city ?? user.latitude) ? (
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-semibold text-text">
                         {user.location_city ?? (
@@ -452,9 +476,11 @@ const MyProfilePage = () => {
                     disabled={gpsLoading}
                     className="mt-3 flex items-center gap-2 text-xs font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 px-3 py-2 rounded-xl transition-colors disabled:opacity-50"
                   >
-                    {gpsLoading
-                      ? <Loader2 size={12} className="animate-spin" />
-                      : <Navigation size={12} />}
+                    {gpsLoading ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Navigation size={12} />
+                    )}
                     Use my GPS location
                   </button>
                   {gpsError && (
@@ -467,7 +493,6 @@ const MyProfilePage = () => {
 
               {/* Right column */}
               <div className="flex flex-col gap-6">
-
                 {/* Biography */}
                 <div className="bg-surface border border-border/80 rounded-2xl p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -483,9 +508,9 @@ const MyProfilePage = () => {
                     </button>
                   </div>
                   {user.biography ? (
-                    <blockquote className="border-l-4 border-primary bg-primary/5 rounded-r-xl px-4 py-3 overflow-hidden">
+                    <blockquote className="rounded-r-xl overflow-hidden">
                       <p className="text-sm text-text italic leading-relaxed wrap-break-word">
-                        "{user.biography}"
+                        {user.biography}
                       </p>
                     </blockquote>
                   ) : (
@@ -548,10 +573,19 @@ const MyProfilePage = () => {
                   <h2 className={`${sectionLabel} mb-3`}>Profile Info</h2>
                   <div className="grid grid-cols-2 gap-2.5">
                     {[
-                      { Icon: User,     label: 'Gender',     value: genderLabel ?? 'Not set' },
+                      { Icon: User, label: 'Gender', value: genderLabel ?? 'Not set' },
                       { Icon: Sparkles, label: 'Looking for', value: prefLabel ?? 'Not set' },
-                      { Icon: Calendar, label: 'Age',         value: user.birth_date ? `${age} yrs` : 'Not set' },
-                      { Icon: Flame,    label: 'Fame Rating', value: `${Math.round(fame)}/100`, primary: true },
+                      {
+                        Icon: Calendar,
+                        label: 'Age',
+                        value: user.birth_date ? `${age} yrs` : 'Not set',
+                      },
+                      {
+                        Icon: Flame,
+                        label: 'Fame Rating',
+                        value: `${Math.round(fame)}/100`,
+                        primary: true,
+                      },
                     ].map(({ Icon, label, value, primary }) => (
                       <div
                         key={label}
@@ -564,7 +598,9 @@ const MyProfilePage = () => {
                           <p className="text-[9px] font-black text-text-muted uppercase tracking-wider leading-none">
                             {label}
                           </p>
-                          <p className={`text-xs font-bold mt-0.5 truncate leading-tight ${primary ? 'text-primary' : 'text-text'}`}>
+                          <p
+                            className={`text-xs font-bold mt-0.5 truncate leading-tight ${primary ? 'text-primary' : 'text-text'}`}
+                          >
                             {value}
                           </p>
                         </div>
@@ -664,7 +700,6 @@ const MyProfilePage = () => {
               )}
             </div>
           )}
-
         </div>
       </div>
     </div>
