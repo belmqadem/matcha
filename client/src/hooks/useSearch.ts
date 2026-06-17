@@ -1,98 +1,164 @@
-// src/hooks/useSearch.ts
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
 import { userService } from '@/services/userService';
 import type { BrowseUser } from '@/types/user';
+import type { SearchFilters } from '@/types/search';
+import { DEFAULT_FILTERS } from '@/types/search';
+
+const LIMIT = 20;
+
+function buildSearchParams(f: SearchFilters, page: number): Record<string, string | number> {
+  const p: Record<string, string | number> = {
+    sort: f.sort ?? 'fame',
+    order: f.order ?? 'desc',
+    page,
+    limit: LIMIT,
+  };
+  if (f.age_min) p.age_min = f.age_min;
+  if (f.age_max) p.age_max = f.age_max;
+  if (f.fame_min) p.fame_min = f.fame_min;
+  if (f.fame_max) p.fame_max = f.fame_max;
+  if (f.location_mode === 'km' && f.max_km) p.max_km = f.max_km;
+  if (f.location_mode === 'city' && f.city) p.city = f.city;
+  if (f.tags) p.tags = f.tags.replace(/#/g, '').replace(/\s+/g, '');
+  return p;
+}
 
 export function useSearch() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const urlQ = searchParams.get('q') || '';
-
-  const [allUsers, setAllUsers] = useState<BrowseUser[]>([]);
+  const [users, setUsers] = useState<BrowseUser[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [q, setQ] = useState(urlQ);
+  const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
+  const [activeFilters, setActiveFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
 
-  // Sync state if URL param changes (e.g. from navbar search submission)
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setQ(urlQ);
-  }, [urlQ]);
+  const fetchSearch = useCallback(
+    async (searchFilters: SearchFilters, targetPage: number, isLoadMore: boolean) => {
+      if (!isLoadMore) {
+        setLoading(true);
+        setError('');
+        setPage(1);
+      }
 
-  // Update URL param when local state changes
-  const handleSetQ = useCallback(
-    (val: string) => {
-      setQ(val);
-      setSearchParams((prev) => {
-        if (val) prev.set('q', val);
-        else prev.delete('q');
-        return prev;
-      });
+      try {
+        const params = buildSearchParams(searchFilters, targetPage);
+        const data = await userService.searchUsers(params);
+        const sanitized = (data.users ?? []).map((u) => ({
+          ...u,
+          liked_by_me: Boolean(u.liked_by_me),
+          liked_me: Boolean(u.liked_me),
+          is_connected: Boolean(u.is_connected),
+        }));
+
+        if (isLoadMore) {
+          setUsers((prev) => {
+            const seen = new Set(prev.map((u) => u.id));
+            return [...prev, ...sanitized.filter((u) => !seen.has(u.id))];
+          });
+        } else {
+          setUsers(sanitized);
+        }
+        setTotal(data.total ?? 0);
+        if (isLoadMore) setPage(targetPage);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        if (!isLoadMore) setLoading(false);
+      }
     },
-    [setSearchParams],
+    [],
   );
 
   useEffect(() => {
-    let active = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchSearch(DEFAULT_FILTERS, 1, false);
+  }, [fetchSearch]);
 
-    const fetchAll = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const usersList = await userService.getSearchAll();
-        if (active) {
-          setAllUsers(usersList);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (active) {
-          setError((err as Error).message);
-          setLoading(false);
-        }
-      }
-    };
+  const search = useCallback(
+    (searchFilters: SearchFilters) => {
+      setFilters(searchFilters);
+      setActiveFilters(searchFilters);
+      void fetchSearch(searchFilters, 1, false);
+    },
+    [fetchSearch],
+  );
 
-    fetchAll();
+  const loadMore = useCallback(() => {
+    void fetchSearch(activeFilters, page + 1, true);
+  }, [fetchSearch, activeFilters, page]);
 
-    return () => {
-      active = false;
-    };
+  const updateFilter = useCallback((key: keyof SearchFilters, value: string) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
 
-  const filteredUsers = useMemo(() => {
-    const query = q.toLowerCase().trim();
-    if (!query) return allUsers;
-    return allUsers.filter(
-      (u) =>
-        u.first_name?.toLowerCase().includes(query) ||
-        u.last_name?.toLowerCase().includes(query) ||
-        u.username?.toLowerCase().includes(query),
-    );
-  }, [allUsers, q]);
+  const removeFilter = useCallback(
+    (key: keyof SearchFilters | 'location') => {
+      setFilters((prev) => {
+        const next = { ...prev };
+        if (key === 'location') {
+          next.max_km = '';
+          next.city = '';
+        } else if (key === 'age_min') {
+          next.age_min = '';
+          next.age_max = '';
+        } else if (key === 'fame_min') {
+          next.fame_min = '';
+          next.fame_max = '';
+        } else if (key !== 'location_mode' && key !== 'sort' && key !== 'order') {
+          next[key] = '';
+        }
+        setActiveFilters(next);
+        void fetchSearch(next, 1, false);
+        return next;
+      });
+    },
+    [fetchSearch],
+  );
+
+  const clearFilters = useCallback(() => {
+    setFilters(DEFAULT_FILTERS);
+    setActiveFilters(DEFAULT_FILTERS);
+    void fetchSearch(DEFAULT_FILTERS, 1, false);
+  }, [fetchSearch]);
 
   const like = useCallback(async (id: string) => {
     const res = await userService.like(id);
-    setAllUsers((prev) =>
-      prev.map((u) => (u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u)),
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u,
+      ),
     );
     return { connected: res.connected };
   }, []);
 
   const unlike = useCallback(async (id: string) => {
     await userService.unlike(id);
-    setAllUsers((prev) =>
+    setUsers((prev) =>
       prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
     );
   }, []);
 
+  const activeCount = [
+    filters.age_min || filters.age_max,
+    filters.fame_min || filters.fame_max,
+    filters.location_mode === 'km' ? filters.max_km : filters.city,
+    filters.tags,
+  ].filter(Boolean).length;
+
   return {
-    users: filteredUsers,
-    total: filteredUsers.length,
+    users,
+    total,
     loading,
     error,
     setError,
-    q,
-    setQ: handleSetQ,
+    filters,
+    updateFilter,
+    search,
+    loadMore,
+    removeFilter,
+    clearFilters,
+    hasMore: users.length < total,
+    activeCount,
     like,
     unlike,
   };

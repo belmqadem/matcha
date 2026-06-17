@@ -47,7 +47,7 @@ export const Step4Tags = ({ form, setForm }: Step4TagsProps) => {
         <button
           type="button"
           onClick={() => addTag(input.trim())}
-          className="px-6 py-3 sm:py-4 rounded-xl bg-primary text-surface text-sm sm:text-base font-semibold flex-shrink-0 transition-all duration-200 hover:bg-primary-hover active:scale-95"
+          className="px-6 py-3 sm:py-4 rounded-xl bg-primary text-white text-sm sm:text-base font-semibold flex-shrink-0 transition-all duration-200 hover:bg-primary-hover active:scale-95"
         >
           Add
         </button>

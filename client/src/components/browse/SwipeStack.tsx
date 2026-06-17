@@ -9,6 +9,7 @@ interface SwipeStackProps {
   resetKey: number;
   onLike: (_id: string) => Promise<{ liked: boolean; connected: boolean } | null>;
   onUnlike: (_id: string) => Promise<boolean>;
+  onViewProfile: (_id: string) => void;
   onLoadMore: () => void;
   isLoading: boolean;
   hasMore: boolean;
@@ -27,6 +28,7 @@ export function SwipeStack({
   resetKey,
   onLike,
   onUnlike,
+  onViewProfile,
   onLoadMore,
   isLoading,
   hasMore,
@@ -153,6 +155,7 @@ export function SwipeStack({
                 onLike={() => handleLike(user)}
                 onPass={handlePass}
                 onUnlike={() => handleUnlike(user)}
+                onViewProfile={() => onViewProfile(user.id)}
                 exitX={isTop && exitX !== null ? exitX : undefined}
                 style={{ height: '100%' }}
               />

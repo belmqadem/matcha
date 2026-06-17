@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Heart, X, MapPin } from 'lucide-react';
 import { FameBadge } from './FameBadge';
 import { Spinner } from '@/components/ui/Spinner';
@@ -10,6 +10,7 @@ interface SwipeCardProps {
   onLike: () => Promise<unknown> | unknown;
   onPass: () => void;
   onUnlike: () => Promise<unknown> | unknown;
+  onViewProfile?: () => void;
   /** Pixels to translate for a button-triggered exit animation (set by SwipeStack). */
   exitX?: number;
   style?: React.CSSProperties;
@@ -27,9 +28,10 @@ function getPhoto(user: BrowseUser): string | null {
   return (main ?? user.photos[0])?.url ?? null;
 }
 
-export function SwipeCard({ user, onLike, onPass, onUnlike, exitX, style, isTop }: SwipeCardProps) {
+export function SwipeCard({ user, onLike, onPass, onUnlike, onViewProfile, exitX, style, isTop }: SwipeCardProps) {
   const [imgErr, setImgErr] = useState(false);
   const [busy, setBusy] = useState(false);
+  const clickStartX = useRef(0);
 
   const age = calcAge(user.birth_date);
   const photo = getPhoto(user);
@@ -94,7 +96,23 @@ export function SwipeCard({ user, onLike, onPass, onUnlike, exitX, style, isTop 
           cursor: isTop ? (isDragging ? 'grabbing' : 'grab') : 'default',
           willChange: 'transform',
         }}
-        {...(isTop ? handlers : {})}
+        {...(isTop
+          ? {
+              onMouseDown: (e: React.MouseEvent) => {
+                clickStartX.current = e.clientX;
+                handlers.onMouseDown(e);
+              },
+              onTouchStart: (e: React.TouchEvent) => {
+                clickStartX.current = e.touches[0].clientX;
+                handlers.onTouchStart(e);
+              },
+              onClick: (e: React.MouseEvent) => {
+                if (Math.abs(e.clientX - clickStartX.current) < 10 && exitX === undefined) {
+                  onViewProfile?.();
+                }
+              },
+            }
+          : {})}
       >
         {/* Photo */}
         <div className="absolute inset-0">

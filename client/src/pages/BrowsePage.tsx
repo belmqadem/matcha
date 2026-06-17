@@ -3,43 +3,23 @@ import { SlidersHorizontal } from 'lucide-react';
 
 import { useBrowse } from '@/hooks/useBrowse';
 import { useBrowseFilters } from '@/hooks/useBrowseFilters';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import { SwipeStack } from '@/components/browse/SwipeStack';
 import { FilterDrawer } from '@/components/browse/FilterDrawer';
-import type { SortKey, OrderKey } from '@/types/search';
 
 export default function BrowsePage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const { users, resetKey, total, loading, loadMore, handleLike, handleUnlike, applyFilters, clearFilters } =
+  const { users, resetKey, loading, hasMore, loadMore, handleLike, handleUnlike, applyFilters, clearFilters } =
     useBrowse();
 
-  const { filters, setFilters, applied, apply, reset, activeCount } = useBrowseFilters();
-
-  const hasMore = users.length < total;
-
-  const toSearchFilters = useCallback(
-    () => ({
-      age_min: applied.age_min != null ? String(applied.age_min) : '',
-      age_max: applied.age_max != null ? String(applied.age_max) : '',
-      fame_min: applied.fame_min != null ? String(applied.fame_min) : '',
-      fame_max: applied.fame_max != null ? String(applied.fame_max) : '',
-      location_mode: 'km' as const,
-      max_km: applied.max_km != null ? String(applied.max_km) : '',
-      city: '',
-      tags: applied.tags ?? '',
-    }),
-    [applied],
-  );
-
-  // Translate drawer filters into the browse query and fetch immediately
-  const applyToHook = useCallback(() => {
-    applyFilters(applied.sort as SortKey, applied.order as OrderKey, toSearchFilters());
-  }, [applied, applyFilters, toSearchFilters]);
+  const { filters, setFilters, apply, reset, activeCount } = useBrowseFilters();
+  const { openProfile } = useProfileDrawer();
 
   const handleApply = useCallback(() => {
     apply();
-    applyToHook();
-  }, [apply, applyToHook]);
+    applyFilters(filters);
+  }, [apply, applyFilters, filters]);
 
   const handleReset = useCallback(() => {
     reset();
@@ -72,6 +52,7 @@ export default function BrowsePage() {
           resetKey={resetKey}
           onLike={handleLike}
           onUnlike={handleUnlike}
+          onViewProfile={openProfile}
           onLoadMore={loadMore}
           isLoading={loading}
           hasMore={hasMore}

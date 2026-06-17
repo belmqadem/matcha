@@ -5,7 +5,6 @@ import type {
   Photo,
   Visitor,
   Liker,
-  BrowseUser,
 } from '@/types/user';
 import type { PublicProfile } from '@/types/user';
 import { photoBuster } from '@/utils/photoBuster';
@@ -15,25 +14,6 @@ async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(body.error ?? body.message ?? `Request failed (${res.status})`);
   return body as T;
 }
-
-const fetchAllSearchUsers = async (): Promise<BrowseUser[]> => {
-  const allUsers: BrowseUser[] = [];
-  let page = 1;
-  const limit = 50;
-  while (true) {
-    const data = await userService.searchUsers({ page, limit });
-    if (!data.users || data.users.length === 0) {
-      break;
-    }
-    allUsers.push(...data.users);
-    if (allUsers.length >= (data.total ?? 0)) {
-      break;
-    }
-    page++;
-    if (page > 20) break;
-  }
-  return allUsers;
-};
 
 export const userService = {
   // ─── Browse / Search ──────────────────────────────────────────────────────
@@ -56,7 +36,7 @@ export const userService = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== '' && v !== null && v !== undefined) q.set(k, String(v));
     });
-    return fetch(`/api/search?${q}`, { credentials: 'include' })
+    return fetch(`/api/browse?${q}`, { credentials: 'include' })
       .then((res) => handleResponse<BrowseResponse>(res))
       .then((data) => ({
         ...data,
@@ -176,61 +156,6 @@ export const userService = {
       return d.likers.map(photoBuster.bustLiker);
     }),
 
-  getLikedUsers: async (): Promise<BrowseResponse> => {
-    const all = await fetchAllSearchUsers();
-    const filtered = all.filter((u) => u.liked_by_me);
-    return {
-      users: filtered,
-      total: filtered.length,
-    };
-  },
-
-  getLikedByUsers: async (): Promise<BrowseResponse> => {
-    const [likers, allSearchUsers] = await Promise.all([
-      userService.getLikedBy(),
-      fetchAllSearchUsers(),
-    ]);
-
-    const users = likers.map((liker) => {
-      const searchUser = allSearchUsers.find((u) => u.id === liker.id);
-      if (searchUser) {
-        return {
-          ...searchUser,
-          liked_me: true,
-        };
-      }
-      return {
-        id: liker.id,
-        username: liker.username,
-        first_name: liker.first_name,
-        last_name: liker.last_name,
-        fame_rating: liker.fame_rating ?? 0,
-        is_online: false,
-        photos: liker.profile_picture_url
-          ? [{ id: liker.profile_picture_id ?? 0, url: liker.profile_picture_url }]
-          : [],
-        profile_picture_id: liker.profile_picture_id ?? undefined,
-        liked_by_me: false,
-        liked_me: true,
-        is_connected: false,
-      } as BrowseUser;
-    });
-
-    return {
-      users,
-      total: users.length,
-    };
-  },
-
-  getMatches: async (): Promise<BrowseResponse> => {
-    const all = await fetchAllSearchUsers();
-    const filtered = all.filter((u) => u.is_connected);
-    return {
-      users: filtered,
-      total: filtered.length,
-    };
-  },
-
   updateLocation: (body: {
     latitude: number;
     longitude: number;
@@ -279,31 +204,4 @@ export const userService = {
       credentials: 'include',
     }).then((res) => handleResponse<void>(res)),
 
-  getQuickSearchUsers: async (): Promise<BrowseUser[]> => {
-    const usersList: BrowseUser[] = [];
-    let page = 1;
-    const limit = 50;
-    while (page <= 4) {
-      const data = await userService.browseUsers({ page, limit });
-      if (!data.users || data.users.length === 0) break;
-      usersList.push(...data.users);
-      if (usersList.length >= (data.total ?? 0)) break;
-      page++;
-    }
-    return usersList;
-  },
-
-  getSearchAll: async (): Promise<BrowseUser[]> => {
-    const usersList: BrowseUser[] = [];
-    let page = 1;
-    const limit = 50;
-    while (page <= 10) {
-      const data = await userService.searchUsers({ page, limit });
-      if (!data.users || data.users.length === 0) break;
-      usersList.push(...data.users);
-      if (usersList.length >= (data.total ?? 0)) break;
-      page++;
-    }
-    return usersList;
-  },
 };
