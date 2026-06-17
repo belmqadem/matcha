@@ -38,7 +38,7 @@ export function ConfirmModal({ title, message, confirmLabel, danger, onConfirm, 
           </button>
           <button
             onClick={onConfirm}
-            className={`px-5 py-2.5 text-[13px] font-bold rounded-xl text-text hover:opacity-90 transition-opacity ${danger ? 'bg-error' : 'bg-primary'}`}
+            className={`px-5 py-2.5 text-[13px] font-bold rounded-xl text-text hover:opacity-90 transition-opacity text-white ${danger ? 'bg-error' : 'bg-primary'}`}
           >
             {confirmLabel}
           </button>

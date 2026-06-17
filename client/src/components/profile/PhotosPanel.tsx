@@ -197,8 +197,8 @@ export function PhotosPanel({ user, onUpdate }: Props) {
   };
 
   return (
-    <div className="w-full h-full flex flex-col min-h-0">
-      <div className="flex items-center justify-between mb-3 shrink-0">
+    <div className="w-full flex flex-col">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg sm:text-xl font-black text-text">Photos</h3>
         <div className="flex items-center gap-2 sm:gap-3">
           <span className="text-xs sm:text-sm font-bold text-text-muted">{photos.length}/5</span>
@@ -216,7 +216,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
       </div>
 
       <div
-        className="flex-1 min-h-0 flex flex-col justify-between"
+        className="flex flex-col gap-3"
         onDragOver={(e) => {
           e.preventDefault();
           if (e.dataTransfer.types.includes('Files')) {
@@ -245,7 +245,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                   fileRef.current?.click();
                 }
               }}
-              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group flex-1 min-h-[150px] aspect-[4/3] md:aspect-auto w-full mb-3 ${
+              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group min-h-[150px]aspect-4/3 w-full ${
                 isOver ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' : 'border-border'
               } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'}`}
             >

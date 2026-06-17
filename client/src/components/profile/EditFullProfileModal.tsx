@@ -527,7 +527,7 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
                 <button
                   type="button"
                   onClick={() => addTag(tagInput.trim())}
-                  className="px-5 py-3 rounded-2xl bg-primary text-surface font-bold cursor-pointer hover:shadow-md active:scale-95 transition-all text-sm shrink-0"
+                  className="px-5 py-3 rounded-2xl bg-primary text-white font-bold cursor-pointer hover:shadow-md active:scale-95 transition-all text-sm shrink-0"
                 >
                   Add
                 </button>
@@ -540,7 +540,7 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
                     {tags.map((tag) => (
                       <span
                         key={tag}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-surface text-xs font-bold shadow-sm"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-bold shadow-sm"
                       >
                         {tag}
                         <button
