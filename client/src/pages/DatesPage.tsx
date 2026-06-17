@@ -44,7 +44,7 @@ export default function DatesPage() {
         <div className="max-w-2xl mx-auto px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarHeart className="w-4 h-4 text-primary" />
-            <h1 className="text-base text-text tracking-tight">your dates</h1>
+            <h1 className="text-base text-text tracking-tight">Your dates</h1>
             {upcoming > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-primary/12 text-primary text-[11px]">
                 {upcoming} soon

@@ -10,9 +10,8 @@ import {
   ChevronDown,
   Search,
   CalendarDays,
-  Sun,
-  Moon,
 } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
@@ -22,18 +21,18 @@ import MatchaLogo from '@/components/Logo';
 type BadgeKey = 'messages' | 'notifications';
 
 const MAIN_NAV = [
-  { to: '/browse',  label: 'Browse',   Icon: Compass,        badge: undefined              },
-  { to: '/chat',    label: 'Messages',  Icon: MessageCircle,  badge: 'messages' as BadgeKey },
-  { to: '/map',     label: 'Map',       Icon: MapPin,         badge: undefined              },
-  { to: '/dates',   label: 'Dates',     Icon: CalendarDays,   badge: undefined              },
+  { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
+  { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
+  { to: '/map', label: 'Map', Icon: MapPin, badge: undefined },
+  { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: undefined },
 ];
 
 const BOTTOM_NAV = [
-  { to: '/browse',  label: 'Browse',   Icon: Compass,        badge: undefined              },
-  { to: '/search',  label: 'Search',   Icon: Search,         badge: undefined              },
-  { to: '/chat',    label: 'Messages',  Icon: MessageCircle,  badge: 'messages' as BadgeKey },
-  { to: '/dates',   label: 'Dates',     Icon: CalendarDays,   badge: undefined              },
-  { to: '/profile/me', label: 'Profile', Icon: User,          badge: undefined              },
+  { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
+  { to: '/search', label: 'Search', Icon: Search, badge: undefined },
+  { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
+  { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: undefined },
+  { to: '/profile/me', label: 'Profile', Icon: User, badge: undefined },
 ];
 
 export default function AppHeader() {
@@ -53,9 +52,7 @@ export default function AppHeader() {
   const profileRef = useRef<HTMLDivElement>(null);
 
   const avatar = me?.photos?.find((p) => p.id === me.profile_picture_id)?.url ?? null;
-  const initials = me
-    ? `${me.first_name?.[0] ?? ''}${me.last_name?.[0] ?? ''}`.toUpperCase()
-    : '?';
+  const initials = me ? `${me.first_name?.[0] ?? ''}${me.last_name?.[0] ?? ''}`.toUpperCase() : '?';
 
   const getBadge = (key?: BadgeKey) => {
     if (key === 'messages') return unreadMessages;
@@ -92,7 +89,11 @@ export default function AppHeader() {
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    try { await authService.logout(); } catch { /* silent */ }
+    try {
+      await authService.logout();
+    } catch {
+      /* silent */
+    }
     ctxLogout();
     navigate('/login');
   };
@@ -101,15 +102,12 @@ export default function AppHeader() {
     <>
       {/* ── Top header ── */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur-md">
-        <div className="flex items-center h-14 px-4 md:px-6 gap-4">
-
+        <div className="grid grid-cols-2 lg:grid-cols-3 items-center h-14 px-4 md:px-6 gap-4">
           {/* Logo */}
-          <div className="shrink-0">
-            <MatchaLogo size="sm" showText={true} />
-          </div>
+          <MatchaLogo size="sm" showText={true} />
 
           {/* Desktop nav (center) */}
-          <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
+          <nav className="hidden lg:flex items-center justify-center gap-5">
             {MAIN_NAV.map(({ to, label, Icon, badge }) => {
               const active = isActive(to);
               const count = getBadge(badge);
@@ -137,7 +135,6 @@ export default function AppHeader() {
 
           {/* Right actions */}
           <div className="ml-auto flex items-center gap-2">
-
             {/* Search link (desktop) */}
             <NavLink
               to="/search"
@@ -160,7 +157,7 @@ export default function AppHeader() {
                     ? 'text-primary border-primary/30 bg-primary/5'
                     : 'text-text-muted border-border hover:bg-border/50 hover:text-text'
                 }`}
-								title='notifications'
+                title="notifications"
               >
                 <Bell size={15} strokeWidth={1.8} />
               </NavLink>
@@ -172,15 +169,7 @@ export default function AppHeader() {
             </div>
 
             {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-9 h-9 rounded-full border border-border text-text-muted hover:bg-border/50 hover:text-text transition-colors"
-              title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
-            >
-              {theme === 'dark'
-                ? <Sun size={15} strokeWidth={1.8} />
-                : <Moon size={15} strokeWidth={1.8} />}
-            </button>
+            <ThemeToggle isDark={theme === 'dark'} onToggle={toggleTheme} />
 
             {/* Avatar / profile dropdown (desktop only) */}
             {me && (
@@ -194,9 +183,11 @@ export default function AppHeader() {
                   }`}
                 >
                   <div className="w-7 h-7 rounded-full overflow-hidden bg-primary/10 border-2 border-primary flex items-center justify-center shrink-0">
-                    {avatar
-                      ? <img src={avatar} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-[11px] font-bold text-primary">{initials}</span>}
+                    {avatar ? (
+                      <img src={avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[11px] font-bold text-primary">{initials}</span>
+                    )}
                   </div>
                   <span className="text-sm font-medium text-text">{me.first_name}</span>
                   <ChevronDown
@@ -209,9 +200,11 @@ export default function AppHeader() {
                   <div className="absolute top-[calc(100%+8px)] right-0 w-52 bg-surface border border-border rounded-2xl shadow-xl p-1.5 animate-fade-in-up origin-top-right">
                     <div className="flex items-center gap-2.5 px-3 py-2.5">
                       <div className="w-9 h-9 rounded-full overflow-hidden bg-primary/10 border-2 border-primary shrink-0 flex items-center justify-center">
-                        {avatar
-                          ? <img src={avatar} alt="" className="w-full h-full object-cover" />
-                          : <span className="text-xs font-bold text-primary">{initials}</span>}
+                        {avatar ? (
+                          <img src={avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xs font-bold text-primary">{initials}</span>
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-text truncate">
@@ -272,9 +265,7 @@ export default function AppHeader() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-none">
-                {label}
-              </span>
+              <span className="text-[10px] font-medium leading-none">{label}</span>
             </NavLink>
           );
         })}

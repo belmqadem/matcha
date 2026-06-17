@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
-import MatchaLogo from '@/components/Logo';
 import FloatingHearts from '@/components/FloatingHearts';
-import { Sun, Moon } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import MatchaLogo from '@/components/Logo';
 
 const heartPath =
   'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z';
@@ -61,18 +61,9 @@ const AuthLayout = ({ children, header }: AuthLayoutProps) => {
   return (
     <div className="relative min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden bg-background">
       {/* Floating Theme Toggle */}
-      <div className="absolute top-4 right-4 z-20">
-        <button
-          onClick={toggleTheme}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-surface text-text-muted hover:text-primary hover:border-primary/20 hover:bg-background transition-colors cursor-pointer"
-          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        >
-          {theme === 'dark' ? (
-            <Sun size={17} strokeWidth={1.8} />
-          ) : (
-            <Moon size={17} strokeWidth={1.8} />
-          )}
-        </button>
+      <div className="absolute w-full top-0 left-0 z-20 flex justify-between px-4 md:px-8 lg:px-12 py-6">
+        <MatchaLogo size="lg" />
+        <ThemeToggle isDark={theme === 'dark'} onToggle={toggleTheme} />
       </div>
 
       {/* Background blobs */}
@@ -101,9 +92,7 @@ const AuthLayout = ({ children, header }: AuthLayoutProps) => {
       ))}
 
       {/* Main Card */}
-      <div className="relative w-full max-w-[95%] sm:max-w-md z-10 rounded-3xl px-6 py-8 sm:px-10 sm:py-10 bg-surface/90 border border-primary/20 backdrop-blur-xl shadow-xl animate-[authPopIn_0.6s_cubic-bezier(0.22,1,0.36,1)_both] flex flex-col items-center">
-        <MatchaLogo size="md" className="mb-4 sm:mb-6" />
-
+      <div className="relative w-full max-w-[95%] sm:max-w-md z-10 rounded-3xl px-6 py-8 sm:px-10 sm:py-10 bg-surface/50 border border-primary/20 backdrop-blur-xl shadow-xl animate-[authPopIn_0.6s_cubic-bezier(0.22,1,0.36,1)_both] flex flex-col items-center">
         <div className="text-center mb-6 sm:mb-8 w-full">
           <p className="text-lg sm:text-xl font-bold text-text">{header}</p>
         </div>

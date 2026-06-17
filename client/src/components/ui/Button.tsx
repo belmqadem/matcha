@@ -67,7 +67,7 @@ const Button = ({
     <button
       type={type}
       onClick={onClick}
-      className={`w-full flex items-center justify-center gap-2 rounded-full py-3 sm:py-3.5 text-sm font-semibold text-text shadow-premium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] bg-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`w-full flex items-center justify-center gap-2 rounded-full py-3 sm:py-3.5 text-sm font-semibold text-white shadow-premium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] bg-primary disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${className}`}
       disabled={disabled}
     >
       {children}

@@ -1,5 +1,3 @@
-import { NavLink } from 'react-router-dom';
-
 interface MatchaLogoProps {
   to?: string;
   size?: 'sm' | 'md' | 'lg';
@@ -27,12 +25,8 @@ const TEXT_SIZE_CLASSES = {
   lg: 'text-3xl',
 };
 
-export default function MatchaLogo({
-  to = '/browse',
-  size = 'md',
-  className = '',
-}: MatchaLogoProps) {
-  const content = (
+export default function MatchaLogo({ size = 'md', className = '' }: MatchaLogoProps) {
+  return (
     <div className={`flex items-center select-none ${className}`}>
       <Heart size={22} color="var(--color-primary)" />
       <span
@@ -41,18 +35,5 @@ export default function MatchaLogo({
         matcha<span className="text-primary">.</span>
       </span>
     </div>
-  );
-
-  if (!to) {
-    return <div className="group/logo inline-flex items-center">{content}</div>;
-  }
-
-  return (
-    <NavLink
-      to={to}
-      className="group/logo inline-flex items-center hover:opacity-80 transition-opacity"
-    >
-      {content}
-    </NavLink>
   );
 }

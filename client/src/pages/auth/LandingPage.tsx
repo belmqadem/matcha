@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Logo, { Heart } from '@/components/Logo';
 import { Link } from 'react-router-dom';
 import { Menu, Moon, Sun, X } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 interface FloatHeart {
   x: string;
@@ -257,29 +258,15 @@ const LandingPage = () => {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-transparent text-text font-primary">
-      <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700&display=swap"
-        rel="stylesheet"
-      />
-
       {/* NAVBAR */}
       <nav className="relative z-20 flex items-center justify-between px-4 md:px-8 lg:px-12 py-6">
-        <Logo />
+        <Logo size="lg" />
         <div className="hidden items-center gap-3 md:flex">
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-surface text-text-muted hover:text-primary hover:border-primary/20 hover:bg-background transition-colors cursor-pointer"
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-          >
-            {theme === 'dark' ? (
-              <Sun size={17} strokeWidth={1.8} />
-            ) : (
-              <Moon size={17} strokeWidth={1.8} />
-            )}
-          </button>
+          <ThemeToggle isDark={theme === 'dark'} onToggle={toggleTheme} />
+
           <Link
             to="/login"
-            className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-muted transition-colors hover:border-primary hover:text-primary"
+            className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-muted bg-surface transition-colors hover:border-primary hover:text-primary"
           >
             Log In
           </Link>
@@ -308,7 +295,11 @@ const LandingPage = () => {
                 className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-text transition-colors hover:border-primary/20 hover:text-primary"
               >
                 <span className="flex items-center gap-2">
-                  {theme === 'dark' ? <Sun size={16} strokeWidth={1.9} /> : <Moon size={16} strokeWidth={1.9} />}
+                  {theme === 'dark' ? (
+                    <Sun size={16} strokeWidth={1.9} />
+                  ) : (
+                    <Moon size={16} strokeWidth={1.9} />
+                  )}
                   {theme === 'dark' ? 'Light mode' : 'Dark mode'}
                 </span>
               </button>
@@ -332,7 +323,7 @@ const LandingPage = () => {
       </nav>
 
       {/* HERO */}
-      <div className="relative flex min-h-[calc(100vh-80px)] flex-col items-stretch gap-8 px-4 md:flex-row-reverse md:items-center md:gap-0 md:pl-8 lg:pl-14">
+      <div className="relative flex min-h-[calc(100vh-80px)] flex-col items-stretch gap-8 md:flex-row-reverse md:items-center md:gap-0 md:pl-8 lg:pl-14">
         {/* RIGHT */}
         <div className="relative order-1 flex h-[46vh] min-h-75 w-full items-center justify-end md:order-0 md:h-[calc(100vh-80px)] md:flex-1 md:justify-center md:self-auto">
           {/* Blob — rounder, more organic */}
@@ -453,7 +444,6 @@ const LandingPage = () => {
             ))}
           </div> */}
         </div>
-
       </div>
     </main>
   );

@@ -25,8 +25,15 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!user) return;
-    const newSocket = io('/', { withCredentials: true, path: '/socket.io' });
-    setTimeout(() => setSocket(newSocket), 0);
+
+    const newSocket = io('/', {
+      withCredentials: true,
+      path: '/socket.io',
+      transports: ['websocket'],
+    });
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSocket(newSocket);
 
     let hasFetchedInitial = false;
     let disconnectedAt = 0;
@@ -40,20 +47,16 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         setUnreadMessages(msgData.unread || 0);
         setUnreadNotifications(notifData.unread_count || 0);
         hasFetchedInitial = true;
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to fetch notification counts', error);
+      } catch {
+        // silent — will retry on reconnect
       }
     };
 
     const onConnect = () => {
       const now = Date.now();
-      // Only fetch counts if this is the first connection, or if we were disconnected for > 10 seconds
       const shouldFetch =
         !hasFetchedInitial || (disconnectedAt > 0 && now - disconnectedAt > 10000);
-      if (shouldFetch) {
-        fetchInitialCounts();
-      }
+      if (shouldFetch) fetchInitialCounts();
       disconnectedAt = 0;
     };
 
@@ -68,6 +71,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       newSocket.disconnect();
+      setSocket(null);
     };
   }, [user]);
 

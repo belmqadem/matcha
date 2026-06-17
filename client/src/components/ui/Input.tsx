@@ -40,7 +40,8 @@ const Input = ({
           peer w-full bg-transparent
           text-text text-sm sm:text-base
           outline-none
-          pt-4 pb-1 sm:pt-5 sm:pb-1.5
+          pt-5 pb-1.5
+					pr-10 md:pr-14
           caret-primary
           placeholder:text-transparent
         "

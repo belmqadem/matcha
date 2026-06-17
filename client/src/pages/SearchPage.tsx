@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, SlidersHorizontal, X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useSearch } from '@/hooks/useSearch';
 import { FilterSidebar } from '@/components/search/FilterSidebar';
 import { ActiveChips } from '@/components/search/ActiveChips';
@@ -8,7 +8,6 @@ import { UserCard } from '@/components/browse/UserCard';
 export default function SearchPage() {
   const {
     users,
-    total,
     loading,
     error,
     setError,
@@ -32,44 +31,18 @@ export default function SearchPage() {
     setFiltersOpen(false);
   };
 
-  const handleLike = async (id: string) => { await like(id); };
-  const handleUnlike = async (id: string) => { await unlike(id); };
+  const handleLike = async (id: string) => {
+    await like(id);
+  };
+  const handleUnlike = async (id: string) => {
+    await unlike(id);
+  };
 
   return (
     <div className="flex flex-col flex-1 pb-12">
-      {/* Sticky header */}
-      <header className="sticky top-0 z-20 bg-surface/80 backdrop-blur-xl border-b border-border/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-black text-text">Search</h1>
-            {!loading && (
-              <span className="text-xs text-text-muted">
-                {total} {total === 1 ? 'profile' : 'profiles'}
-              </span>
-            )}
-          </div>
-
-          {/* Mobile filter toggle */}
-          <button
-            onClick={() => setFiltersOpen((o) => !o)}
-            className="relative md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border bg-surface text-xs font-bold text-text-muted hover:border-primary hover:text-primary transition-colors"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            Filters
-            {activeCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-black flex items-center justify-center">
-                {activeCount}
-              </span>
-            )}
-          </button>
-        </div>
-      </header>
-
       <div className="flex-1 flex flex-col md:flex-row gap-6 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
         {/* Filter sidebar */}
-        <aside
-          className={`md:w-72 shrink-0 ${filtersOpen ? 'block' : 'hidden md:block'}`}
-        >
+        <aside className={`md:w-72 shrink-0 ${filtersOpen ? 'block' : 'hidden md:block'}`}>
           <div className="md:sticky md:top-20">
             <FilterSidebar
               filters={filters}
@@ -90,7 +63,10 @@ export default function SearchPage() {
           {error && (
             <div className="bg-surface border-2 border-error rounded-2xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
               <span className="text-sm font-bold text-error">{error}</span>
-              <button onClick={() => setError('')} className="text-error opacity-70 hover:opacity-100">
+              <button
+                onClick={() => setError('')}
+                className="text-error opacity-70 hover:opacity-100"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
