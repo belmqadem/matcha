@@ -51,6 +51,10 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
         border: 1px solid #e5e7eb;
         padding: 24px;
       }
+			.card a {
+				color: #fff;
+				text-decoration: none;
+			}
       .logo {
         margin: 0 0 24px;
         font-size: 24px;
