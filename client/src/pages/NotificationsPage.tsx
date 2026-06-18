@@ -1,6 +1,5 @@
 // src/pages/NotificationsPage.tsx
 import { useState } from 'react';
-import { AlertCircle } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NOTIFICATION_FILTERS } from '@/components/notifications/notificationConstants';
 import NotificationTabs from '@/components/notifications/NotificationTabs';
@@ -17,7 +16,7 @@ const DELAY_CLASSES = [
 ];
 
 export default function NotificationsPage() {
-  const { notifications, loading, error, unreadCount, markOneAsRead, deleteOne, markAllRead } =
+  const { notifications, loading, unreadCount, markOneAsRead, deleteOne, markAllRead } =
     useNotifications();
 
   const [activeFilter, setActiveFilter] = useState('all');
@@ -36,7 +35,7 @@ export default function NotificationsPage() {
             <h1 className="text-2xl sm:text-3xl font-black leading-tight text-text tracking-tight">
               Notifications
             </h1>
-            {!loading && !error && (
+            {!loading && (
               <p className="text-sm text-text-muted mt-1">
                 {notifications.length === 0
                   ? 'Nothing here yet'
@@ -55,16 +54,8 @@ export default function NotificationsPage() {
           )}
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="mb-6 flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-error/10 border border-error/20 text-sm font-medium text-error animate-fade-in-up">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
         {/* Tabs */}
-        {!loading && !error && notifications.length > 0 && (
+        {!loading && notifications.length > 0 && (
           <NotificationTabs
             activeFilter={activeFilter}
             setActiveFilter={setActiveFilter}

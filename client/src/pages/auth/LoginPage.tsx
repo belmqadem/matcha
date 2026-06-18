@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Divider from '@/components/ui/Divider';
@@ -16,12 +17,13 @@ const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ username: '', password: '' });
   const passwordVisibility = usePasswordVisibility();
-  const [error, setError] = useState(
-    searchParams.get('error') === 'oauth_failed' ? 'OAuth sign-in failed. Please try again.' : '',
-  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (searchParams.get('error') === 'oauth_failed') {
+      toast.error('OAuth sign-in failed. Please try again.');
+    }
+
     const checkOAuthRedirect = async () => {
       try {
         const { user } = await authService.me();
@@ -52,10 +54,9 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (form.username.trim() === '' || form.password.trim() === '') {
-      setError('Please enter both username and password.');
+      toast.error('Please enter both username and password.');
       return;
     }
 
@@ -68,7 +69,7 @@ const LoginPage = () => {
         navigate('/browse');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed.');
+      toast.error(err instanceof Error ? err.message : 'Login failed.');
     } finally {
       setLoading(false);
     }
@@ -96,8 +97,6 @@ const LoginPage = () => {
           icon={Lock}
           showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
         />
-
-        {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
         <div className="mt-6">
           <Button type="submit" disabled={loading}>

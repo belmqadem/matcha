@@ -1,6 +1,7 @@
 // src/pages/auth/ResetPasswordPage.tsx
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
@@ -14,7 +15,6 @@ const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const { token } = useParams<{ token: string }>();
   const [form, setForm] = useState({ password: '', confirm: '' });
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const passwordVisibility = usePasswordVisibility();
@@ -22,22 +22,21 @@ const ResetPasswordPage = () => {
 
   const handleChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (error) setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!token) {
-      setError('Invalid or missing reset token.');
+      toast.error('Invalid or missing reset token.');
       return;
     }
     if (form.password !== form.confirm) {
-      setError('Passwords do not match.');
+      toast.error('Passwords do not match.');
       return;
     }
     if (form.password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      toast.error('Password must be at least 8 characters.');
       return;
     }
 
@@ -46,7 +45,7 @@ const ResetPasswordPage = () => {
       await authService.resetPassword(token, form.password);
       navigate('/login');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      toast.error(err instanceof Error ? err.message : 'Something went wrong.');
       setIsLoading(false);
     }
   };
@@ -75,12 +74,6 @@ const ResetPasswordPage = () => {
             icon={Lock}
             showPasswordIcon={<ShowPasswordButton password={confirmVisibility} />}
           />
-
-          {error && (
-            <p className="text-xs sm:text-sm font-medium text-error mb-3 text-center animate-fade-in-up">
-              {error}
-            </p>
-          )}
 
           <div className="pt-2 sm:pt-4">
             <Button type="submit" disabled={isLoading}>

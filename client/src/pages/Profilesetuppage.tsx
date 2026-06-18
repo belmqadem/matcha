@@ -1,6 +1,7 @@
 // src/pages/Profilesetuppage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import type { ProfileFormData } from '@/types/profileSetup';
 
@@ -54,7 +55,6 @@ export default function ProfileSetupPage() {
   const { user } = useAuth();
 
   const [step, setStep] = useState(0);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [animating, setAnimating] = useState(false);
 
@@ -89,10 +89,9 @@ export default function ProfileSetupPage() {
   };
 
   const handleValidateAndGo = (nextStep: number) => {
-    setError('');
     const { valid, message } = validateStep(step, form);
     if (!valid) {
-      setError(message);
+      toast.error(message);
       return;
     }
     goToStep(nextStep);
@@ -106,10 +105,9 @@ export default function ProfileSetupPage() {
   };
 
   const handleSubmit = async () => {
-    setError('');
     const { valid, message } = validateStep(step, form);
     if (!valid) {
-      setError(message);
+      toast.error(message);
       return;
     }
     setLoading(true);
@@ -117,7 +115,7 @@ export default function ProfileSetupPage() {
       await saveCompleteProfile(form);
       handleCompletion();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      toast.error(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -170,12 +168,12 @@ export default function ProfileSetupPage() {
       ))}
       {/* Main card */}
       <div className="w-full max-w-[95%] sm:max-w-md bg-surface rounded-3xl shadow-xl p-6 sm:p-8 relative z-10 border border-border">
-        <div className="text-center mb-5 sm:mb-6">
+        {/* <div className="text-center mb-5 sm:mb-6">
           <div className="flex items-center justify-center select-none">
             <MatchaLogo size="sm" to="" showText={true} />
           </div>
           <div className="w-6 h-0.5 bg-primary rounded-full mx-auto mt-2 opacity-30" />
-        </div>
+        </div> */}
 
         {/* <div className="h-1 rounded-full bg-border mb-5 sm:mb-6 overflow-hidden">
           <div
@@ -199,7 +197,6 @@ export default function ProfileSetupPage() {
           step={step}
           totalSteps={STEPS.length}
           loading={loading}
-          error={error}
           onBack={handleBack}
           onNext={isLast ? handleSubmit : handleNext}
         />

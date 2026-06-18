@@ -1,7 +1,7 @@
 // src/pages/ChatPage.tsx
 import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
 import { useConversations } from '@/hooks/useConversations';
@@ -59,8 +59,6 @@ export default function ChatPage() {
 
   const {
     sending,
-    error,
-    clearError,
     sendMessage,
     handleBlock,
     handleUnblock,
@@ -104,15 +102,11 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col relative overflow-hidden">
-      {(error || deepLinkError) && (
+      {deepLinkError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-xs sm:text-sm font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl flex items-center gap-2 sm:gap-3 max-w-[90%] sm:max-w-sm animate-fade-in-up">
-          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
-          <span className="truncate">{error ?? deepLinkError}</span>
+          <span className="truncate">{deepLinkError}</span>
           <button
-            onClick={() => {
-              clearError();
-              setDeepLinkError(null);
-            }}
+            onClick={() => setDeepLinkError(null)}
             className="hover:opacity-70 transition-opacity ml-1 shrink-0 active:scale-95"
           >
             <X className="w-4 h-4" />

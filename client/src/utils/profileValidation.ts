@@ -59,12 +59,6 @@ export const validateBioStep = (biography: string): StepValidation => {
       message: 'Please write a short biography about yourself.',
     };
   }
-  if (biography.trim().length < 10) {
-    return {
-      valid: false,
-      message: 'Your biography must be at least 10 characters long.',
-    };
-  }
   return { valid: true, message: '' };
 };
 

@@ -1,21 +1,16 @@
 // src/components/profile/SaveBar.tsx
-import { AlertTriangle, Check, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 
 interface SaveBarProps {
   saving: boolean;
-  error: string;
+  error?: string;
   onSave: () => void;
   onCancel: () => void;
 }
 
-export function SaveBar({ saving, error, onSave, onCancel }: SaveBarProps) {
+export function SaveBar({ saving, onSave, onCancel }: SaveBarProps) {
   return (
     <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 sm:pt-5 mt-4 sm:mt-5 border-t-2 border-background">
-      {error && (
-        <p className="w-full sm:flex-1 text-xs sm:text-sm font-bold text-error flex items-center justify-center sm:justify-start gap-1.5 animate-fade-in-up">
-          <AlertTriangle className="w-4 h-4" /> {error}
-        </p>
-      )}
       <div className="flex w-full sm:w-auto gap-3">
         <button
           type="button"

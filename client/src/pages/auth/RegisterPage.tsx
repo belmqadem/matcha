@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Divider from '@/components/ui/Divider';
@@ -19,7 +20,6 @@ const RegisterPage = () => {
     password: '',
   });
   const passwordVisibility = usePasswordVisibility();
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,10 +36,9 @@ const RegisterPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!form.email || !form.username || !form.firstName || !form.lastName || !form.password) {
-      setError('Please fill in all fields.');
+      toast.error('Please fill in all fields.');
       return;
     }
 
@@ -54,22 +53,7 @@ const RegisterPage = () => {
       });
       navigate('/verify-email');
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else if (typeof err === 'object' && err !== null && 'response' in err) {
-        const axiosErr = err as { response?: { data?: Record<string, string | string[]> } };
-        const data = axiosErr.response?.data;
-
-        if (data) {
-          const firstValue = Object.values(data)[0];
-          const message = Array.isArray(firstValue) ? firstValue[0] : firstValue;
-          setError(typeof message === 'string' ? message : 'Registration failed.');
-        } else {
-          setError('Registration failed.');
-        }
-      } else {
-        setError('Registration failed.');
-      }
+      toast.error(err instanceof Error ? err.message : 'Registration failed.');
     } finally {
       setLoading(false);
     }
@@ -121,8 +105,6 @@ const RegisterPage = () => {
           icon={Lock}
           showPasswordIcon={<ShowPasswordButton password={passwordVisibility} />}
         />
-
-        {error && <p className="text-xs text-(--color-error) mb-3 text-center">{error}</p>}
 
         <div className="mt-6">
           <Button type="submit" disabled={loading}>

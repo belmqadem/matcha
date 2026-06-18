@@ -1,5 +1,6 @@
 // src/hooks/useMapData.ts
 import { useState, useCallback, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { mapService } from '@/services/mapService';
 import type { MapUser, RadiusKm } from '@/types/map';
 
@@ -9,8 +10,6 @@ interface UseMapDataReturn {
   radiusKm: RadiusKm;
   loading: boolean;
   gpsLoading: boolean;
-  error: string | null;
-  clearError: () => void;
   fetchMapData: (_km?: RadiusKm) => Promise<void>;
   handleGps: () => void;
   handleRadiusChange: (_km: RadiusKm) => void;
@@ -22,19 +21,17 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
   const [radiusKm, setRadiusKm] = useState<RadiusKm>(initialRadius);
   const [loading, setLoading] = useState(true);
   const [gpsLoading, setGpsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchMapData = useCallback(
     async (km: RadiusKm = radiusKm) => {
       setLoading(true);
-      setError(null);
       try {
         const data = await mapService.getBrowseMap(km);
         setUsers(data.users);
         setCenter(data.center ?? null);
         setRadiusKm(data.radius_km as RadiusKm);
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load map');
+        toast.error(e instanceof Error ? e.message : 'Failed to load map');
       } finally {
         setLoading(false);
       }
@@ -50,7 +47,7 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
 
   const handleGps = useCallback(() => {
     if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
+      toast.error('Geolocation is not supported by your browser.');
       return;
     }
     setGpsLoading(true);
@@ -60,13 +57,13 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
           await mapService.updateGpsLocation(coords.latitude, coords.longitude);
           await fetchMapData(radiusKm);
         } catch (e) {
-          setError(e instanceof Error ? e.message : 'Failed to update location');
+          toast.error(e instanceof Error ? e.message : 'Failed to update location');
         } finally {
           setGpsLoading(false);
         }
       },
       (err) => {
-        setError(err.message);
+        toast.error(err.message);
         setGpsLoading(false);
       },
       { enableHighAccuracy: true },
@@ -81,16 +78,12 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
     [fetchMapData],
   );
 
-  const clearError = useCallback(() => setError(null), []);
-
   return {
     users,
     center,
     radiusKm,
     loading,
     gpsLoading,
-    error,
-    clearError,
     fetchMapData,
     handleGps,
     handleRadiusChange,

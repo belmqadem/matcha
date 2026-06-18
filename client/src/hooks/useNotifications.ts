@@ -1,5 +1,6 @@
 // src/hooks/useNotifications.ts
 import { useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { notificationService } from '@/services/notificationService';
 import { useSocket } from '@/context/SocketContext';
 import type { Notification } from '@/types/notification';
@@ -8,7 +9,6 @@ export function useNotifications() {
   const { socket, decrementNotifications, markNotificationsRead } = useSocket();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -41,9 +41,8 @@ export function useNotifications() {
       const data = await notificationService.getNotifications();
       const unique = Array.from(new Map(data.notifications.map((n) => [n.id, n])).values());
       setNotifications(unique);
-      setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load notifications');
+      toast.error(e instanceof Error ? e.message : 'Failed to load notifications');
     } finally {
       setLoading(false);
     }
@@ -129,5 +128,5 @@ export function useNotifications() {
     }
   }, [markingAll, unreadCount, fetchNotifications, markNotificationsRead]);
 
-  return { notifications, loading, error, unreadCount, markOneAsRead, deleteOne, markAllRead };
+  return { notifications, loading, unreadCount, markOneAsRead, deleteOne, markAllRead };
 }

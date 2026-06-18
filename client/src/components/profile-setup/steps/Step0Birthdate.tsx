@@ -1,6 +1,6 @@
 // src/components/profile-setup/steps/Step0Birthdate.tsx
 import type { ProfileFormData } from '../../../types/profileSetup';
-import { calculateAge, getMinBirthdateInput, getMaxBirthdateInput } from '../../../utils/age';
+import { calculateAge } from '../../../utils/age';
 import DatePicker from '@/components/DatePicker';
 
 interface Step0BirthdateProps {
@@ -10,10 +10,6 @@ interface Step0BirthdateProps {
 
 export const Step0Birthdate = ({ form, setForm }: Step0BirthdateProps) => {
   const age = calculateAge(form.birthdate);
-  const maxStr = getMaxBirthdateInput();
-  const minStr = getMinBirthdateInput();
-  const maxDate = new Date(maxStr);
-  const minDate = new Date(minStr);
 
   const parseDateString = (s: string): Date | null => {
     if (!s) return null;
@@ -44,8 +40,6 @@ export const Step0Birthdate = ({ form, setForm }: Step0BirthdateProps) => {
           const day = String(date.getDate()).padStart(2, '0');
           setForm((p) => ({ ...p, birthdate: `${year}-${month}-${day}` }));
         }}
-        minDate={minDate}
-        maxDate={maxDate}
         className={`
           flex items-center gap-2 w-full px-4 py-3 sm:py-4 rounded-xl border-2 text-text text-sm sm:text-base outline-none text-left bg-surface transition-all duration-200 cursor-pointer
           ${
@@ -62,12 +56,6 @@ export const Step0Birthdate = ({ form, setForm }: Step0BirthdateProps) => {
             You are <strong>{age}</strong> years old
           </p>
         </div>
-      )}
-
-      {form.birthdate && age !== null && age < 18 && (
-        <p className="mt-3 text-xs sm:text-sm font-medium text-error animate-fade-in-up">
-          You must be at least 18 to use Matcha.
-        </p>
       )}
     </div>
   );

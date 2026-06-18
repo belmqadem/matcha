@@ -1,5 +1,6 @@
 // src/components/profile/EditIdentityModal.tsx
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '@/services/userService';
@@ -29,12 +30,11 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
   });
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
 
   const handleSave = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) {
-      setError('Name is required.');
+      toast.error('Name is required.');
       return;
     }
     if (form.email !== user.email) {
@@ -46,7 +46,6 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
 
   const doSave = async (emailChanged = false) => {
     setSaving(true);
-    setError('');
     try {
       const updated = await userService.patchUser(form);
       if (emailChanged) {
@@ -57,7 +56,7 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
       onUpdate(updated);
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
       setSaving(false);
     }
@@ -116,7 +115,7 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
           </p>
         </div>
 
-        <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
+        <SaveBar saving={saving} error="" onSave={handleSave} onCancel={onClose} />
       </div>
     </EditModal>
     </>

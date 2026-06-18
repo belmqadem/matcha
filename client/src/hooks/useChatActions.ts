@@ -1,5 +1,6 @@
 // src/hooks/useChatActions.ts
 import { useCallback, useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useSocket } from '@/context/SocketContext';
 import { useAuth } from '@/context/AuthContext';
 import { chatService } from '@/services/chatService';
@@ -18,8 +19,6 @@ interface UseChatActionsParams {
 
 interface UseChatActionsReturn {
   sending: boolean;
-  error: string;
-  clearError: () => void;
   sendMessage: (_content: string) => void;
   handleBlock: () => Promise<void>;
   handleUnblock: (_id?: string) => Promise<void>;
@@ -40,22 +39,18 @@ export function useChatActions({
   const { socket } = useSocket();
   const { user: me } = useAuth();
   const [sending, setSending] = useState(false);
-  const [error, setError] = useState('');
-
-  const clearError = useCallback(() => setError(''), []);
 
   // Listen for socket errors and clear "sending" state
   useEffect(() => {
     if (!socket) return;
 
     const onSocketError = (data: { message: string }) => {
-      setError(data.message || 'Failed to send message');
+      toast.error(data.message || 'Failed to send message');
       setSending(false);
     };
 
     const onMessageSent = () => {
       setSending(false);
-      setError('');
     };
 
     socket.on('chat:error', onSocketError);
@@ -72,7 +67,7 @@ export function useChatActions({
 
       // Check socket connection
       if (!socket || !socket.connected) {
-        setError('Connection lost. Please refresh the page.');
+        toast.error('Connection lost. Please refresh the page.');
         return;
       }
 
@@ -172,8 +167,6 @@ export function useChatActions({
 
   return {
     sending,
-    error,
-    clearError,
     sendMessage,
     handleBlock,
     handleUnblock,

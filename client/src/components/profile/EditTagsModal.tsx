@@ -1,5 +1,6 @@
 // src/components/profile/EditTagsModal.tsx
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 import { userService } from '@/services/userService';
 import type { UserProfile } from '@/types/user';
@@ -22,7 +23,6 @@ export function EditTagsModal({ user, onUpdate, onClose }: Props) {
   const [tags, setTags] = useState<string[]>(user.tags ?? []);
   const [input, setInput] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const addTag = (tag: string) => {
     const n = tag.startsWith('#') ? tag.toLowerCase() : `#${tag.toLowerCase()}`;
@@ -33,13 +33,12 @@ export function EditTagsModal({ user, onUpdate, onClose }: Props) {
 
   const handleSave = async () => {
     setSaving(true);
-    setError('');
     try {
       const updated = await userService.updateTags(tags);
       onUpdate({ ...user, tags: updated });
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
       setSaving(false);
     }
@@ -110,7 +109,7 @@ export function EditTagsModal({ user, onUpdate, onClose }: Props) {
           </div>
         )}
 
-        <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
+        <SaveBar saving={saving} error="" onSave={handleSave} onCancel={onClose} />
       </div>
     </EditModal>
   );

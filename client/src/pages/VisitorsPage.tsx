@@ -7,7 +7,7 @@ import { VisitorStats } from '@/components/visitors/VisitorStats';
 
 export default function VisitorsPage() {
   const navigate = useNavigate();
-  const { visitors, sorted, loading, error, sort, setSort } = useVisitors();
+  const { visitors, sorted, loading, sort, setSort } = useVisitors();
 
   return (
     <div className="flex flex-col flex-1 pb-10">
@@ -57,10 +57,6 @@ export default function VisitorsPage() {
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin" />
           </div>
-        ) : error ? (
-          <p className="text-center py-16 text-sm sm:text-base text-text-muted bg-surface rounded-3xl border border-border shadow-sm animate-fade-in-up">
-            {error}
-          </p>
         ) : visitors.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 sm:gap-4 animate-fade-in-up">
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-primary/10 flex items-center justify-center">

@@ -6,7 +6,7 @@ import { LikerCard } from '@/components/likes/LikerCard';
 
 export default function LikesPage() {
   const navigate = useNavigate();
-  const { likedBy, sorted, loading, error, sort, setSort } = useLikes();
+  const { likedBy, sorted, loading, sort, setSort } = useLikes();
 
   return (
     <div className="min-h-[100dvh] bg-background font-primary pb-10">
@@ -55,10 +55,6 @@ export default function LikesPage() {
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 text-primary animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="text-center py-16 text-sm sm:text-base text-text-muted bg-surface rounded-3xl border border-border shadow-sm animate-fade-in-up">
-            {error}
           </div>
         ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 sm:gap-4 animate-fade-in-up">

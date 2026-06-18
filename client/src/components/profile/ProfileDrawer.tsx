@@ -1,6 +1,7 @@
 // @deprecated — replaced by ProfilePage (/profile/:id). Kept for reference only.
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   Heart,
   MapPin,
@@ -37,7 +38,6 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
 
   const [likeLoading, setLikeLoading] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
-  const [actionError, setActionError] = useState('');
   const [confirm, setConfirm] = useState<'block' | 'unblock' | 'report' | null>(null);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -98,7 +98,6 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
   const handleLike = async () => {
     if (!profile) return;
     setLikeLoading(true);
-    setActionError('');
     try {
       if (profile.liked_by_me) {
         await userService.unlike(profile.id);
@@ -110,7 +109,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
         );
       }
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Action failed.');
+      toast.error(e instanceof Error ? e.message : 'Action failed.');
     } finally {
       setLikeLoading(false);
     }
@@ -120,7 +119,6 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
     if (!profile) return;
     setConfirm(null);
     setBlockLoading(true);
-    setActionError('');
     try {
       if (profile.is_blocked_by_me) {
         await userService.unblock(profile.id);
@@ -142,7 +140,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
         navigate('/browse');
       }
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Action failed.');
+      toast.error(e instanceof Error ? e.message : 'Action failed.');
     } finally {
       setBlockLoading(false);
     }
@@ -155,7 +153,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
       await userService.report(profile.id);
       setProfile((p) => (p ? { ...p, is_fake_reported: true } : p));
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Report failed.');
+      toast.error(e instanceof Error ? e.message : 'Report failed.');
     }
   };
 
@@ -453,11 +451,6 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                 <div className="space-y-3 mt-auto">
                   {/* Actions Block */}
                   <div className="pt-2 border-t border-border/55">
-                    {actionError && (
-                      <p className="text-xs text-error font-medium mb-3 text-center">
-                        {actionError}
-                      </p>
-                    )}
                     <div className="flex gap-3">
                       {profile.is_connected ? (
                         <button

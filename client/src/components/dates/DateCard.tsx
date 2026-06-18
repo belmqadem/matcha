@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { Calendar, MapPin, Check, X, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useProfileDrawer } from '@/hooks/useProfileDrawer';
@@ -24,7 +25,6 @@ interface DateCardProps {
 export default function DateCard({ date, onUpdate }: DateCardProps) {
   const { openProfile } = useProfileDrawer();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { user: currentUser } = useAuth();
   const { socket } = useSocket();
 
@@ -37,7 +37,6 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
 
   const handleAction = async (action: 'accepted' | 'declined' | 'cancel') => {
     setLoading(true);
-    setError(null);
     try {
       if (action === 'cancel') {
         await dateService.cancelDate(date.id);
@@ -57,7 +56,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       }
       onUpdate();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
+      toast.error(e instanceof Error ? e.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
@@ -123,9 +122,6 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
           </p>
         </div>
       </div>
-
-      {/* Error */}
-      {error && <p className="px-4 pb-3 -mt-1 text-xs text-error">{error}</p>}
 
       {/* Actions */}
       {date.status === 'pending' && (

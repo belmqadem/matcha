@@ -7,7 +7,6 @@ interface StepNavigationProps {
   loading: boolean;
   onBack: () => void;
   onNext: () => void;
-  error?: string;
 }
 
 export const StepNavigation = ({
@@ -16,19 +15,12 @@ export const StepNavigation = ({
   loading,
   onBack,
   onNext,
-  error,
 }: StepNavigationProps) => {
   const isLast = step === totalSteps - 1;
   const isFirst = step === 0;
 
   return (
     <>
-      {error && (
-        <div className="mt-3 p-3 bg-error/10 rounded-lg border border-error/20 animate-fade-in-up">
-          <p className="text-xs sm:text-sm font-medium text-error">{error}</p>
-        </div>
-      )}
-
       <div
         className={`
           flex items-center gap-3 mt-6
@@ -65,7 +57,7 @@ export const StepNavigation = ({
               'Saving…'
             ) : isLast ? (
               <>
-                <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current text-text" />
+                <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                 Complete
               </>
             ) : (

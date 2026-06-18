@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { X, CalendarHeart, Loader2 } from 'lucide-react';
 import type { DateProposal } from '@/types/chat';
 import DatePicker from '@/components/DatePicker';
@@ -19,13 +20,9 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
 
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async () => {
-    if (!date) {
-      setError('Please select a date.');
-      return;
-    }
+    if (!date) { toast.error('Please select a date.'); return; }
     const selectedDate = new Date(
       date.getFullYear(),
       date.getMonth(),
@@ -34,12 +31,8 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
       minute,
       0,
     );
-    if (selectedDate <= new Date()) {
-      setError('Scheduled time must be in the future.');
-      return;
-    }
+    if (selectedDate <= new Date()) { toast.error('Scheduled time must be in the future.'); return; }
 
-    setError('');
     setLoading(true);
     try {
       await onPropose({
@@ -48,7 +41,7 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
       });
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to propose date.');
+      toast.error(e instanceof Error ? e.message : 'Failed to propose date.');
     } finally {
       setLoading(false);
     }
@@ -78,12 +71,6 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
             <X size={15} />
           </button>
         </div>
-
-        {error && (
-          <p className="text-xs px-4 py-2.5 rounded-2xl bg-error/10 text-error font-bold border border-error/20">
-            {error}
-          </p>
-        )}
 
         <div className="flex flex-col gap-4">
           <div>

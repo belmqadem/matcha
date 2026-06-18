@@ -428,7 +428,7 @@ const MyProfilePage = () => {
       </div>
 
       {/* ── Tab bar ── */}
-      <div className="bg-surface border-b border-border px-4 sm:px-6 sticky top-14 z-10">
+      <div className="bg-surface border-b border-border px-4 sm:px-6 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto flex">
           {tabs.map(({ id, label }) => (
             <button
@@ -448,7 +448,7 @@ const MyProfilePage = () => {
 
       {/* ── Tab content ── */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-24 pt-6 lg:py-6">
           {/* ── Profile tab ── */}
           {activeTab === 'profile' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -475,17 +475,10 @@ const MyProfilePage = () => {
 
                 {/* Location */}
                 <div className="bg-surface border border-border/80 rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center mb-3">
                     <h2 className={`${sectionLabel} flex items-center gap-1.5`}>
                       <MapPin size={12} /> Location
                     </h2>
-                    <button
-                      onClick={() => setEditModal('location')}
-                      className="text-text-muted hover:text-primary transition-colors"
-                      aria-label="Edit location"
-                    >
-                      <Edit2 size={13} />
-                    </button>
                   </div>
 
                   {(user.location_city ?? user.latitude) ? (
@@ -536,17 +529,10 @@ const MyProfilePage = () => {
               <div className="flex flex-col gap-6">
                 {/* Biography */}
                 <div className="bg-surface border border-border/80 rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center mb-3">
                     <h2 className={`${sectionLabel} flex items-center gap-1.5`}>
                       <Quote size={12} /> Biography
                     </h2>
-                    <button
-                      onClick={() => setEditModal('about')}
-                      className="text-text-muted hover:text-primary transition-colors"
-                      aria-label="Edit biography"
-                    >
-                      <Edit2 size={13} />
-                    </button>
                   </div>
                   {user.biography ? (
                     <blockquote className="rounded-r-xl overflow-hidden">
@@ -555,33 +541,18 @@ const MyProfilePage = () => {
                       </p>
                     </blockquote>
                   ) : (
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-amber-400 flex items-center gap-1.5">
-                        <AlertTriangle size={11} /> Biography required
-                      </p>
-                      <button
-                        onClick={() => setEditModal('about')}
-                        className="text-xs font-bold text-primary hover:underline"
-                      >
-                        Add biography
-                      </button>
-                    </div>
+                    <p className="text-xs text-amber-400 flex items-center gap-1.5">
+                      <AlertTriangle size={11} /> Biography required
+                    </p>
                   )}
                 </div>
 
                 {/* Interests */}
                 <div className="bg-surface border border-border/80 rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center mb-3">
                     <h2 className={`${sectionLabel} flex items-center gap-1.5`}>
                       <Tag size={12} /> Interests
                     </h2>
-                    <button
-                      onClick={() => setEditModal('tags')}
-                      className="text-text-muted hover:text-primary transition-colors"
-                      aria-label="Edit interests"
-                    >
-                      <Edit2 size={13} />
-                    </button>
                   </div>
                   {(user.tags ?? []).length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
@@ -595,17 +566,9 @@ const MyProfilePage = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-amber-400 flex items-center gap-1.5">
-                        <AlertTriangle size={11} /> Add at least one interest tag
-                      </p>
-                      <button
-                        onClick={() => setEditModal('tags')}
-                        className="text-xs font-bold text-primary hover:underline"
-                      >
-                        Add tags
-                      </button>
-                    </div>
+                    <p className="text-xs text-amber-400 flex items-center gap-1.5">
+                      <AlertTriangle size={11} /> Add at least one interest tag
+                    </p>
                   )}
                 </div>
 

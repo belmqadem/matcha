@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { userService } from '@/services/userService';
 import type { Liker } from '@/types/user';
 
@@ -8,7 +9,6 @@ interface UseLikesReturn {
   likedBy: Liker[];
   sorted: Liker[];
   loading: boolean;
-  error: string;
   sort: SortOrder;
   setSort: (_sort: SortOrder) => void;
 }
@@ -16,14 +16,13 @@ interface UseLikesReturn {
 export function useLikes(): UseLikesReturn {
   const [likedBy, setLikedBy] = useState<Liker[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [sort, setSort] = useState<SortOrder>('recent');
 
   useEffect(() => {
     userService
       .getLikedBy()
       .then((likers) => setLikedBy(likers ?? []))
-      .catch((e: Error) => setError(e.message ?? 'Failed to load likes.'))
+      .catch((e: Error) => toast.error(e.message ?? 'Failed to load likes.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -33,5 +32,5 @@ export function useLikes(): UseLikesReturn {
     return sort === 'recent' ? tb - ta : ta - tb;
   });
 
-  return { likedBy, sorted, loading, error, sort, setSort };
+  return { likedBy, sorted, loading, sort, setSort };
 }

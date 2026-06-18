@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { userService } from '@/services/userService';
 import type { BrowseUser } from '@/types/user';
 import type { BrowseFilters } from '@/types/browse';
@@ -38,7 +39,6 @@ export function useBrowse() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
   // Initialise with persisted filters so loadMore continues using the right params
   const [activeFilters, setActiveFilters] = useState<BrowseFilters>(loadSavedFilters);
@@ -50,7 +50,6 @@ export function useBrowse() {
 
       if (!isLoadMore) {
         setLoading(true);
-        setError(null);
         setPage(1);
         setResetKey((k) => k + 1);
       }
@@ -72,7 +71,7 @@ export function useBrowse() {
         setTotal(data.total ?? 0);
         if (isLoadMore) setPage(targetPage);
       } catch (err) {
-        setError((err as Error).message);
+        toast.error((err as Error).message ?? 'Failed to load browse.');
       } finally {
         if (!isLoadMore) setLoading(false);
       }
@@ -117,7 +116,7 @@ export function useBrowse() {
       setUsers((prev) =>
         prev.map((u) => (u.id === id ? { ...u, liked_by_me: false, is_connected: false } : u)),
       );
-      setError((err as Error).message);
+      toast.error((err as Error).message ?? 'Failed to like.');
       return null;
     }
   };
@@ -142,7 +141,7 @@ export function useBrowse() {
             : u,
         ),
       );
-      setError((err as Error).message);
+      toast.error((err as Error).message ?? 'Failed to unlike.');
       return false;
     }
   };
@@ -152,7 +151,6 @@ export function useBrowse() {
     resetKey,
     total,
     loading,
-    error,
     hasMore: users.length < total,
     loadMore,
     handleLike,

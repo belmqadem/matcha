@@ -1,6 +1,5 @@
 // src/pages/MapPage.tsx
 import { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
 import { useMapData } from '@/hooks/useMapData';
 import { useLeafletMap } from '@/hooks/useleafletMap';
 import { useMapLikes } from '@/hooks/useMapLikes';
@@ -11,7 +10,7 @@ import type { MapUser, RadiusKm } from '@/types/map';
 
 export default function MapPage() {
   // Pure logic, managed completely by your separated custom hooks
-  const { users, center, radiusKm, loading, gpsLoading, error, handleGps, handleRadiusChange } =
+  const { users, center, radiusKm, loading, gpsLoading, handleGps, handleRadiusChange } =
     useMapData();
 
   const { likeStates, handleLike, checkLikeStatus } = useMapLikes();
@@ -49,13 +48,6 @@ export default function MapPage() {
         onRadiusChange={(km) => handleRadiusChange(km as RadiusKm)}
         onGps={handleGps}
       />
-
-      {error && (
-        <div className="m-4 px-4 py-2 rounded-lg bg-error/10 text-error text-[13px] border border-error/20 flex items-center gap-2 shrink-0">
-          <AlertCircle size={16} />
-          <span>{error}</span>
-        </div>
-      )}
 
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden relative">
         <div ref={containerRef} className="flex-1 min-h-0 z-0" />

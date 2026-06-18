@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 // Global Context Providers
 import { AuthProvider } from '@/context/AuthContext';
@@ -46,6 +47,23 @@ const App = () => {
     <BrowserRouter>
       <AuthProvider>
         <SocketProvider>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: 'var(--color-surface)',
+                color: 'var(--color-text)',
+                border: '1px solid var(--color-border)',
+                borderRadius: '12px',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+              },
+              error: {
+                iconTheme: { primary: 'var(--color-error)', secondary: 'var(--color-surface)' },
+              },
+            }}
+          />
           <Routes>
             {/* ── Public / Auth routes ── */}
             <Route path="/" element={<LandingPage />} />

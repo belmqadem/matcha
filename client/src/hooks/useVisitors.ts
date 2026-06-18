@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { userService } from '@/services/userService';
 import type { Visitor } from '@/types/user';
 
@@ -8,7 +9,6 @@ interface UseVisitorsReturn {
   visitors: Visitor[];
   sorted: Visitor[];
   loading: boolean;
-  error: string;
   sort: SortOrder;
   setSort: (_sort: SortOrder) => void;
 }
@@ -16,14 +16,13 @@ interface UseVisitorsReturn {
 export function useVisitors(): UseVisitorsReturn {
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [sort, setSort] = useState<SortOrder>('recent');
 
   useEffect(() => {
     userService
       .getVisitors()
       .then((v) => setVisitors(v ?? []))
-      .catch((e: Error) => setError(e.message ?? 'Failed to load visitors.'))
+      .catch((e: Error) => toast.error(e.message ?? 'Failed to load visitors.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -32,5 +31,5 @@ export function useVisitors(): UseVisitorsReturn {
     return sort === 'recent' ? diff : -diff;
   });
 
-  return { visitors, sorted, loading, error, sort, setSort };
+  return { visitors, sorted, loading, sort, setSort };
 }

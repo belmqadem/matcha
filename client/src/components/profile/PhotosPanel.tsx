@@ -1,6 +1,7 @@
 // src/components/profile/PhotosPanel.tsx
 import { useRef, useState } from 'react';
-import { Camera, Star, X, Loader2, AlertTriangle, Wand2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Camera, Star, X, Loader2, Wand2 } from 'lucide-react';
 import { userService } from '@/services/userService';
 import * as profileService from '@/services/profileService';
 import type { UserProfile, Photo } from '@/types/user';
@@ -17,7 +18,6 @@ interface Props {
 export function PhotosPanel({ user, onUpdate }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
@@ -41,12 +41,11 @@ export function PhotosPanel({ user, onUpdate }: Props) {
 
   const handleUploadFiles = async (files: File[]) => {
     if (photos.length + files.length > 5) {
-      setError('Max 5 photos allowed.');
+      toast.error('Max 5 photos allowed.');
       return;
     }
 
     setUploading(true);
-    setError('');
 
     try {
       let updated = { ...user };
@@ -58,7 +57,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
       photoBuster.regenerate();
       onUpdate(photoBuster.bustUser(updated));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Upload failed.');
+      toast.error(e instanceof Error ? e.message : 'Upload failed.');
     } finally {
       setUploading(false);
     }
@@ -79,7 +78,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
       photoBuster.regenerate();
       onUpdate(photoBuster.bustUser({ ...user, photos: remaining, profile_picture_id: newPicId }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Delete failed.');
+      toast.error(e instanceof Error ? e.message : 'Delete failed.');
     }
   };
 
@@ -102,7 +101,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
         }),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed.');
+      toast.error(e instanceof Error ? e.message : 'Failed.');
     }
   };
 
@@ -165,7 +164,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
         onUpdate(photoBuster.bustUser({ ...user, photos: updatedPhotos }));
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Reordering failed.');
+      toast.error(e instanceof Error ? e.message : 'Reordering failed.');
     }
   };
 
@@ -419,12 +418,6 @@ export function PhotosPanel({ user, onUpdate }: Props) {
         onChange={handleUpload}
         className="hidden"
       />
-
-      {error && (
-        <p className="text-xs sm:text-sm font-bold text-error mt-3 flex items-center gap-1.5 animate-fade-in-up">
-          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {error}
-        </p>
-      )}
 
       {selectedPhoto && (
         <PhotoEditorModal

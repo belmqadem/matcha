@@ -1,6 +1,7 @@
 // src/pages/auth/VerifyEmailPage.tsx
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import AuthLayout from '@/layout/AuthLayout';
 import { authService } from '@/services/authService';
 
@@ -11,7 +12,6 @@ const VerifyEmailPage = () => {
   const { token } = useParams<{ token: string }>();
 
   const [status, setStatus] = useState<Status>('idle');
-  const [error, setError] = useState('');
   const didVerify = useRef(false);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ const VerifyEmailPage = () => {
       })
       .catch((err) => {
         setStatus('error');
-        setError(err instanceof Error ? err.message : 'Verification failed.');
+        toast.error(err instanceof Error ? err.message : 'Verification failed.');
       });
   }, [token, navigate]);
 
@@ -65,7 +65,7 @@ const VerifyEmailPage = () => {
 
         {status === 'error' && (
           <p className="text-center text-sm sm:text-base text-error mb-4 sm:mb-5 animate-fade-in-up">
-            {error}
+            Verification failed. Please try again or request a new link.
           </p>
         )}
 

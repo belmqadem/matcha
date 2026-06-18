@@ -1,5 +1,6 @@
 // src/components/profile/EditLocationModal.tsx
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { MapPin, Loader2, Shield } from 'lucide-react';
 import { userService } from '@/services/userService';
 import type { UserProfile } from '@/types/user';
@@ -25,16 +26,14 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
   );
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const useGPS = () => {
     if (!navigator.geolocation) {
-      setError('Geolocation not supported.');
+      toast.error('Geolocation not supported.');
       return;
     }
 
     setGpsLoading(true);
-    setError('');
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -42,7 +41,7 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
         setGpsLoading(false);
       },
       () => {
-        setError('Could not get GPS. Enter city manually.');
+        toast.error('Could not get GPS. Enter city manually.');
         setGpsLoading(false);
       },
     );
@@ -53,12 +52,11 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
     const finalLng = gpsCoords?.lng ?? user.longitude;
 
     if (finalLat == null || finalLng == null) {
-      setError('GPS coordinates are required. Please detect location.');
+      toast.error('GPS coordinates are required. Please detect location.');
       return;
     }
 
     setSaving(true);
-    setError('');
 
     try {
       await userService.updateLocation({
@@ -75,7 +73,7 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
       });
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
       setSaving(false);
     }
@@ -130,7 +128,7 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
           />
         </div> */}
 
-        <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
+        <SaveBar saving={saving} error="" onSave={handleSave} onCancel={onClose} />
       </div>
     </EditModal>
   );

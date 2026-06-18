@@ -1,6 +1,7 @@
 // src/components/profile/PhotoEditorModal.tsx
 import { useState } from 'react';
-import { RotateCw, Wand2, Loader2, AlertTriangle } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { RotateCw, Wand2, Loader2 } from 'lucide-react';
 import type { Photo } from '@/types/user';
 import { EditModal } from './EditModal';
 import { userService } from '@/services/userService';
@@ -42,7 +43,6 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
   const [intensity, setIntensity] = useState(50);
   const [localRotation, setLocalRotation] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
 
   const serverSrc = photo.url;
   const previewFilter = activeFilter ? buildCssFilter(activeFilter, intensity) : '';
@@ -53,7 +53,6 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
 
   const handleSave = async () => {
     setSaving(true);
-    setError('');
     try {
       let currentPhoto = photo;
 
@@ -76,7 +75,7 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
       onSave(bustedPhoto);
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to save photo.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save photo.');
     } finally {
       setSaving(false);
     }
@@ -166,12 +165,6 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
                 disabled={saving}
               />
             </div>
-          )}
-
-          {error && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs font-bold text-error animate-fade-in-up">
-              <AlertTriangle className="h-3.5 w-3.5" /> {error}
-            </p>
           )}
 
           {/* Save & Cancel buttons */}

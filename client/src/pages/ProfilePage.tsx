@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import {
   Heart,
   MapPin,
@@ -18,6 +19,7 @@ import {
 import { userService } from '@/services/userService';
 import type { PublicProfile } from '@/types/user';
 import { ConfirmModal } from '@/components/profile/ConfirmModal';
+import { PhotoGalleryViewer } from '@/components/profile/PhotoGalleryViewer';
 import { GENDERS, PREFERENCES } from '@/components/profile/profileConstants';
 
 export default function ProfilePage() {
@@ -29,9 +31,9 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [activePhoto, setActivePhoto] = useState(0);
 
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const [likeLoading, setLikeLoading] = useState(false);
   const [blockLoading, setBlockLoading] = useState(false);
-  const [actionError, setActionError] = useState('');
   const [confirm, setConfirm] = useState<'block' | 'unblock' | 'report' | null>(null);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -87,7 +89,6 @@ export default function ProfilePage() {
   const handleLike = async () => {
     if (!profile) return;
     setLikeLoading(true);
-    setActionError('');
     try {
       if (profile.liked_by_me) {
         await userService.unlike(profile.id);
@@ -99,7 +100,7 @@ export default function ProfilePage() {
         );
       }
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Action failed.');
+      toast.error(e instanceof Error ? e.message : 'Action failed.');
     } finally {
       setLikeLoading(false);
     }
@@ -109,7 +110,6 @@ export default function ProfilePage() {
     if (!profile) return;
     setConfirm(null);
     setBlockLoading(true);
-    setActionError('');
     try {
       if (profile.is_blocked_by_me) {
         await userService.unblock(profile.id);
@@ -119,7 +119,7 @@ export default function ProfilePage() {
         navigate('/browse');
       }
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Action failed.');
+      toast.error(e instanceof Error ? e.message : 'Action failed.');
     } finally {
       setBlockLoading(false);
     }
@@ -132,7 +132,7 @@ export default function ProfilePage() {
       await userService.report(profile.id);
       setProfile((p) => (p ? { ...p, is_fake_reported: true } : p));
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : 'Report failed.');
+      toast.error(e instanceof Error ? e.message : 'Report failed.');
     }
   };
 
@@ -284,7 +284,11 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
             {/* Left Column — Photos */}
             <div className="md:col-span-5 flex flex-col gap-3">
-              <div className="relative w-full aspect-3/4 rounded-2xl overflow-hidden bg-background border border-border/50 shadow-md group">
+              {/* Main photo — click to open viewer */}
+              <div
+                onClick={() => activeUrl && setViewerIndex(activePhoto)}
+                className="relative w-full aspect-3/4 rounded-2xl overflow-hidden bg-background border border-border/50 shadow-md group cursor-pointer"
+              >
                 {activeUrl ? (
                   <img
                     src={activeUrl}
@@ -302,35 +306,44 @@ export default function ProfilePage() {
                 {sortedPhotos.length > 1 && (
                   <>
                     <button
-                      onClick={() =>
-                        setActivePhoto((prev) => (prev > 0 ? prev - 1 : sortedPhotos.length - 1))
-                      }
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-text flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePhoto((prev) => (prev > 0 ? prev - 1 : sortedPhotos.length - 1));
+                      }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                     >
                       <ChevronLeft size={16} />
                     </button>
                     <button
-                      onClick={() =>
-                        setActivePhoto((prev) => (prev < sortedPhotos.length - 1 ? prev + 1 : 0))
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-text flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActivePhoto((prev) => (prev < sortedPhotos.length - 1 ? prev + 1 : 0));
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer active:scale-95"
                     >
                       <ChevronRight size={16} />
                     </button>
                   </>
                 )}
+
+                {sortedPhotos.length > 1 && (
+                  <span className="absolute bottom-3 right-3 bg-black/50 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-xs pointer-events-none">
+                    {activePhoto + 1} / {sortedPhotos.length}
+                  </span>
+                )}
               </div>
 
+              {/* Thumbnail grid */}
               {sortedPhotos.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none shrink-0">
+                <div className="grid grid-cols-4 gap-2">
                   {sortedPhotos.map((p, idx) => (
                     <button
                       key={p.id}
                       onClick={() => setActivePhoto(idx)}
-                      className={`w-11 h-14 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                      className={`aspect-3/4 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
                         activePhoto === idx
-                          ? 'border-primary scale-102 shadow-sm shadow-primary/30'
-                          : 'border-border/40 opacity-70 hover:opacity-100'
+                          ? 'border-primary shadow-sm shadow-primary/30'
+                          : 'border-border/40 opacity-70 hover:opacity-100 hover:border-border'
                       }`}
                     >
                       <img src={p.url} alt="" className="w-full h-full object-cover" />
@@ -406,9 +419,6 @@ export default function ProfilePage() {
 
               {/* Actions */}
               <div className="pt-2 border-t border-border/55">
-                {actionError && (
-                  <p className="text-xs text-error font-medium mb-3 text-center">{actionError}</p>
-                )}
                 <div className="flex gap-3">
                   {profile.is_connected ? (
                     <button
@@ -500,6 +510,15 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {viewerIndex !== null && (
+        <PhotoGalleryViewer
+          photos={sortedPhotos}
+          currentIndex={viewerIndex}
+          onClose={() => setViewerIndex(null)}
+          onChangeIndex={setViewerIndex}
+        />
+      )}
     </div>
   );
 }

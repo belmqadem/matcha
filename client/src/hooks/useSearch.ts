@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { userService } from '@/services/userService';
 import type { BrowseUser } from '@/types/user';
 import type { SearchFilters } from '@/types/search';
@@ -28,7 +29,6 @@ export function useSearch() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [filters, setFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
   const [activeFilters, setActiveFilters] = useState<SearchFilters>(DEFAULT_FILTERS);
 
@@ -36,7 +36,6 @@ export function useSearch() {
     async (searchFilters: SearchFilters, targetPage: number, isLoadMore: boolean) => {
       if (!isLoadMore) {
         setLoading(true);
-        setError('');
         setPage(1);
       }
 
@@ -61,7 +60,7 @@ export function useSearch() {
         setTotal(data.total ?? 0);
         if (isLoadMore) setPage(targetPage);
       } catch (err) {
-        setError((err as Error).message);
+        toast.error((err as Error).message ?? 'Search failed.');
       } finally {
         if (!isLoadMore) setLoading(false);
       }
@@ -149,8 +148,6 @@ export function useSearch() {
     users,
     total,
     loading,
-    error,
-    setError,
     filters,
     updateFilter,
     search,

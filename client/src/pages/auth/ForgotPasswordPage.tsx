@@ -1,6 +1,7 @@
 // src/pages/auth/ForgotPasswordPage.tsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import AuthLayout from '@/layout/AuthLayout';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -9,7 +10,6 @@ import { authService } from '@/services/authService';
 
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -17,17 +17,16 @@ const ForgotPasswordPage = () => {
     e.preventDefault();
 
     if (!email.trim()) {
-      setError('Please enter your email address.');
+      toast.error('Please enter your email address.');
       return;
     }
 
     setIsLoading(true);
-    setError('');
     try {
       await authService.forgotPassword(email);
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
+      toast.error(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setIsLoading(false);
     }
@@ -58,19 +57,10 @@ const ForgotPasswordPage = () => {
               type="email"
               label="Email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError('');
-              }}
+              onChange={(e) => setEmail(e.target.value)}
               required
               icon={Mail}
             />
-
-            {error && (
-              <p className="text-xs sm:text-sm font-medium text-error mb-3 text-center animate-fade-in-up">
-                {error}
-              </p>
-            )}
 
             <div className="pt-2 sm:pt-4">
               <Button type="submit" disabled={isLoading}>

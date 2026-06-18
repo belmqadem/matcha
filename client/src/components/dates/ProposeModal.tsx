@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 import { chatService } from '@/services/chatService';
 import { dateService } from '@/services/dateService';
@@ -36,19 +37,18 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
 
   const [location, setLocation] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     chatService
       .conversations()
       .then((data) => setConnections(data.conversations ?? []))
-      .catch(() => setError('Could not load your connections.'))
+      .catch(() => toast.error('Could not load your connections.'))
       .finally(() => setLoadingConns(false));
   }, []);
 
   const handleSubmit = async () => {
-    if (!receiverId) return setError('Please select a person.');
-    if (!date) return setError('Please select a date.');
+    if (!receiverId) { toast.error('Please select a person.'); return; }
+    if (!date) { toast.error('Please select a date.'); return; }
     const selectedDate = new Date(
       date.getFullYear(),
       date.getMonth(),
@@ -57,10 +57,9 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
       minute,
       0,
     );
-    if (selectedDate <= new Date()) return setError('Scheduled time must be in the future.');
+    if (selectedDate <= new Date()) { toast.error('Scheduled time must be in the future.'); return; }
 
     setSubmitting(true);
-    setError(null);
     try {
       await dateService.proposeDate({
         receiver_id: receiverId,
@@ -79,9 +78,9 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
       onSuccess();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes('409')) setError('You already have a pending date with this person.');
-      else if (msg.includes('403')) setError('You can only propose to connected users.');
-      else setError(msg || 'Failed to propose date');
+      if (msg.includes('409')) toast.error('You already have a pending date with this person.');
+      else if (msg.includes('403')) toast.error('You can only propose to connected users.');
+      else toast.error(msg || 'Failed to propose date');
     } finally {
       setSubmitting(false);
     }
@@ -105,12 +104,6 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
             <X size={20} />
           </button>
         </div>
-
-        {error && (
-          <div className="mb-4 px-3 py-2 rounded-xl bg-error/10 text-error text-sm font-medium">
-            {error}
-          </div>
-        )}
 
         <div className="flex flex-col gap-4">
           {/* With */}

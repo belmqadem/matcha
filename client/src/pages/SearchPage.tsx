@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useSearch } from '@/hooks/useSearch';
 import { FilterSidebar } from '@/components/search/FilterSidebar';
 import { ActiveChips } from '@/components/search/ActiveChips';
@@ -9,8 +9,6 @@ export default function SearchPage() {
   const {
     users,
     loading,
-    error,
-    setError,
     filters,
     updateFilter,
     search,
@@ -58,19 +56,6 @@ export default function SearchPage() {
         <div className="flex-1 min-w-0">
           {/* Active filter chips */}
           <ActiveChips filters={filters} onRemove={removeFilter} />
-
-          {/* Error */}
-          {error && (
-            <div className="bg-surface border-2 border-error rounded-2xl px-4 py-3 mb-5 flex items-center justify-between gap-3">
-              <span className="text-sm font-bold text-error">{error}</span>
-              <button
-                onClick={() => setError('')}
-                className="text-error opacity-70 hover:opacity-100"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          )}
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 gap-3">

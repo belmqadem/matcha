@@ -9,7 +9,7 @@ import ProposeModal from '@/components/dates/ProposeModal';
 import { useAuth } from '@/context/AuthContext';
 
 export default function DatesPage() {
-  const { dates, upcoming, loading, error, fetchDates } = useDates();
+  const { dates, upcoming, loading, fetchDates } = useDates();
   const [showModal, setShowModal] = useState(false);
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState<TabFilter>('upcoming');
@@ -103,13 +103,6 @@ export default function DatesPage() {
         <div className="mb-5">
           <DateTabs tab={tab} setTab={setTab} dates={dates} upcomingCount={upcoming} />
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-4 px-4 py-3 rounded-2xl bg-error/10 border border-error/20 text-sm font-medium text-error">
-            {error}
-          </div>
-        )}
 
         {/* List */}
         {loading ? (

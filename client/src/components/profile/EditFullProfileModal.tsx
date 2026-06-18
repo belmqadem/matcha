@@ -1,13 +1,16 @@
 // src/components/profile/EditFullProfileModal.tsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Sparkles, MapPin, Tag, Shield, Loader2, ChevronDown, X, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { User, Sparkles, MapPin, Tag, Shield, Loader2, ChevronDown, X, Check, Search } from 'lucide-react';
 import { userService } from '@/services/userService';
 import { authService } from '@/services/authService';
+import { mapService } from '@/services/mapService';
 import type { UserProfile } from '@/types/user';
 import { GENDERS, PREFERENCES, SUGGESTED_TAGS } from './profileConstants';
 import { SaveBar } from './SaveBar';
 import { ConfirmModal } from './EditModal';
+import DatePicker from '@/components/DatePicker';
 
 const inputCls =
   'w-full bg-background border-2 border-transparent rounded-2xl px-4 py-3 text-sm font-bold text-text placeholder-text-muted outline-none focus:border-primary transition-all';
@@ -36,12 +39,11 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
     email: user.email,
   });
   const [identitySaving, setIdentitySaving] = useState(false);
-  const [identityError, setIdentityError] = useState('');
   const [showEmailConfirm, setShowEmailConfirm] = useState(false);
 
   const handleSaveIdentity = async () => {
     if (!identityForm.first_name.trim() || !identityForm.last_name.trim()) {
-      setIdentityError('Name is required.');
+      toast.error('Name is required.');
       return;
     }
     if (identityForm.email !== user.email) {
@@ -53,7 +55,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
 
   const doSaveIdentity = async (emailChanged: boolean) => {
     setIdentitySaving(true);
-    setIdentityError('');
     try {
       const updated = await userService.patchUser(identityForm);
       if (emailChanged) {
@@ -69,19 +70,13 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         navigate('/profile/me');
       }, 1500);
     } catch (e) {
-      setIdentityError(e instanceof Error ? e.message : 'Failed to save.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
       setIdentitySaving(false);
     }
   };
 
   // --- TAB 2: ABOUT STATE ---
-  const maxBirthDate = (() => {
-    const d = new Date();
-    d.setFullYear(d.getFullYear() - 18);
-    return d.toISOString().split('T')[0];
-  })();
-
   const [aboutForm, setAboutForm] = useState({
     gender: user.gender ?? '',
     sexual_preference: user.sexual_preference ?? '',
@@ -89,19 +84,13 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
     birth_date: user.birth_date ? new Date(user.birth_date).toISOString().split('T')[0] : '',
   });
   const [aboutSaving, setAboutSaving] = useState(false);
-  const [aboutError, setAboutError] = useState('');
 
   const handleSaveAbout = async () => {
     if (!aboutForm.birth_date) {
-      setAboutError('Birth date is required.');
-      return;
-    }
-    if (aboutForm.birth_date > maxBirthDate) {
-      setAboutError('You must be at least 18 years old.');
+      toast.error('Birth date is required.');
       return;
     }
     setAboutSaving(true);
-    setAboutError('');
     try {
       const updated = await userService.patchProfile({
         gender: aboutForm.gender || undefined,
@@ -121,62 +110,81 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         navigate('/profile/me');
       }, 1500);
     } catch (e) {
-      setAboutError(e instanceof Error ? e.message : 'Failed to save.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
       setAboutSaving(false);
     }
   };
 
   // --- TAB 3: LOCATION STATE ---
-  const [cityInput, setCityInput] = useState(user.location_city ?? '');
-  const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(
     user.latitude && user.longitude
       ? { lat: Number(user.latitude), lng: Number(user.longitude) }
       : null,
   );
+  const [resolvedCity, setResolvedCity] = useState(user.location_city ?? '');
+  const [citySearchInput, setCitySearchInput] = useState('');
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [locationSaving, setLocationSaving] = useState(false);
-  const [locationError, setLocationError] = useState('');
 
   const useGPS = () => {
     if (!navigator.geolocation) {
-      setLocationError('Geolocation not supported.');
+      toast.error('Geolocation not supported by your browser.');
       return;
     }
     setGpsLoading(true);
-    setLocationError('');
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setResolvedCity('');
         setGpsLoading(false);
       },
       () => {
-        setLocationError('Could not detect GPS. Enter city manually.');
+        toast.error('GPS access denied. Enter your city below.');
         setGpsLoading(false);
       },
     );
+  };
+
+  const searchCity = async () => {
+    const q = citySearchInput.trim();
+    if (!q) {
+      toast.error('Please enter a city name.');
+      return;
+    }
+    setSearchLoading(true);
+    const result = await mapService.forwardGeocode(q);
+    setSearchLoading(false);
+    if (!result) {
+      toast.error('City not found. Try a different name.');
+      return;
+    }
+    const shortName = result.displayName.split(',')[0].trim();
+    setGpsCoords({ lat: result.lat, lng: result.lng });
+    setResolvedCity(shortName);
+    setCitySearchInput('');
   };
 
   const handleSaveLocation = async () => {
     const finalLat = gpsCoords?.lat ?? user.latitude;
     const finalLng = gpsCoords?.lng ?? user.longitude;
     if (finalLat == null || finalLng == null) {
-      setLocationError('GPS coordinates are required. Please detect your location.');
+      toast.error('Please set your location using GPS or city search.');
       return;
     }
     setLocationSaving(true);
-    setLocationError('');
     try {
       await userService.updateLocation({
         latitude: finalLat,
         longitude: finalLng,
-        location_city: cityInput.trim() || undefined,
+        location_city: resolvedCity || undefined,
       });
       onUpdate({
         ...user,
         latitude: finalLat,
         longitude: finalLng,
-        location_city: cityInput.trim() || user.location_city,
+        location_city: resolvedCity || user.location_city,
       });
       setSaveSuccess(true);
       setTimeout(() => {
@@ -185,7 +193,7 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         navigate('/profile/me');
       }, 1500);
     } catch (e) {
-      setLocationError(e instanceof Error ? e.message : 'Failed to save.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save location.');
     } finally {
       setLocationSaving(false);
     }
@@ -195,7 +203,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
   const [tags, setTags] = useState<string[]>(user.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [tagsSaving, setTagsSaving] = useState(false);
-  const [tagsError, setTagsError] = useState('');
 
   const addTag = (tag: string) => {
     const n = tag.startsWith('#') ? tag.toLowerCase() : `#${tag.toLowerCase()}`;
@@ -206,7 +213,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
 
   const handleSaveTags = async () => {
     setTagsSaving(true);
-    setTagsError('');
     try {
       const updated = await userService.updateTags(tags);
       onUpdate({ ...user, tags: updated });
@@ -217,7 +223,7 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         navigate('/profile/me');
       }, 1500);
     } catch (e) {
-      setTagsError(e instanceof Error ? e.message : 'Failed to save.');
+      toast.error(e instanceof Error ? e.message : 'Failed to save.');
     } finally {
       setTagsSaving(false);
     }
@@ -241,7 +247,7 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
       />
     )}
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 backdrop-blur-xs p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 backdrop-blur-xs p-4 pt-8"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -368,7 +374,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
               <div className="pt-4">
                 <SaveBar
                   saving={identitySaving}
-                  error={identityError}
                   onSave={handleSaveIdentity}
                   onCancel={onClose}
                 />
@@ -388,12 +393,21 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelCls}>Birth Date</label>
-                  <input
-                    value={aboutForm.birth_date}
-                    type="date"
-                    max={maxBirthDate}
-                    onChange={(e) => setAboutForm((p) => ({ ...p, birth_date: e.target.value }))}
-                    className={inputCls}
+                  <DatePicker
+                    value={
+                      aboutForm.birth_date
+                        ? (() => {
+                            const [y, m, d] = aboutForm.birth_date.split('-').map(Number);
+                            return new Date(y, m - 1, d);
+                          })()
+                        : null
+                    }
+                    onChange={(date) => {
+                      const y = date.getFullYear();
+                      const m = String(date.getMonth() + 1).padStart(2, '0');
+                      const d = String(date.getDate()).padStart(2, '0');
+                      setAboutForm((p) => ({ ...p, birth_date: `${y}-${m}-${d}` }));
+                    }}
                   />
                 </div>
                 <div>
@@ -455,7 +469,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
               <div className="pt-4">
                 <SaveBar
                   saving={aboutSaving}
-                  error={aboutError}
                   onSave={handleSaveAbout}
                   onCancel={onClose}
                 />
@@ -468,18 +481,19 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleSaveLocation();
+                void handleSaveLocation();
               }}
               className="space-y-4 animate-in fade-in duration-200"
             >
+              {/* GPS button */}
               <div>
                 <label className={labelCls}>GPS Location</label>
                 <button
                   type="button"
                   onClick={useGPS}
                   disabled={gpsLoading}
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 text-sm font-bold cursor-pointer transition-all active:scale-95 ${
-                    gpsCoords
+                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-2xl border-2 text-sm font-bold cursor-pointer transition-all active:scale-95 disabled:opacity-60 ${
+                    gpsCoords && !resolvedCity
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border bg-background text-text-muted hover:text-text'
                   }`}
@@ -490,30 +504,66 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
                     <MapPin className="w-4 h-4" />
                   )}
                   {gpsLoading
-                    ? 'Detecting coordinates…'
-                    : gpsCoords
-                      ? `GPS Coordinates Detected (${gpsCoords.lat.toFixed(4)}, ${gpsCoords.lng.toFixed(4)}) ✓`
-                      : 'Detect my GPS Location'}
+                    ? 'Detecting…'
+                    : gpsCoords && !resolvedCity
+                      ? 'GPS detected ✓'
+                      : 'Detect my GPS location'}
                 </button>
                 <p className="text-[10px] font-bold text-primary/80 mt-2 flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5" /> Used exclusively to calculate distances.
                 </p>
               </div>
 
-              <div>
-                <label className={labelCls}>City Name (Display only)</label>
-                <input
-                  value={cityInput}
-                  onChange={(e) => setCityInput(e.target.value)}
-                  placeholder="e.g. Paris, Marais district"
-                  className={inputCls}
-                />
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">or enter manually</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
 
-              <div className="pt-4">
+              {/* City search */}
+              <div>
+                <label className={labelCls}>Search by city</label>
+                <div className="flex gap-2">
+                  <input
+                    value={citySearchInput}
+                    onChange={(e) => setCitySearchInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        void searchCity();
+                      }
+                    }}
+                    placeholder="e.g. Paris, Berlin…"
+                    className={inputCls}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void searchCity()}
+                    disabled={searchLoading}
+                    className="flex items-center justify-center w-11 rounded-2xl bg-primary text-white transition-all active:scale-95 disabled:opacity-60 shrink-0"
+                  >
+                    {searchLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirmed location */}
+              {gpsCoords && resolvedCity && (
+                <div className="flex items-center gap-2 px-3 py-2.5 bg-primary/10 border border-primary/20 rounded-2xl animate-fade-in-up">
+                  <MapPin className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-sm font-bold text-primary">{resolvedCity} ✓</span>
+                </div>
+              )}
+
+              <div className="pt-2">
                 <SaveBar
                   saving={locationSaving}
-                  error={locationError}
+                  error=""
                   onSave={handleSaveLocation}
                   onCancel={onClose}
                 />
@@ -596,7 +646,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
               <div className="pt-4">
                 <SaveBar
                   saving={tagsSaving}
-                  error={tagsError}
                   onSave={handleSaveTags}
                   onCancel={onClose}
                 />
