@@ -1,14 +1,32 @@
 import rateLimit from "express-rate-limit";
+import jwt from "jsonwebtoken";
 import { HTTP_STATUS } from "../constants/httpStatus.js";
 import AppError from "../utils/AppError.js";
+import env from "../config/env.js";
 
 const DEFAULT_MESSAGE = "Too many requests, please try again later.";
+const isDev = env.NODE_ENV === "development";
+
+const keyGenerator = (req) => {
+  try {
+    const token = req.cookies?.token;
+    if (token) {
+      const decoded = jwt.decode(token);
+      if (decoded?.id) return `user:${decoded.id}`;
+    }
+  } catch {
+    // fall through
+  }
+  return req.ip;
+};
 
 const createRateLimiter = (options = {}) => {
   const message = options.message || DEFAULT_MESSAGE;
   return rateLimit({
     windowMs: options.windowMs || 15 * 60 * 1000,
-    limit: options.limit || 200,
+    // dev: 2000/15 min (relaxed for active testing), prod: 500/15 min
+    limit: options.limit || (isDev ? 2000 : 500),
+    keyGenerator: options.keyGenerator ?? keyGenerator,
     standardHeaders: true,
     legacyHeaders: false,
     message,

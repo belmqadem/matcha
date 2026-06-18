@@ -171,7 +171,7 @@ export default function AppHeader() {
               </NavLink>
               {notificationCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center border-2 border-surface">
-                  {notificationCount > 99 ? '99+' : notificationCount}
+                  ●
                 </span>
               )}
             </div>

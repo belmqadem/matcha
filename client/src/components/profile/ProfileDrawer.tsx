@@ -476,7 +476,7 @@ export function ProfileDrawer({ profileId, onClose }: ProfileDrawerProps) {
                           className={`w-full py-2.5 rounded-full font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 ${
                             profile.liked_by_me
                               ? 'bg-transparent border border-primary text-primary hover:bg-primary/10'
-                              : 'bg-primary text-text hover:bg-primary-hover shadow-md shadow-primary/20'
+                              : 'bg-primary text-white hover:bg-primary-hover shadow-md shadow-primary/20'
                           }`}
                         >
                           <Heart

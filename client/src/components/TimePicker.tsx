@@ -123,7 +123,7 @@ export default function TimePicker({ hour, minute, onChange }: Props) {
             <button
               type="button"
               onClick={confirm}
-              className="px-4 py-1.5 rounded-lg bg-primary text-text text-[13px] font-bold hover:opacity-90 transition-opacity"
+              className="px-4 py-1.5 rounded-lg bg-primary text-white text-[13px] font-bold hover:opacity-90 transition-opacity"
             >
               Done
             </button>

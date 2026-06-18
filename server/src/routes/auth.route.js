@@ -10,21 +10,19 @@ import {
   resendVerificationSchema,
   resetSchema,
 } from "../validators/auth.validator.js";
-// import {
-//   registerLimiter,
-//   loginLimiter,
-//   forgotPasswordLimiter,
-//   resetPasswordLimiter,
-//   resendVerificationLimiter,
-// } from "../middleware/rateLimiter.js";
-
-// TODO: Comment off rate limiters when testing done
+import {
+  registerLimiter,
+  loginLimiter,
+  forgotPasswordLimiter,
+  resetPasswordLimiter,
+  resendVerificationLimiter,
+} from "../middleware/rateLimiter.js";
 
 const router = Router();
 
 router.post(
   "/register",
-  // registerLimiter,
+  registerLimiter,
   validate(registerSchema),
   asyncHandler(authController.register),
 );
@@ -33,7 +31,7 @@ router.get("/verify/:token", asyncHandler(authController.verifyEmail));
 
 router.post(
   "/login",
-  // loginLimiter,
+  loginLimiter,
   validate(loginSchema),
   asyncHandler(authController.login),
 );
@@ -42,21 +40,21 @@ router.post("/logout", authenticate, asyncHandler(authController.logout));
 
 router.post(
   "/forgot-password",
-  // forgotPasswordLimiter,
+  forgotPasswordLimiter,
   validate(forgotSchema),
   asyncHandler(authController.forgotPassword),
 );
 
 router.post(
   "/resend-verification",
-  // resendVerificationLimiter,
+  resendVerificationLimiter,
   validate(resendVerificationSchema),
   asyncHandler(authController.resendVerification),
 );
 
 router.post(
   "/reset-password",
-  // resetPasswordLimiter,
+  resetPasswordLimiter,
   validate(resetSchema),
   asyncHandler(authController.resetPassword),
 );
