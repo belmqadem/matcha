@@ -1,6 +1,6 @@
 import * as authService from "../services/auth.service.js";
-import { setLocationFromIp } from "../services/location.service.js";
-import logger from "../utils/logger.js";
+// import { setLocationFromIp } from "../services/location.service.js";
+// import logger from "../utils/logger.js";
 import { issueAuthCookie } from "../utils/issueAuthCookie.js";
 import passport from "../config/passport.js";
 import env from "../config/env.js";
@@ -20,7 +20,7 @@ export const verifyEmail = async (req, res) => {
 
 export const login = async (req, res) => {
   const { username, password } = req.body;
-  const { user, hasLocation, isProfileComplete, missingFields } =
+  const { user, _hasLocation, isProfileComplete, missingFields } =
     await authService.login({
       username,
       password,
@@ -28,14 +28,14 @@ export const login = async (req, res) => {
 
   issueAuthCookie(res, user);
 
-  if (!hasLocation) {
-    setLocationFromIp(user.id, req.ip).catch((err) =>
-      logger.warn(
-        { err, userId: user.id },
-        "Could not auto-set location on login",
-      ),
-    );
-  }
+  // if (!hasLocation) {
+  //   setLocationFromIp(user.id, req.ip).catch((err) =>
+  //     logger.warn(
+  //       { err, userId: user.id },
+  //       "Could not auto-set location on login",
+  //     ),
+  //   );
+  // }
 
   return res.status(200).json({
     user: {
@@ -77,22 +77,22 @@ export const resetPassword = async (req, res) => {
 const oauthFailureRedirect = `${env.CLIENT_URL}/login?error=oauth_failed`;
 
 const oauthSuccessRedirect = async (req, res) => {
-  const hasLocation =
-    req.user?.latitude !== null && req.user?.longitude !== null;
+  // const hasLocation =
+  //   req.user?.latitude !== null && req.user?.longitude !== null;
 
-  if (!hasLocation) {
-    try {
-      const location = await setLocationFromIp(req.user.id, req.ip);
-      req.user.latitude = location.latitude;
-      req.user.longitude = location.longitude;
-      req.user.location_city = location.location_city;
-    } catch (err) {
-      logger.warn(
-        { err, userId: req.user.id },
-        "Could not auto-set location on OAuth login",
-      );
-    }
-  }
+  // if (!hasLocation) {
+  //   try {
+  //     const location = await setLocationFromIp(req.user.id, req.ip);
+  //     req.user.latitude = location.latitude;
+  //     req.user.longitude = location.longitude;
+  //     req.user.location_city = location.location_city;
+  //   } catch (err) {
+  //     logger.warn(
+  //       { err, userId: req.user.id },
+  //       "Could not auto-set location on OAuth login",
+  //     );
+  //   }
+  // }
 
   issueAuthCookie(res, req.user);
   res.redirect(`${env.CLIENT_URL}/browse`);
