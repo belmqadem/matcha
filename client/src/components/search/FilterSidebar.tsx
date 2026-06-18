@@ -163,7 +163,7 @@ export function FilterSidebar({
         </button>
         <button
           type="submit"
-          className="flex-[2] py-2.5 sm:py-3 rounded-xl bg-primary text-surface text-xs sm:text-sm font-black hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-sm active:scale-95"
+          className="flex-[2] py-2.5 sm:py-3 rounded-xl bg-primary text-white text-xs sm:text-sm font-black hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-sm active:scale-95"
         >
           <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Search
         </button>

@@ -18,20 +18,20 @@ import { useSocket } from '@/context/SocketContext';
 import { authService } from '@/services/authService';
 import MatchaLogo from '@/components/Logo';
 
-type BadgeKey = 'messages' | 'notifications';
+type BadgeKey = 'messages' | 'notifications' | 'dates';
 
 const MAIN_NAV = [
   { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
   { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
   { to: '/map', label: 'Map', Icon: MapPin, badge: undefined },
-  { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: undefined },
+  { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: 'dates' as BadgeKey },
 ];
 
 const BOTTOM_NAV = [
   { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
   { to: '/search', label: 'Search', Icon: Search, badge: undefined },
   { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
-  { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: undefined },
+  { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: 'dates' as BadgeKey },
   { to: '/profile/me', label: 'Profile', Icon: User, badge: undefined },
 ];
 
@@ -40,8 +40,14 @@ export default function AppHeader() {
   const location = useLocation();
 
   const { user: me, logout: ctxLogout } = useAuth();
-  const { unreadMessages, unreadNotifications, markNotificationsRead, markMessagesRead } =
-    useSocket();
+  const {
+    unreadMessages,
+    unreadNotifications,
+    pendingDates,
+    markNotificationsRead,
+    markMessagesRead,
+    clearPendingDates,
+  } = useSocket();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -57,6 +63,7 @@ export default function AppHeader() {
   const getBadge = (key?: BadgeKey) => {
     if (key === 'messages') return unreadMessages;
     if (key === 'notifications') return unreadNotifications;
+    if (key === 'dates') return pendingDates;
     return 0;
   };
   const notificationCount = getBadge('notifications');
@@ -85,7 +92,8 @@ export default function AppHeader() {
     setProfileOpen(false);
     if (location.pathname === '/notifications') markNotificationsRead();
     if (location.pathname.startsWith('/chat')) markMessagesRead();
-  }, [location.pathname, markNotificationsRead, markMessagesRead]);
+    if (location.pathname === '/dates') clearPendingDates();
+  }, [location.pathname, markNotificationsRead, markMessagesRead, clearPendingDates]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -107,7 +115,7 @@ export default function AppHeader() {
           <MatchaLogo size="sm" showText={true} />
 
           {/* Desktop nav (center) */}
-          <nav className="hidden lg:flex items-center justify-center gap-5">
+          <nav className="hidden lg:flex items-center justify-center gap-1">
             {MAIN_NAV.map(({ to, label, Icon, badge }) => {
               const active = isActive(to);
               const count = getBadge(badge);

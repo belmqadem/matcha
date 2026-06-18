@@ -15,12 +15,12 @@ interface ProposeModalProps {
 const SelectWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="relative flex items-center">
     {children}
-    <span className="pointer-events-none absolute right-2 text-text-muted text-[11px]">▾</span>
+    <span className="pointer-events-none absolute right-2 text-text-muted text-xs">▾</span>
   </div>
 );
 
 const selectCls =
-  'w-full appearance-none pr-6 p-2.5 rounded-xl border border-border bg-surface text-[13px] text-text font-medium outline-none focus:border-primary cursor-pointer';
+  'w-full appearance-none pr-6 p-2.5 rounded-xl border border-border bg-surface text-sm text-text font-medium outline-none focus:border-primary cursor-pointer';
 
 export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) {
   const [connections, setConnections] = useState<Conversation[]>([]);
@@ -97,7 +97,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
         className="bg-surface rounded-3xl p-7 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200"
       >
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[18px] font-black text-text">Propose a date</h2>
+          <h2 className="text-lg font-black text-text">Propose a date</h2>
           <button
             onClick={onClose}
             className="text-text-muted hover:text-text transition-colors p-1 -mr-1"
@@ -107,7 +107,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
         </div>
 
         {error && (
-          <div className="mb-4 px-3 py-2 rounded-xl bg-error/10 text-error text-[13px] font-medium">
+          <div className="mb-4 px-3 py-2 rounded-xl bg-error/10 text-error text-sm font-medium">
             {error}
           </div>
         )}
@@ -115,11 +115,11 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
         <div className="flex flex-col gap-4">
           {/* With */}
           <div>
-            <label className="block text-[12px] font-bold text-text-muted mb-1.5">With</label>
+            <label className="block text-xs font-bold text-text-muted mb-1.5">With</label>
             {loadingConns ? (
               <div className="h-10 bg-border animate-pulse rounded-xl" />
             ) : connections.length === 0 ? (
-              <div className="p-3 rounded-xl bg-border/50 text-[13px] text-text-muted">
+              <div className="p-3 rounded-xl bg-border/50 text-sm text-text-muted">
                 No connections yet — match with someone first.
               </div>
             ) : (
@@ -142,7 +142,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
 
           {/* Date & time */}
           <div>
-            <label className="block text-[12px] font-bold text-text-muted mb-1.5">
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
               Date &amp; time
             </label>
             <div className="flex gap-2">
@@ -164,7 +164,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
 
           {/* Location */}
           <div>
-            <label className="block text-[12px] font-bold text-text-muted mb-1.5">
+            <label className="block text-xs font-bold text-text-muted mb-1.5">
               Location <span className="font-normal opacity-70">(optional)</span>
             </label>
             <input
@@ -173,7 +173,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               maxLength={200}
-              className="w-full p-2.5 rounded-xl border border-border bg-surface text-[13px] text-text font-medium outline-none focus:border-primary"
+              className="w-full p-2.5 rounded-xl border border-border bg-surface text-sm text-text font-medium outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -181,14 +181,14 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
         <div className="flex gap-2.5 mt-6">
           <button
             onClick={onClose}
-            className="flex-1 p-2.5 rounded-xl border border-border text-text font-bold text-[13px] hover:bg-background transition-colors"
+            className="flex-1 p-2.5 rounded-xl border border-border text-text font-bold text-sm hover:bg-background transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting || connections.length === 0}
-            className="flex-1 p-2.5 rounded-xl bg-primary text-white font-bold text-[13px] disabled:opacity-50 hover:opacity-90 transition-opacity"
+            className="flex-1 p-2.5 rounded-xl bg-primary text-white font-bold text-sm disabled:opacity-50 hover:opacity-90 transition-opacity"
           >
             {submitting ? 'Sending…' : 'Send proposal'}
           </button>

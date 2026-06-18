@@ -7,6 +7,7 @@ import { authService } from '@/services/authService';
 import type { UserProfile } from '@/types/user';
 import { GENDERS, PREFERENCES, SUGGESTED_TAGS } from './profileConstants';
 import { SaveBar } from './SaveBar';
+import { ConfirmModal } from './EditModal';
 
 const inputCls =
   'w-full bg-background border-2 border-transparent rounded-2xl px-4 py-3 text-sm font-bold text-text placeholder-text-muted outline-none focus:border-primary transition-all';
@@ -36,19 +37,21 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
   });
   const [identitySaving, setIdentitySaving] = useState(false);
   const [identityError, setIdentityError] = useState('');
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
 
   const handleSaveIdentity = async () => {
     if (!identityForm.first_name.trim() || !identityForm.last_name.trim()) {
       setIdentityError('Name is required.');
       return;
     }
-    const emailChanged = identityForm.email !== user.email;
-    if (emailChanged) {
-      const ok = window.confirm(
-        'Changing your email will sign you out. You will need to verify your new email before logging back in. Continue?',
-      );
-      if (!ok) return;
+    if (identityForm.email !== user.email) {
+      setShowEmailConfirm(true);
+      return;
     }
+    await doSaveIdentity(false);
+  };
+
+  const doSaveIdentity = async (emailChanged: boolean) => {
     setIdentitySaving(true);
     setIdentityError('');
     try {
@@ -73,34 +76,38 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
   };
 
   // --- TAB 2: ABOUT STATE ---
+  const maxBirthDate = (() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 18);
+    return d.toISOString().split('T')[0];
+  })();
+
   const [aboutForm, setAboutForm] = useState({
     gender: user.gender ?? '',
     sexual_preference: user.sexual_preference ?? '',
     biography: user.biography ?? '',
-    age: user.birth_date
-      ? String(new Date().getFullYear() - new Date(user.birth_date).getFullYear())
-      : '',
+    birth_date: user.birth_date ? new Date(user.birth_date).toISOString().split('T')[0] : '',
   });
   const [aboutSaving, setAboutSaving] = useState(false);
   const [aboutError, setAboutError] = useState('');
 
   const handleSaveAbout = async () => {
-    if (!aboutForm.age || parseInt(aboutForm.age) < 18) {
-      setAboutError('You must be at least 18.');
+    if (!aboutForm.birth_date) {
+      setAboutError('Birth date is required.');
+      return;
+    }
+    if (aboutForm.birth_date > maxBirthDate) {
+      setAboutError('You must be at least 18 years old.');
       return;
     }
     setAboutSaving(true);
     setAboutError('');
     try {
-      const birthDate = new Date(new Date().getFullYear() - parseInt(aboutForm.age), 0, 1)
-        .toISOString()
-        .split('T')[0];
-
       const updated = await userService.patchProfile({
         gender: aboutForm.gender || undefined,
         sexual_preference: aboutForm.sexual_preference || undefined,
         biography: aboutForm.biography || undefined,
-        birth_date: birthDate,
+        birth_date: aboutForm.birth_date,
       } as Partial<UserProfile>);
 
       onUpdate({
@@ -219,8 +226,22 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
   const availableTags = SUGGESTED_TAGS.filter((t) => !tags.includes(t));
 
   return (
+    <>
+    {showEmailConfirm && (
+      <ConfirmModal
+        title="Change email?"
+        message="Changing your email will sign you out. You will need to verify your new email before logging back in."
+        confirmLabel="Continue"
+        danger
+        onConfirm={() => {
+          setShowEmailConfirm(false);
+          void doSaveIdentity(true);
+        }}
+        onClose={() => setShowEmailConfirm(false)}
+      />
+    )}
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-xs p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/45 backdrop-blur-xs p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -366,15 +387,13 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Age</label>
+                  <label className={labelCls}>Birth Date</label>
                   <input
-                    value={aboutForm.age}
-                    type="number"
-                    min={18}
-                    max={99}
-                    onChange={(e) => setAboutForm((p) => ({ ...p, age: e.target.value }))}
+                    value={aboutForm.birth_date}
+                    type="date"
+                    max={maxBirthDate}
+                    onChange={(e) => setAboutForm((p) => ({ ...p, birth_date: e.target.value }))}
                     className={inputCls}
-                    placeholder="Your age"
                   />
                 </div>
                 <div>
@@ -587,5 +606,6 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
         </div>
       </div>
     </div>
+    </>
   );
 }

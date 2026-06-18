@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { userService } from '@/services/userService';
 import { authService } from '@/services/authService';
 import type { UserProfile } from '@/types/user';
-import { EditModal } from './EditModal';
+import { EditModal, ConfirmModal } from './EditModal';
 import { SaveBar } from './SaveBar';
 
 const inputCls =
@@ -30,24 +30,23 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
 
   const handleSave = async () => {
     if (!form.first_name.trim() || !form.last_name.trim()) {
       setError('Name is required.');
       return;
     }
-    const emailChanged = form.email !== user.email;
-
-    if (emailChanged) {
-      const ok = window.confirm(
-        'Changing your email will sign you out. You will need to verify your new email before logging back in. Continue?',
-      );
-      if (!ok) return;
+    if (form.email !== user.email) {
+      setShowEmailConfirm(true);
+      return;
     }
+    await doSave();
+  };
 
+  const doSave = async (emailChanged = false) => {
     setSaving(true);
     setError('');
-
     try {
       const updated = await userService.patchUser(form);
       if (emailChanged) {
@@ -65,6 +64,20 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
   };
 
   return (
+    <>
+    {showEmailConfirm && (
+      <ConfirmModal
+        title="Change email?"
+        message="Changing your email will sign you out. You will need to verify your new email before logging back in."
+        confirmLabel="Continue"
+        danger
+        onConfirm={() => {
+          setShowEmailConfirm(false);
+          void doSave(true);
+        }}
+        onClose={() => setShowEmailConfirm(false)}
+      />
+    )}
     <EditModal title="Edit Identity" onClose={onClose}>
       <div className="flex flex-col gap-4 sm:gap-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -106,5 +119,6 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
         <SaveBar saving={saving} error={error} onSave={handleSave} onCancel={onClose} />
       </div>
     </EditModal>
+    </>
   );
 }

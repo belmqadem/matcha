@@ -9,11 +9,11 @@ import type { DateEntry, DateStatus } from '@/types/date';
 import { useAuth } from '@/context/AuthContext';
 import { useSocket } from '@/context/SocketContext';
 
-const STATUS_META: Record<DateStatus, { label: string; color: string }> = {
-  pending: { label: 'pending', color: 'text-primary' },
-  accepted: { label: 'confirmed', color: 'text-primary' },
-  declined: { label: 'declined', color: 'text-error' },
-  cancelled: { label: 'cancelled', color: 'text-text-muted' },
+const STATUS_META: Record<DateStatus, { label: string; chip: string }> = {
+  pending: { label: 'Pending', chip: 'bg-primary/10 text-primary' },
+  accepted: { label: 'Confirmed', chip: 'bg-primary/10 text-primary' },
+  declined: { label: 'Declined', chip: 'bg-error/10 text-error' },
+  cancelled: { label: 'Cancelled', chip: 'bg-border text-text-muted' },
 };
 
 interface DateCardProps {
@@ -65,15 +65,15 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
 
   return (
     <div
-      className={`bg-surface border border-border/60 rounded-2xl overflow-hidden transition-all ${
+      className={`bg-surface border border-border/60 rounded-2xl sm:rounded-3xl overflow-hidden transition-all ${
         faded ? 'opacity-40' : 'hover:border-border hover:shadow-sm'
       }`}
     >
       {/* Main content */}
-      <div className="p-4 flex gap-3 items-start">
+      <div className="p-4 sm:p-5 flex gap-3 items-start">
         <div
           onClick={() => openProfile(date.other_user_id)}
-          className="flex-shrink-0 mt-0.5 cursor-pointer"
+          className="shrink-0 mt-0.5 cursor-pointer"
         >
           <Avatar
             photoUrl={date.other_profile_picture_url || undefined}
@@ -86,22 +86,24 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
         <div className="flex-1 min-w-0">
           {/* Name + status */}
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm text-text truncate">
+            <p className="text-sm font-bold text-text truncate">
               {date.other_first_name} {date.other_last_name}
-              <span className="text-text-muted ml-1.5 text-xs">@{date.other_username}</span>
+              <span className="text-text-muted font-normal ml-1.5 text-xs">@{date.other_username}</span>
             </p>
-            <span className={`text-[11px] flex-shrink-0 ${meta.color}`}>{meta.label}</span>
+            <span className={`shrink-0 text-[0.65rem] font-black px-2 py-0.5 rounded-full ${meta.chip}`}>
+              {meta.label}
+            </span>
           </div>
 
           {/* Date & location */}
           <div className="mt-2 flex flex-col gap-1">
             <div className="flex items-center gap-1.5 text-xs text-text-muted">
-              <Calendar className="w-3 h-3 text-primary flex-shrink-0" />
+              <Calendar className="w-3 h-3 text-primary shrink-0" />
               <span className="text-text">{formatDate(date.scheduled_at)}</span>
               <span>·</span>
               <span>{formatTime(date.scheduled_at)}</span>
               {past && date.status === 'accepted' && (
-                <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-border text-text-muted">
+                <span className="ml-1 text-xs px-1.5 py-0.5 rounded-full bg-border text-text-muted">
                   past
                 </span>
               )}
@@ -109,15 +111,15 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
 
             {date.location && (
               <div className="flex items-center gap-1.5 text-xs text-text-muted">
-                <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
+                <MapPin className="w-3 h-3 text-primary shrink-0" />
                 <span className="truncate">{date.location}</span>
               </div>
             )}
           </div>
 
           {/* Role hint */}
-          <p className="mt-1.5 text-[10px] text-text-muted">
-            {isReceiver ? 'they proposed' : 'you proposed'}
+          <p className="mt-1.5 text-xs text-text-muted">
+            {isReceiver ? 'They proposed' : 'You proposed'}
           </p>
         </div>
       </div>

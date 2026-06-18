@@ -81,7 +81,6 @@ export function useBrowse() {
   );
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchBrowse(initialFilters.current, false, 1);
   }, [fetchBrowse]);
 

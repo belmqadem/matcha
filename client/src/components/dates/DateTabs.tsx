@@ -14,10 +14,10 @@ export default function DateTabs({ tab, setTab, dates, upcomingCount }: DateTabs
   const pendingCount = dates.filter((d) => d.status === 'pending').length;
 
   const TABS: { key: TabFilter; label: string; count?: number }[] = [
-    { key: 'upcoming', label: 'upcoming', count: upcomingCount },
-    { key: 'pending', label: 'pending', count: pendingCount },
-    { key: 'past', label: 'past' },
-    { key: 'all', label: 'all', count: dates.length },
+    { key: 'upcoming', label: 'Upcoming', count: upcomingCount },
+    { key: 'pending', label: 'Pending', count: pendingCount },
+    { key: 'past', label: 'Past' },
+    { key: 'all', label: 'All', count: dates.length },
   ];
 
   return (

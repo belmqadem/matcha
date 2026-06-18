@@ -103,7 +103,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="flex flex-col flex-1 relative overflow-hidden">
+    <div className="flex flex-col relative overflow-hidden">
       {(error || deepLinkError) && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-xs sm:text-sm font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl flex items-center gap-2 sm:gap-3 max-w-[90%] sm:max-w-sm animate-fade-in-up">
           <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
@@ -173,10 +173,10 @@ export default function ChatPage() {
       )}
 
       {/* Main Flex Layout */}
-      <div className="relative z-10 flex flex-1 overflow-hidden w-full max-w-7xl mx-auto p-2 sm:p-4 lg:p-6 gap-3 sm:gap-5">
+      <div className="relative z-10 flex flex-1 min-h-0 overflow-hidden w-full max-w-7xl mx-auto p-2 sm:p-4 lg:p-6 gap-3 sm:gap-5">
         {/* Sidebar */}
         <aside
-          className={`w-full md:w-80 lg:w-96 shrink-0 flex flex-col bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
+          className={`w-full md:w-80 lg:w-96 shrink-0 flex flex-col min-h-0 bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
             mobileView === 'chat' ? 'hidden md:flex' : 'flex'
           }`}
         >
@@ -197,7 +197,7 @@ export default function ChatPage() {
 
         {/* Thread Area */}
         <main
-          className={`flex-1 flex flex-col bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden min-w-0 ${
+          className={`flex-1 flex flex-col h-[calc(100vh-136px)] min-w-0 bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
             mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >

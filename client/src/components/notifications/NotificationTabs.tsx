@@ -29,7 +29,7 @@ export default function NotificationTabs({
             onClick={() => setActiveFilter(f.key)}
             className={`flex-shrink-0 snap-start flex items-center gap-1.5 sm:gap-2 px-4 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-black transition-all duration-150 whitespace-nowrap border active:scale-95 ${
               active
-                ? 'bg-primary text-surface border-primary shadow-md shadow-primary/20'
+                ? 'bg-primary text-white border-primary shadow-md shadow-primary/20'
                 : 'bg-surface text-text-muted border-border hover:bg-background'
             }`}
           >

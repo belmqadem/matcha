@@ -18,13 +18,16 @@ import {
   CheckCircle2,
   AlertTriangle,
   Navigation,
+  UserX,
 } from 'lucide-react';
 
 import { userService } from '@/services/userService';
+import { chatService } from '@/services/chatService';
 import { authService } from '@/services/authService';
 import { mapService } from '@/services/mapService';
 import { useAuth } from '@/context/AuthContext';
 import type { UserProfile, Visitor, Liker } from '@/types/user';
+import type { BlockedUser } from '@/types/chat';
 import type { FullUser } from '@/types/auth';
 
 import { CityName } from '@/components/ui/CityName';
@@ -33,7 +36,7 @@ import { EditFullProfileModal } from '@/components/profile/EditFullProfileModal'
 import { GENDERS, PREFERENCES, DEFAULT_PREFERENCE } from '@/components/profile/profileConstants';
 
 type ModalType = 'identity' | 'about' | 'tags' | 'location' | null;
-type Tab = 'profile' | 'visitors' | 'liked-by';
+type Tab = 'profile' | 'visitors' | 'liked-by' | 'blocked';
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -97,6 +100,9 @@ const MyProfilePage = () => {
   const [likedBy, setLikedBy] = useState<Liker[]>([]);
   const [likedByLoading, setLikedByLoading] = useState(false);
   const [likedByLoaded, setLikedByLoaded] = useState(false);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [blockedLoading, setBlockedLoading] = useState(false);
+  const [blockedLoaded, setBlockedLoaded] = useState(false);
 
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsError, setGpsError] = useState('');
@@ -153,7 +159,29 @@ const MyProfilePage = () => {
       };
       void fetchLikedBy();
     }
-  }, [activeTab, visitorsLoaded, visitorsLoading, likedByLoaded, likedByLoading]);
+    if (activeTab === 'blocked' && !blockedLoaded && !blockedLoading) {
+      const fetchBlocked = async () => {
+        setBlockedLoading(true);
+        try {
+          const data = await chatService.blocked();
+          setBlockedUsers(data.blocked);
+        } catch {
+          /* ignore */
+        }
+        setBlockedLoaded(true);
+        setBlockedLoading(false);
+      };
+      void fetchBlocked();
+    }
+  }, [
+    activeTab,
+    visitorsLoaded,
+    visitorsLoading,
+    likedByLoaded,
+    likedByLoading,
+    blockedLoaded,
+    blockedLoading,
+  ]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -191,6 +219,15 @@ const MyProfilePage = () => {
         setEditModal('location');
       },
     );
+  };
+
+  const handleUnblock = async (id: string) => {
+    try {
+      await userService.unblock(id);
+      setBlockedUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch {
+      /* ignore */
+    }
   };
 
   if (loading)
@@ -254,6 +291,10 @@ const MyProfilePage = () => {
     {
       id: 'liked-by',
       label: likedByLoaded ? `Liked by (${likedBy.length})` : 'Liked by',
+    },
+    {
+      id: 'blocked',
+      label: blockedLoaded ? `Blocked (${blockedUsers.length})` : 'Blocked',
     },
   ];
 
@@ -365,8 +406,8 @@ const MyProfilePage = () => {
                 <Flame size={11} /> {Math.round(fame)}/100
               </span>
               {completionPct === 100 ? (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-green-400">
-                  <CheckCircle2 size={13} /> Complete ✓
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
+                  <CheckCircle2 size={13} /> Complete
                 </span>
               ) : (
                 <div className="flex items-center gap-2 flex-1 min-w-30 max-w-45">
@@ -694,6 +735,62 @@ const MyProfilePage = () => {
                         username={l.username}
                         time={timeAgo(l.created_at)}
                       />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Blocked tab ── */}
+          {activeTab === 'blocked' && (
+            <div>
+              <h2 className={`${sectionLabel} flex items-center gap-1.5 mb-4`}>
+                <UserX size={12} /> Blocked accounts
+              </h2>
+              {blockedLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                </div>
+              ) : blockedUsers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <span className="text-4xl mb-3">🛡️</span>
+                  <p className="text-sm font-bold text-text-muted">No blocked accounts</p>
+                  <p className="text-xs text-text-muted mt-1">Users you block will appear here</p>
+                </div>
+              ) : (
+                <div className="bg-surface border border-border/80 rounded-2xl overflow-hidden divide-y divide-border/50">
+                  {blockedUsers.map((u) => {
+                    const ini = `${u.first_name?.[0] ?? ''}${u.last_name?.[0] ?? ''}`.toUpperCase();
+                    return (
+                      <div
+                        key={u.id}
+                        className="flex items-center gap-3 py-3 px-4 hover:bg-background transition-colors"
+                      >
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
+                          {u.profile_picture_url ? (
+                            <img
+                              src={u.profile_picture_url}
+                              alt={u.first_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-sm font-bold text-primary">{ini}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-text truncate">
+                            {u.first_name} {u.last_name}
+                          </p>
+                          <p className="text-xs text-text-muted">@{u.username}</p>
+                        </div>
+                        <button
+                          onClick={() => void handleUnblock(u.id)}
+                          className="shrink-0 text-xs font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-full transition-colors"
+                        >
+                          Unblock
+                        </button>
+                      </div>
                     );
                   })}
                 </div>

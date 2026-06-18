@@ -157,7 +157,7 @@ export default function ProfilePage() {
           <p className="text-sm font-bold text-text">{error || 'Profile not found.'}</p>
           <button
             onClick={() => navigate(-1)}
-            className="px-6 py-2 rounded-full bg-primary text-text text-xs font-bold uppercase tracking-wider cursor-pointer"
+            className="px-6 py-2 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-wider cursor-pointer"
           >
             Go Back
           </button>

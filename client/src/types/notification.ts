@@ -1,4 +1,3 @@
-// src/types/notification.ts
 export type NotificationType =
   | 'like'
   | 'visit'
@@ -14,14 +13,14 @@ export interface Notification {
   id: number;
   type: NotificationType;
   is_read: boolean;
+  count: number;
   created_at: string;
-  from_id: string;
-  from_username: string;
-  from_first_name: string;
-  from_last_name: string;
-  from_profile_picture_id: string | null;
+  from_id: string | null;
+  from_username: string | null;
+  from_first_name: string | null;
+  from_last_name: string | null;
+  from_profile_picture_id: number | null;
   from_profile_picture_url: string | null;
-  count?: number;
 }
 
 export interface NotificationsResponse {

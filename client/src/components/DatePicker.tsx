@@ -168,7 +168,7 @@ export default function DatePicker({ value, onChange, minDate, maxDate, classNam
                     setShowMonthPanel(false);
                   }}
                   className={`py-2 text-[12px] font-semibold rounded-xl transition-all cursor-pointer active:scale-95
-                    ${viewMonth === idx ? 'bg-primary text-text shadow-md shadow-primary/20' : 'text-text hover:bg-background'}
+                    ${viewMonth === idx ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-text hover:bg-background'}
                   `}
                 >
                   {m}
@@ -189,7 +189,7 @@ export default function DatePicker({ value, onChange, minDate, maxDate, classNam
                     setShowYearPanel(false);
                   }}
                   className={`py-1.5 text-[12px] font-semibold rounded-lg transition-all cursor-pointer active:scale-95
-                    ${viewYear === y ? 'bg-primary text-text shadow-md shadow-primary/20' : 'text-text hover:bg-background'}
+                    ${viewYear === y ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-text hover:bg-background'}
                   `}
                 >
                   {y}
@@ -234,7 +234,7 @@ export default function DatePicker({ value, onChange, minDate, maxDate, classNam
                         setOpen(false);
                       }}
                       className={`h-9 w-full rounded-lg text-[13px] font-medium transition-all active:scale-90
-                        ${isSel ? 'bg-primary text-text shadow-sm shadow-primary/20' : ''}
+                        ${isSel ? 'bg-primary text-white shadow-sm shadow-primary/20' : ''}
                         ${!isSel && isToday ? 'text-primary' : ''}
                         ${!isSel && !isDisabled ? 'hover:bg-background' : ''}
                         ${isDisabled ? 'text-text-muted opacity-40 cursor-not-allowed' : 'cursor-pointer'}

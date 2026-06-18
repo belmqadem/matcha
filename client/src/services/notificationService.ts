@@ -5,8 +5,16 @@ const BASE_URL = '/api/notifications';
 
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
-  const body = text ? JSON.parse(text) : {};
-  if (!res.ok) throw new Error(body.error ?? body.message ?? `Request failed (${res.status})`);
+  const body = text ? (JSON.parse(text) as Record<string, unknown>) : {};
+  if (!res.ok) {
+    const msg =
+      typeof body.error === 'string'
+        ? body.error
+        : typeof body.message === 'string'
+          ? body.message
+          : `Request failed (${res.status})`;
+    throw new Error(msg);
+  }
   return body as T;
 }
 
@@ -16,7 +24,12 @@ export const notificationService = {
       handleResponse<NotificationsResponse>(res),
     ),
 
-  markRead: (id: number) =>
+  markAllAsRead: () =>
+    fetch(`${BASE_URL}/read-all`, { method: 'PATCH', credentials: 'include' }).then((res) =>
+      handleResponse<{ updated: number }>(res),
+    ),
+
+  markOneAsRead: (id: number) =>
     fetch(`${BASE_URL}/${id}/read`, { method: 'PATCH', credentials: 'include' }).then((res) =>
       handleResponse<{ id: number }>(res),
     ),
@@ -24,10 +37,5 @@ export const notificationService = {
   deleteNotification: (id: number) =>
     fetch(`${BASE_URL}/${id}`, { method: 'DELETE', credentials: 'include' }).then((res) =>
       handleResponse<{ deleted: boolean }>(res),
-    ),
-
-  markAllRead: () =>
-    fetch(`${BASE_URL}/read-all`, { method: 'PATCH', credentials: 'include' }).then((res) =>
-      handleResponse<{ updated: number }>(res),
     ),
 };

@@ -5,14 +5,17 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from '@/context/AuthContext';
 import { chatService } from '@/services/chatService';
 import { notificationService } from '@/services/notificationService';
+import { dateService } from '@/services/dateService';
 
 interface SocketContextType {
   socket: Socket | null;
   unreadMessages: number;
   unreadNotifications: number;
+  pendingDates: number;
   markMessagesRead: () => void;
   markNotificationsRead: () => void;
-  decrementNotifications: () => void; // <-- ADD THIS
+  decrementNotifications: () => void;
+  clearPendingDates: () => void;
 }
 
 const SocketContext = createContext<SocketContextType | null>(null);
@@ -22,6 +25,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [pendingDates, setPendingDates] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -40,12 +44,17 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchInitialCounts = async () => {
       try {
-        const [msgData, notifData] = await Promise.all([
+        const [msgData, notifData, dateData] = await Promise.all([
           chatService.getUnreadCount(),
           notificationService.getNotifications(),
+          dateService.getDates(),
         ]);
         setUnreadMessages(msgData.unread || 0);
         setUnreadNotifications(notifData.unread_count || 0);
+        const inboundPending = dateData.dates.filter(
+          (d) => d.status === 'pending' && d.my_role === 'receiver',
+        ).length;
+        setPendingDates(inboundPending);
         hasFetchedInitial = true;
       } catch {
         // silent — will retry on reconnect
@@ -67,7 +76,15 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     newSocket.on('connect', onConnect);
     newSocket.on('disconnect', onDisconnect);
     newSocket.on('chat:receive', () => setUnreadMessages((prev) => prev + 1));
-    newSocket.on('notification:new', () => setUnreadNotifications((prev) => prev + 1));
+    newSocket.on(
+      'notification:new',
+      (data: { type: string; from: string; createdAt: string }) => {
+        setUnreadNotifications((prev) => prev + 1);
+        if (data.type === 'date_proposed') {
+          setPendingDates((prev) => prev + 1);
+        }
+      },
+    );
 
     return () => {
       newSocket.disconnect();
@@ -77,9 +94,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
   const markMessagesRead = () => setUnreadMessages(0);
   const markNotificationsRead = () => setUnreadNotifications(0);
-
-  // <-- ADD THIS FUNCTION
   const decrementNotifications = () => setUnreadNotifications((prev) => Math.max(0, prev - 1));
+  const clearPendingDates = () => setPendingDates(0);
 
   return (
     <SocketContext.Provider
@@ -87,9 +103,11 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
         socket,
         unreadMessages,
         unreadNotifications,
+        pendingDates,
         markMessagesRead,
         markNotificationsRead,
-        decrementNotifications, // <-- EXPORT IT
+        decrementNotifications,
+        clearPendingDates,
       }}
     >
       {children}
