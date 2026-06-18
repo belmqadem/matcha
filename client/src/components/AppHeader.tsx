@@ -143,6 +143,9 @@ export default function AppHeader() {
 
           {/* Right actions */}
           <div className="ml-auto flex items-center gap-2">
+            {/* Theme toggle */}
+            <ThemeToggle isDark={theme === 'dark'} onToggle={toggleTheme} />
+
             {/* Search link (desktop) */}
             <NavLink
               to="/search"
@@ -176,8 +179,15 @@ export default function AppHeader() {
               )}
             </div>
 
-            {/* Theme toggle */}
-            <ThemeToggle isDark={theme === 'dark'} onToggle={toggleTheme} />
+            {/* Logout button */}
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-full border border-border text-text-muted hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+              title="Sign out"
+            >
+              <LogOut size={15} strokeWidth={1.8} />
+            </button>
 
             {/* Avatar / profile dropdown (desktop only) */}
             {me && (
