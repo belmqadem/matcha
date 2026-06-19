@@ -41,7 +41,7 @@ export const PhotoGrid = ({ photos, onAddPhotos, onRemovePhoto }: PhotoGridProps
             />
 
             {i === 0 && (
-              <span className="absolute bottom-2 left-2 text-[0.65rem] sm:text-xs bg-primary text-surface px-2 sm:px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              <span className="absolute bottom-2 left-2 text-[0.65rem] sm:text-xs bg-primary text-white px-2 sm:px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                 Main
               </span>
             )}

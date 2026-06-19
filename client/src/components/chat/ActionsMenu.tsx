@@ -5,6 +5,7 @@ import { Ban, ShieldOff, UserMinus } from 'lucide-react';
 interface ActionsMenuProps {
   firstName: string;
   iBlocked: boolean;
+  isConnected: boolean;
   onBlock: () => void;
   onUnblock: () => void;
   onUnmatch: () => void;
@@ -14,6 +15,7 @@ interface ActionsMenuProps {
 export default function ActionsMenu({
   firstName,
   iBlocked,
+  isConnected,
   onBlock,
   onUnblock,
   onUnmatch,
@@ -58,18 +60,21 @@ export default function ActionsMenu({
         </button>
       )}
 
-      <div className="mx-4 my-1 border-t border-border" />
-
-      <button
-        onClick={() => {
-          onUnmatch();
-          onClose();
-        }}
-        className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-error hover:bg-error/10 transition-colors text-left active:bg-error/20"
-      >
-        <UserMinus className="w-4 h-4 sm:w-4 sm:h-4" />
-        Unmatch {firstName}
-      </button>
+      {!iBlocked && isConnected && (
+        <>
+          <div className="mx-4 my-1 border-t border-border" />
+          <button
+            onClick={() => {
+              onUnmatch();
+              onClose();
+            }}
+            className="w-full flex items-center gap-2 sm:gap-3 px-4 py-3 text-xs sm:text-sm font-bold text-error hover:bg-error/10 transition-colors text-left active:bg-error/20"
+          >
+            <UserMinus className="w-4 h-4 sm:w-4 sm:h-4" />
+            Unmatch {firstName}
+          </button>
+        </>
+      )}
     </div>
   );
 }

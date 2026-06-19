@@ -141,6 +141,7 @@ export default function ChatThread({
               <ActionsMenu
                 firstName={activeConvo.first_name}
                 iBlocked={isBlocked}
+                isConnected={!isBlocked && (activeConvo.is_connected ?? false)}
                 onBlock={() => onConfirmAction('block')}
                 onUnblock={() => onConfirmAction('unblock')}
                 onUnmatch={() => onConfirmAction('unmatch')}
