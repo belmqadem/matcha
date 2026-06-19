@@ -87,9 +87,13 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-bold text-text truncate">
               {date.other_first_name} {date.other_last_name}
-              <span className="text-text-muted font-normal ml-1.5 text-xs">@{date.other_username}</span>
+              <span className="text-text-muted font-normal ml-1.5 text-xs">
+                @{date.other_username}
+              </span>
             </p>
-            <span className={`shrink-0 text-[0.65rem] font-black px-2 py-0.5 rounded-full ${meta.chip}`}>
+            <span
+              className={`shrink-0 text-[0.65rem] font-black px-2 py-0.5 rounded-full ${meta.chip}`}
+            >
               {meta.label}
             </span>
           </div>
@@ -166,9 +170,9 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
           </button>
           <Link
             to={`/chat/${date.other_user_id}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full bg-primary text-surface text-xs font-bold shadow-premium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full bg-primary text-white text-xs font-bold shadow-premium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
           >
-            <MessageCircle className="w-3.5 h-3.5" /> chat
+            <MessageCircle className="w-3.5 h-3.5" /> Chat
           </Link>
         </div>
       )}

@@ -37,7 +37,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1 pb-12">
+    <div className="flex flex-col flex-1 items-center py-4 px-4">
       <div className="flex-1 flex flex-col md:flex-row gap-6 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
         {/* Filter sidebar */}
         <aside className={`md:w-72 shrink-0 ${filtersOpen ? 'block' : 'hidden md:block'}`}>

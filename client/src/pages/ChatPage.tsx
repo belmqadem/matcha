@@ -57,23 +57,17 @@ export default function ChatPage() {
     bottomRef,
   } = useMessages(activeConvo, onConvoUpdate);
 
-  const {
-    sending,
-    sendMessage,
-    handleBlock,
-    handleUnblock,
-    handleUnmatch,
-    handleProposeDate,
-  } = useChatActions({
-    activeConvo,
-    isBlocked,
-    isForbidden: forbidden,
-    appendOptimistic,
-    setConvos,
-    setBlockedUsers,
-    setActiveConvo,
-    setMobileView,
-  });
+  const { sending, sendMessage, handleBlock, handleUnblock, handleUnmatch, handleProposeDate } =
+    useChatActions({
+      activeConvo,
+      isBlocked,
+      isForbidden: forbidden,
+      appendOptimistic,
+      setConvos,
+      setBlockedUsers,
+      setActiveConvo,
+      setMobileView,
+    });
 
   useChatDeepLink({
     urlUserId,
@@ -101,7 +95,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="flex flex-col relative overflow-hidden">
+    <div className="flex flex-col flex-1 min-h-0 items-center py-6 px-4">
       {deepLinkError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-error text-surface text-xs sm:text-sm font-bold px-4 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl flex items-center gap-2 sm:gap-3 max-w-[90%] sm:max-w-sm animate-fade-in-up">
           <span className="truncate">{deepLinkError}</span>
@@ -167,7 +161,7 @@ export default function ChatPage() {
       )}
 
       {/* Main Flex Layout */}
-      <div className="relative z-10 flex flex-1 min-h-0 overflow-hidden w-full max-w-7xl mx-auto p-2 sm:p-4 lg:p-6 gap-3 sm:gap-5">
+      <div className="relative z-10 flex flex-1 min-h-0 overflow-hidden w-full max-w-7xl mx-auto gap-3 sm:gap-5">
         {/* Sidebar */}
         <aside
           className={`w-full md:w-80 lg:w-96 shrink-0 flex flex-col min-h-0 bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
@@ -191,7 +185,7 @@ export default function ChatPage() {
 
         {/* Thread Area */}
         <main
-          className={`flex-1 flex flex-col h-[calc(100vh-136px)] min-w-0 bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
+          className={`flex-1 flex flex-col min-h-0 min-w-0 bg-surface/95 backdrop-blur-md rounded-2xl sm:rounded-3xl border border-border shadow-sm overflow-hidden ${
             mobileView === 'list' ? 'hidden md:flex' : 'flex'
           }`}
         >

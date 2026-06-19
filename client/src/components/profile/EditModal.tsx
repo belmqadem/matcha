@@ -88,7 +88,7 @@ export function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className={`px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-surface hover:opacity-90 transition-opacity active:scale-95 ${danger ? 'bg-error' : 'bg-text'}`}
+            className={`px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl text-text hover:opacity-90 transition-opacity active:scale-95 ${danger ? 'bg-error' : 'bg-text'}`}
           >
             {confirmLabel}
           </button>

@@ -131,10 +131,10 @@ export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, i
         {/* LIKE color-wash */}
         {likeOpacity > 0 && (
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-green-500/20"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-primary/40"
             style={{ opacity: likeOpacity }}
           >
-            <span className="text-4xl font-black tracking-widest text-green-400 drop-shadow-lg">
+            <span className="text-4xl font-black tracking-widest text-white drop-shadow-lg">
               LIKE
             </span>
           </div>
@@ -143,10 +143,10 @@ export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, i
         {/* SKIP color-wash */}
         {passOpacity > 0 && (
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-error/20"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-text/20"
             style={{ opacity: passOpacity }}
           >
-            <span className="text-4xl font-black tracking-widest text-error drop-shadow-lg">
+            <span className="text-4xl font-black tracking-widest text-white drop-shadow-lg">
               SKIP
             </span>
           </div>

@@ -20,19 +20,26 @@ import MatchaLogo from '@/components/Logo';
 
 type BadgeKey = 'messages' | 'notifications' | 'dates';
 
-const MAIN_NAV = [
-  { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
+interface NavLinkProps {
+  to: string;
+  label: string;
+  Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  badge?: BadgeKey;
+}
+
+const MAIN_NAV: NavLinkProps[] = [
+  { to: '/browse', label: 'Browse', Icon: Compass },
   { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
-  { to: '/map', label: 'Map', Icon: MapPin, badge: undefined },
+  { to: '/map', label: 'Map', Icon: MapPin },
   { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: 'dates' as BadgeKey },
 ];
 
-const BOTTOM_NAV = [
-  { to: '/browse', label: 'Browse', Icon: Compass, badge: undefined },
-  { to: '/search', label: 'Search', Icon: Search, badge: undefined },
+const BOTTOM_NAV: NavLinkProps[] = [
+  { to: '/browse', label: 'Browse', Icon: Compass },
+  { to: '/search', label: 'Search', Icon: Search },
   { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
   { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: 'dates' as BadgeKey },
-  { to: '/profile/me', label: 'Profile', Icon: User, badge: undefined },
+  { to: '/profile/me', label: 'Profile', Icon: User },
 ];
 
 export default function AppHeader() {
@@ -109,10 +116,10 @@ export default function AppHeader() {
   return (
     <>
       {/* ── Top header ── */}
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur-md">
+      <header className="absolute top-0 z-50 w-full border-b border-border bg-surface/80 backdrop-blur-md">
         <div className="grid grid-cols-2 lg:grid-cols-3 items-center h-14 px-4 md:px-6 gap-4">
           {/* Logo */}
-          <MatchaLogo size="sm" showText={true} />
+          <MatchaLogo size="sm" />
 
           {/* Desktop nav (center) */}
           <nav className="hidden lg:flex items-center justify-center gap-1">
@@ -260,7 +267,7 @@ export default function AppHeader() {
       </header>
 
       {/* ── Mobile bottom tab bar ── */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-surface/95 backdrop-blur-md border-t border-border flex items-stretch h-16">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-surface/80 backdrop-blur-md border-t border-border flex items-stretch h-16">
         {BOTTOM_NAV.map(({ to, label, Icon, badge }) => {
           const active = isActive(to);
           const count = getBadge(badge);

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Bell, CalendarHeart } from 'lucide-react';
+import { Plus, Bell } from 'lucide-react';
 import { useDates } from '@/hooks/useDates';
 import { isPast } from '@/utils/dateUtils';
 import DateTabs, { type TabFilter } from '@/components/dates/DateTabs';
@@ -51,14 +51,13 @@ export default function DatesPage() {
   ];
 
   return (
-    <div className="flex flex-col flex-1 pb-10">
-      <div className="max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-10">
-
+    <div className="flex flex-col flex-1 items-center py-4 px-4">
+      <div className="max-w-2xl mx-auto w-full">
         {/* Page header */}
         <div className="flex items-end justify-between mb-6 sm:mb-8">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
-              <CalendarHeart className="w-5 h-5 text-primary" />
+              {/* <CalendarHeart className="w-5 h-5 text-primary" /> */}
               <h1 className="text-2xl sm:text-3xl font-black text-text tracking-tight">
                 Your Dates
               </h1>
@@ -143,7 +142,10 @@ export default function DatesPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((d, i) => (
-              <div key={d.id} className={`animate-fade-in-up ${DELAY_CLASSES[Math.min(i, DELAY_CLASSES.length - 1)]}`}>
+              <div
+                key={d.id}
+                className={`animate-fade-in-up ${DELAY_CLASSES[Math.min(i, DELAY_CLASSES.length - 1)]}`}
+              >
                 <DateCard date={d} onUpdate={fetchDates} />
               </div>
             ))}

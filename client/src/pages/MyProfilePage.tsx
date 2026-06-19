@@ -301,7 +301,7 @@ const MyProfilePage = () => {
   const sectionLabel = 'text-xs font-black text-text-muted uppercase tracking-wider';
 
   return (
-    <div className="flex flex-col flex-1 animate-fade-in-up">
+    <div className="flex flex-col flex-1">
       {editModal && (
         <EditFullProfileModal
           user={user}

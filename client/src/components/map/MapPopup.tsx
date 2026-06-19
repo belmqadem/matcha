@@ -73,11 +73,11 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
           onClick={onLike}
           className={`flex-1 py-2.5 rounded-full text-[12px] font-bold transition-all border flex items-center justify-center gap-1.5 hover:scale-[1.03] active:scale-[0.97] cursor-pointer ${
             isLiked
-              ? 'bg-primary border-primary text-surface shadow-md shadow-primary/20'
+              ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
               : 'bg-transparent border-primary text-primary hover:bg-primary/10'
           }`}
         >
-          <Heart size={14} className={isLiked ? 'fill-surface text-surface' : 'text-primary'} />
+          <Heart size={14} className={isLiked ? 'fill-white text-white' : 'text-primary'} />
           {isLiked ? 'Liked' : 'Like'}
         </button>
         <button

@@ -89,7 +89,7 @@ export default function ProposeModal({ onClose, onSuccess }: ProposeModalProps) 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-text/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-5"
+      className="fixed inset-0 bg-text/40 backdrop-blur-sm z-[9999] flex items-start justify-center p-5"
     >
       <div
         onClick={(e) => e.stopPropagation()}

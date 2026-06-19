@@ -41,7 +41,7 @@ const Input = ({
           text-text text-sm sm:text-base
           outline-none
           pt-5 pb-1.5
-					pr-10 md:pr-14
+					pr-10
           caret-primary
           placeholder:text-transparent
         "
@@ -66,7 +66,7 @@ const Input = ({
     </div>
 
     {showPasswordIcon && (
-      <div className="absolute right-2 sm:right-4 z-10 flex items-center justify-center">
+      <div className="absolute right-0 z-10 flex items-center justify-center">
         {showPasswordIcon}
       </div>
     )}
