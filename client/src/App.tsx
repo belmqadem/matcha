@@ -90,7 +90,7 @@ const App = () => {
                   <Route path="/dates" element={<DatesPage />} />
                   <Route path="/profile/me" element={<MyProfilePage />} />
                   {/* <Route path="/profile/edit" element={<EditProfilePage />} /> */}
-                  <Route path="/profile/:id" element={<ProfilePage />} />
+                  <Route path="/profile/:username" element={<ProfilePage />} />
                 </Route>
               </Route>
             </Route>

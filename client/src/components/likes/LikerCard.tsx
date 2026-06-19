@@ -24,7 +24,7 @@ export function LikerCard({ liker, index }: LikerCardProps) {
 
   return (
     <div
-      onClick={() => openProfile(liker.id)}
+      onClick={() => openProfile(liker.username)}
       className="group relative flex flex-col bg-surface rounded-2xl border border-border overflow-hidden cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
     >
       {/* Photo / avatar */}

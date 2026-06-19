@@ -81,7 +81,7 @@ export default function MapPopup({ user, isLiked, onClose, onLike }: MapPopupPro
           {isLiked ? 'Liked' : 'Like'}
         </button>
         <button
-          onClick={() => openProfile(user.id)}
+          onClick={() => openProfile(user.username)}
           className="flex-1 py-2.5 rounded-full text-[12px] font-bold bg-text text-surface hover:bg-text/90 transition-all hover:scale-[1.03] active:scale-[0.97] text-center flex items-center justify-center shadow-md cursor-pointer"
         >
           View Profile

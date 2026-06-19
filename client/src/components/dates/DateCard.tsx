@@ -71,7 +71,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
       {/* Main content */}
       <div className="p-4 sm:p-5 flex gap-3 items-start">
         <div
-          onClick={() => openProfile(date.other_user_id)}
+          onClick={() => openProfile(date.other_username)}
           className="shrink-0 mt-0.5 cursor-pointer"
         >
           <Avatar

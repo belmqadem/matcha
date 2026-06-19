@@ -54,7 +54,7 @@ export function UserCard({ user, onLike, onUnlike }: UserCardProps) {
 
   return (
     <div
-      onClick={() => openProfile(user.id)}
+      onClick={() => openProfile(user.username)}
       className="relative rounded-3xl overflow-hidden bg-surface border border-border shadow-md cursor-pointer group select-none"
     >
       {/* Photo */}

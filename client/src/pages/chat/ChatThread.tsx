@@ -94,7 +94,7 @@ export default function ChatThread({
           </button>
 
           <button
-            onClick={() => openProfile(activeConvo.id)}
+            onClick={() => openProfile(activeConvo.username)}
             className="flex items-center gap-2 sm:gap-3 cursor-pointer group min-w-0 text-left"
           >
             <Avatar

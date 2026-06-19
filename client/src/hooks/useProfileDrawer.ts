@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 export function useProfileDrawer() {
   const navigate = useNavigate();
 
-  const openProfile = (id: string | number) => {
-    navigate(`/profile/${String(id)}`);
+  const openProfile = (username: string) => {
+    navigate(`/profile/${username}`);
   };
 
   const closeProfile = () => {

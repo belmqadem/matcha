@@ -66,7 +66,7 @@ export const getBlocked = async (req, res) => {
 export const getPublicProfile = async (req, res) => {
   const profile = await profileService.getPublicProfile(
     req.user.id,
-    req.params.id,
+    req.params.username,
   );
   return res.status(200).json({ profile });
 };

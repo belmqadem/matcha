@@ -142,7 +142,7 @@ export function SwipeStack({
                 isTop={isTop}
                 onLike={() => handleLike(user)}
                 onPass={handlePass}
-                onViewProfile={() => onViewProfile(user.id)}
+                onViewProfile={() => onViewProfile(user.username)}
                 exitX={isTop && exitX !== null ? exitX : undefined}
                 style={{ height: '100%' }}
               />

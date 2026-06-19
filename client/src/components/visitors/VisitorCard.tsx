@@ -25,7 +25,7 @@ export function VisitorCard({ visitor, index }: VisitorCardProps) {
 
   return (
     <div
-      onClick={() => openProfile(visitor.id)}
+      onClick={() => openProfile(visitor.username)}
       className="group flex flex-col bg-surface rounded-2xl sm:rounded-3xl border border-border overflow-hidden cursor-pointer hover:shadow-xl hover:-translate-y-1 transition-all duration-200"
     >
       <div className="relative aspect-[4/5] bg-background flex-shrink-0 overflow-hidden">

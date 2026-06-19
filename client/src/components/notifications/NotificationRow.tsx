@@ -111,13 +111,13 @@ export default function NotificationRow({ notification, onRead, onDelete }: Noti
     if (!notification.is_read) {
       await onRead(notification.id);
     }
-    const { type, from_id } = notification;
+    const { type, from_id, from_username } = notification;
     if (type === 'message' && from_id) {
       navigate(`/chat/${from_id}`);
     } else if (type.startsWith('date_')) {
       navigate('/dates');
-    } else if (from_id && type !== 'unlike') {
-      openProfile(from_id);
+    } else if (from_username && type !== 'unlike') {
+      openProfile(from_username);
     }
   };
 

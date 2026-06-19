@@ -23,7 +23,7 @@ import { PhotoGalleryViewer } from '@/components/profile/PhotoGalleryViewer';
 import { GENDERS, PREFERENCES } from '@/components/profile/profileConstants';
 
 export default function ProfilePage() {
-  const { id } = useParams<{ id: string }>();
+  const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState<PublicProfile | null>(null);
@@ -50,7 +50,7 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (!id) return;
+    if (!username) return;
     let aborted = false;
 
     const fetchProfile = async () => {
@@ -60,7 +60,7 @@ export default function ProfilePage() {
       setActivePhoto(0);
 
       try {
-        const p = await userService.getPublicProfile(id);
+        const p = await userService.getPublicProfile(username);
         if (aborted) return;
         if (p.is_blocked) {
           setError('User not found.');
@@ -84,7 +84,7 @@ export default function ProfilePage() {
     return () => {
       aborted = true;
     };
-  }, [id]);
+  }, [username]);
 
   const handleLike = async () => {
     if (!profile) return;
