@@ -169,7 +169,7 @@ export default function DateCard({ date, onUpdate }: DateCardProps) {
             cancel
           </button>
           <Link
-            to={`/chat/${date.other_user_id}`}
+            to={`/chat/${date.other_username}`}
             className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full bg-primary text-white text-xs font-bold shadow-premium transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
           >
             <MessageCircle className="w-3.5 h-3.5" /> Chat

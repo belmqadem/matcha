@@ -5,17 +5,17 @@ import { chatService } from '@/services/chatService';
 import type { Conversation } from '@/types/chat';
 
 interface UseChatDeepLinkParams {
-  urlUserId?: string;
+  urlUsername?: string;
   convos: Conversation[];
-  loading: boolean; // ← add this
+  loading: boolean;
   setConvos: React.Dispatch<React.SetStateAction<Conversation[]>>;
   setActiveConvo: (_convo: Conversation) => void;
   setMobileView: (_view: 'list' | 'chat') => void;
-  onError: (_msg: string) => void; // ← add this (already in ChatPage.tsx)
+  onError: (_msg: string) => void;
 }
 
 export function useChatDeepLink({
-  urlUserId,
+  urlUsername,
   convos,
   loading,
   setConvos,
@@ -24,29 +24,28 @@ export function useChatDeepLink({
   onError,
 }: UseChatDeepLinkParams) {
   const navigate = useNavigate();
-  const didRun = useRef(false); // ← run once per urlUserId
+  const didRun = useRef(false);
 
   useEffect(() => {
     didRun.current = false;
-  }, [urlUserId]);
+  }, [urlUsername]);
 
   useEffect(() => {
-    if (!urlUserId || loading || didRun.current) return; // ← wait for load, not convos.length
+    if (!urlUsername || loading || didRun.current) return;
 
     didRun.current = true;
 
-    const target = convos.find((c) => String(c.id) === String(urlUserId));
+    const target = convos.find((c) => c.username === urlUsername);
     if (target) {
       setActiveConvo(target);
       setMobileView('chat');
       return;
     }
 
-    // Not in list — fetch and create stub
+    // Not in list — fetch by username and create stub
     chatService
-      .getUser(urlUserId)
+      .getUser(urlUsername)
       .then((userData) => {
-        // Handle response structure: { profile: { user: {...} } }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = userData as any;
         const u = data.profile?.user ?? data.user ?? data;
@@ -85,5 +84,5 @@ export function useChatDeepLink({
         onError('Could not open that conversation.');
         navigate('/chat');
       });
-  }, [urlUserId, loading, convos, navigate, setActiveConvo, setMobileView, setConvos, onError]);
+  }, [urlUsername, loading, convos, navigate, setActiveConvo, setMobileView, setConvos, onError]);
 }

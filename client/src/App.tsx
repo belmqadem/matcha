@@ -83,7 +83,7 @@ const App = () => {
                   <Route path="/browse" element={<BrowsePage />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/chat" element={<ChatPage />} />
-                  <Route path="/chat/:id" element={<ChatPage />} />
+                  <Route path="/chat/:username" element={<ChatPage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
                   {/* <Route path="/visitors" element={<VisitorsPage />} /> */}
                   <Route path="/map" element={<MapPage />} />

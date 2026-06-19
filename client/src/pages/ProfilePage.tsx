@@ -422,7 +422,7 @@ export default function ProfilePage() {
                 <div className="flex gap-3">
                   {profile.is_connected ? (
                     <button
-                      onClick={() => navigate(`/chat/${profile.id}`)}
+                      onClick={() => navigate(`/chat/${profile.username}`)}
                       className="w-full py-2.5 rounded-full bg-primary text-white hover:bg-primary-hover font-bold uppercase tracking-wider text-xs flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 shadow-md shadow-primary/20"
                     >
                       Send Message

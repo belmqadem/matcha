@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, SlidersHorizontal, X } from 'lucide-react';
 import { useSearch } from '@/hooks/useSearch';
 import { FilterSidebar } from '@/components/search/FilterSidebar';
 import { ActiveChips } from '@/components/search/ActiveChips';
@@ -54,6 +54,22 @@ export default function SearchPage() {
 
         {/* Results */}
         <div className="flex-1 min-w-0">
+          {/* Mobile filter toggle */}
+          <div className="flex items-center justify-between mb-4 md:hidden">
+            <button
+              onClick={() => setFiltersOpen((o) => !o)}
+              className="relative flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-bold text-text-muted hover:text-primary hover:border-primary transition-colors"
+            >
+              {filtersOpen ? <X className="w-4 h-4" /> : <SlidersHorizontal className="w-4 h-4" />}
+              {filtersOpen ? 'Hide filters' : 'Filters'}
+              {!filtersOpen && activeCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-primary text-white text-[10px] font-black flex items-center justify-center">
+                  {activeCount}
+                </span>
+              )}
+            </button>
+          </div>
+
           {/* Active filter chips */}
           <ActiveChips filters={filters} onRemove={removeFilter} />
 

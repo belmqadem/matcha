@@ -17,7 +17,7 @@ import type { Conversation, ConfirmAction, SidebarTab } from '@/types/chat';
 
 export default function ChatPage() {
   const { user: me } = useAuth();
-  const { id: urlUserId } = useParams<{ id: string }>();
+  const { username: urlUsername } = useParams<{ username: string }>();
   const navigate = useNavigate();
 
   const [activeConvo, setActiveConvo] = useState<Conversation | null>(null);
@@ -70,7 +70,7 @@ export default function ChatPage() {
     });
 
   useChatDeepLink({
-    urlUserId,
+    urlUsername,
     convos,
     loading,
     setConvos,
@@ -82,7 +82,7 @@ export default function ChatPage() {
   const selectConvo = (convo: Conversation) => {
     setActiveConvo(convo);
     setMobileView('chat');
-    navigate(`/chat/${convo.id}`, { replace: true });
+    navigate(`/chat/${convo.username}`, { replace: true });
   };
 
   const handleBack = () => {
