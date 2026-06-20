@@ -131,7 +131,7 @@ export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, i
         {/* LIKE color-wash */}
         {likeOpacity > 0 && (
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-primary/40"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-primary/40 rounded-3xl"
             style={{ opacity: likeOpacity }}
           >
             <span className="text-4xl font-black tracking-widest text-white drop-shadow-lg">
@@ -143,7 +143,7 @@ export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, i
         {/* SKIP color-wash */}
         {passOpacity > 0 && (
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-text/20"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-text/40 rounded-3xl"
             style={{ opacity: passOpacity }}
           >
             <span className="text-4xl font-black tracking-widest text-white drop-shadow-lg">

@@ -176,7 +176,7 @@ export default function ProfilePage() {
     PREFERENCES.find((p) => p.value === profile.sexual_preference)?.label ?? 'Bisexual';
 
   return (
-    <div className="flex flex-col flex-1 animate-fade-in-up">
+    <div className="flex flex-col flex-1 animate-fade-in-up pb-16">
       {confirm === 'block' && (
         <ConfirmModal
           title="Block this user?"
