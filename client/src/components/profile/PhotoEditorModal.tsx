@@ -1,9 +1,9 @@
 // src/components/profile/PhotoEditorModal.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
-import { RotateCw, Wand2, Loader2 } from 'lucide-react';
+import { RotateCw, Wand2, Loader2, X } from 'lucide-react';
 import type { Photo } from '@/types/user';
-import { EditModal } from './EditModal';
 import { userService } from '@/services/userService';
 
 interface PhotoEditorModalProps {
@@ -12,67 +12,54 @@ interface PhotoEditorModalProps {
   onSave: (_updatedPhoto: Photo) => void;
 }
 
-const FILTERS = ['grayscale', 'sepia', 'blur', 'brighten', 'darken'] as const;
-type Filter = (typeof FILTERS)[number];
+const FILTERS = [
+  { id: 'grayscale' as const, label: 'B&W' },
+  { id: 'sepia' as const, label: 'Sepia' },
+  { id: 'blur' as const, label: 'Blur' },
+  { id: 'brighten' as const, label: 'Brighten' },
+  { id: 'darken' as const, label: 'Darken' },
+];
 
-/** Map our filter names to CSS filter strings */
-function buildCssFilter(filter: Filter | '', intensity: number): string {
-  // intensity 0-100 → 0-1 (or 0-2 for brighten/darken)
+type Filter = (typeof FILTERS)[number]['id'];
+
+function buildCssFilter(filter: Filter, intensity: number): string {
   const t = intensity / 100;
   switch (filter) {
-    case 'grayscale':
-      return `grayscale(${t})`;
-    case 'sepia':
-      return `sepia(${t})`;
-    // blur: max 8px at full intensity
-    case 'blur':
-      return `blur(${(t * 8).toFixed(1)}px)`;
-    // brighten: 1 = no change, 2 = full bright
-    case 'brighten':
-      return `brightness(${1 + t})`;
-    // darken: 1 = no change, 0 = full dark
-    case 'darken':
-      return `brightness(${1 - t * 0.9})`;
-    default:
-      return '';
+    case 'grayscale': return `grayscale(${t})`;
+    case 'sepia': return `sepia(${t})`;
+    case 'blur': return `blur(${(t * 8).toFixed(1)}px)`;
+    case 'brighten': return `brightness(${1 + t})`;
+    case 'darken': return `brightness(${1 - t * 0.9})`;
   }
 }
 
 export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalProps) {
   const [activeFilter, setActiveFilter] = useState<Filter | ''>('');
   const [intensity, setIntensity] = useState(50);
-  const [localRotation, setLocalRotation] = useState(0);
+  const [rotation, setRotation] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  const serverSrc = photo.url;
-  const previewFilter = activeFilter ? buildCssFilter(activeFilter, intensity) : '';
+  const isDirty = rotation !== 0 || activeFilter !== '';
 
-  const handleRotateClick = () => {
-    setLocalRotation((r) => (r + 90) % 360);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const handleReset = () => {
+    setRotation(0);
+    setActiveFilter('');
+    setIntensity(50);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      let currentPhoto = photo;
-
-      // 1. If rotated, apply rotation first
-      if (localRotation !== 0) {
-        currentPhoto = await userService.rotatePhoto(photo.id, localRotation);
-      }
-
-      // 2. If filter selected, apply filter on top of the rotated version
-      if (activeFilter !== '') {
-        currentPhoto = await userService.applyFilter(photo.id, activeFilter, intensity);
-      }
-
-      // 3. Cache-bust the final image URL
-      const bustedPhoto = {
-        ...currentPhoto,
-        url: `${currentPhoto.url.split('?')[0]}?t=${Date.now()}`,
-      };
-
-      onSave(bustedPhoto);
+      let current = photo;
+      if (rotation !== 0) current = await userService.rotatePhoto(photo.id, rotation);
+      if (activeFilter !== '') current = await userService.applyFilter(photo.id, activeFilter, intensity);
+      onSave({ ...current, url: `${current.url.split('?')[0]}?t=${Date.now()}` });
       onClose();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Failed to save photo.');
@@ -81,119 +68,170 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
     }
   };
 
-  // Combine local rotation + filter preview into a single CSS transform/filter.
   const imgStyle = {
-    transform: `rotate(${localRotation}deg)`,
-    filter: previewFilter || 'none',
+    transform: `rotate(${rotation}deg)`,
+    filter: activeFilter ? buildCssFilter(activeFilter as Filter, intensity) : 'none',
+    transition: 'transform 0.35s cubic-bezier(0.34,1.56,0.64,1), filter 0.2s ease',
   } as React.CSSProperties;
 
-  const isDirty = localRotation !== 0 || activeFilter !== '';
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-text/50 backdrop-blur-sm p-4 overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="bg-surface w-full max-w-xl rounded-3xl shadow-2xl animate-fade-in-up overflow-hidden my-auto">
 
-  return (
-    <EditModal title="Edit Photo" onClose={onClose} maxWidth="max-w-sm sm:max-w-md md:max-w-2xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
-        {/* Preview Container */}
-        <div className="relative mx-auto flex aspect-[4/5] w-full max-w-[240px] items-center justify-center overflow-hidden rounded-2xl border border-border bg-background shadow-inner sm:max-w-none">
-          <img
-            src={serverSrc}
-            alt="Preview"
-            className="h-full w-full object-cover transition-all duration-300"
-            style={imgStyle}
-          />
-          {saving && (
-            <div className="absolute inset-0 flex items-center justify-center bg-text/30">
-              <Loader2 className="h-8 w-8 animate-spin text-surface" />
-            </div>
-          )}
-        </div>
-
-        {/* Controls Container */}
-        <div className="flex w-full flex-col gap-5">
-          {/* Rotate */}
-          <div className="flex items-center justify-between rounded-2xl border border-border bg-background/50 p-3 sm:p-4">
-            <span className="text-[0.65rem] font-bold uppercase tracking-widest text-text-muted sm:text-xs">
-              Transform
-            </span>
-            <button
-              type="button"
-              onClick={handleRotateClick}
-              disabled={saving}
-              className="flex cursor-pointer items-center gap-1.5 rounded-xl border-2 border-border bg-surface px-3 py-1.5 text-xs font-bold transition-all hover:border-primary hover:text-primary active:scale-95 disabled:opacity-50"
-            >
-              <RotateCw className="h-3.5 w-3.5" /> Rotate 90°
-            </button>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-background/50 p-3 sm:p-4">
-            <span className="flex items-center gap-1 text-[0.65rem] font-bold uppercase tracking-widest text-text-muted sm:text-xs">
-              <Wand2 className="h-3 w-3" /> Filters
-            </span>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-              {FILTERS.map((f) => (
-                <button
-                  key={f}
-                  type="button"
-                  onClick={() => setActiveFilter(f === activeFilter ? '' : f)}
-                  disabled={saving}
-                  className={`shrink-0 cursor-pointer rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-all capitalize active:scale-95 ${
-                    activeFilter === f
-                      ? 'bg-primary border-primary text-surface'
-                      : 'bg-surface border-border text-text-muted hover:text-text'
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Intensity slider + Apply — only shown when a filter is selected */}
-          {activeFilter && (
-            <div className="flex animate-fade-in-up flex-col gap-3 rounded-2xl border border-border bg-background/50 p-3 sm:p-4">
-              <div className="flex items-center justify-between text-[0.65rem] font-bold text-text-muted sm:text-xs">
-                <span>Intensity</span>
-                <span>{intensity}%</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={intensity}
-                onChange={(e) => setIntensity(parseInt(e.target.value))}
-                className="w-full cursor-pointer accent-primary"
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h3 className="text-base font-black text-text">Edit Photo</h3>
+          <div className="flex items-center gap-2">
+            {isDirty && (
+              <button
+                type="button"
+                onClick={handleReset}
                 disabled={saving}
-              />
-            </div>
-          )}
-
-          {/* Save & Cancel buttons */}
-          <div className="mt-2 flex gap-3 border-t border-border pt-4">
+                className="text-[11px] font-bold text-text-muted hover:text-text px-3 py-1.5 rounded-full hover:bg-background transition-colors active:scale-95 disabled:opacity-40"
+              >
+                Reset
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 cursor-pointer rounded-xl border-2 border-border bg-surface py-2.5 text-xs font-bold text-text-muted transition-all hover:bg-background active:scale-95 disabled:opacity-50"
+              className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-text-muted hover:bg-background transition-colors active:scale-95 disabled:opacity-40"
             >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving || !isDirty}
-              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-xs font-bold text-surface shadow-md transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…
-                </>
-              ) : (
-                'Save Changes'
-              )}
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
+
+        {/* Body */}
+        <div className="flex flex-col sm:flex-row">
+
+          {/* Preview — square container with object-contain so rotation never clips */}
+          <div className="sm:w-[45%] bg-black/90 flex items-center justify-center p-5 sm:p-6">
+            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-black/60">
+              <img
+                src={photo.url}
+                alt="Preview"
+                className="absolute inset-0 w-full h-full object-contain"
+                style={imgStyle}
+              />
+              {saving && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-2xl">
+                  <Loader2 className="w-8 h-8 animate-spin text-white" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="sm:w-[55%] p-5 sm:p-6 flex flex-col gap-5 border-t sm:border-t-0 sm:border-l border-border">
+
+            {/* Rotate */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2.5">
+                Transform
+              </p>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setRotation((r) => (r + 90) % 360)}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background text-xs font-bold text-text hover:border-primary hover:text-primary transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <RotateCw className="w-3.5 h-3.5" />
+                  Rotate 90°
+                </button>
+                {rotation !== 0 && (
+                  <span className="text-xs font-black text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
+                    {rotation}°
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Filters */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2.5 flex items-center gap-1.5">
+                <Wand2 className="w-3 h-3" /> Filters
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {FILTERS.map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      const next = f.id === activeFilter ? '' : f.id;
+                      setActiveFilter(next);
+                      if (next !== '' && next !== activeFilter) setIntensity(50);
+                    }}
+                    disabled={saving}
+                    className={`py-2 px-2 rounded-xl border text-xs font-bold transition-all active:scale-95 disabled:opacity-50 ${
+                      activeFilter === f.id
+                        ? 'bg-primary border-primary text-white shadow-sm shadow-primary/20'
+                        : 'bg-background border-border text-text-muted hover:border-primary/40 hover:text-text'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Intensity — only when filter active */}
+            {activeFilter && (
+              <div className="animate-fade-in-up">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                    Intensity
+                  </p>
+                  <span className="text-xs font-black text-primary">{intensity}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={intensity}
+                  onChange={(e) => setIntensity(parseInt(e.target.value))}
+                  className="w-full cursor-pointer accent-primary"
+                  disabled={saving}
+                />
+                <div className="flex justify-between text-[9px] text-text-muted mt-1 font-bold">
+                  <span>None</span>
+                  <span>Full</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center gap-3 px-5 py-4 border-t border-border">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="flex-1 py-2.5 rounded-xl border border-border bg-background text-sm font-bold text-text-muted hover:text-text transition-all active:scale-95 disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || !isDirty}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-sm shadow-primary/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-40"
+          >
+            {saving
+              ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
+              : 'Apply Changes'
+            }
+          </button>
+        </div>
+
       </div>
-    </EditModal>
+    </div>,
+    document.body,
   );
 }

@@ -244,7 +244,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                   fileRef.current?.click();
                 }
               }}
-              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group min-h-[150px]aspect-4/3 w-full ${
+              className={`relative rounded-2xl sm:rounded-[1.8rem] overflow-hidden bg-background/50 border-2 transition-all duration-300 group aspect-[4/3] w-full ${
                 isOver ? 'border-primary ring-2 ring-primary/20 scale-[1.01]' : 'border-border'
               } ${!photo ? 'cursor-pointer hover:border-primary' : 'cursor-grab active:cursor-grabbing'}`}
             >
@@ -261,8 +261,8 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                     </span>
                   )}
 
-                  <div className="absolute inset-0 bg-text/0 group-hover:bg-text/30 transition-all duration-300">
-                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex gap-1 sm:gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute inset-0 sm:group-hover:bg-text/30 transition-all duration-300">
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex gap-1 sm:gap-1.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       {photo.id !== user.profile_picture_id && (
                         <button
                           type="button"
@@ -271,9 +271,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                             handleSetMain(photo.id);
                           }}
                           title="Set as main"
-                          className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-surface flex items-center justify-center text-primary cursor-pointer shadow-sm hover:scale-110 transition-transform"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface/95 flex items-center justify-center text-primary cursor-pointer shadow-sm hover:scale-110 transition-transform"
                         >
-                          <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-current" />
+                          <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                         </button>
                       )}
                       <button
@@ -283,9 +283,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                           setSelectedPhoto(photo);
                         }}
                         title="Edit photo"
-                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-primary transition-transform"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface/95 flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-primary transition-transform"
                       >
-                        <Wand2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                       <button
                         type="button"
@@ -293,9 +293,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                           e.stopPropagation();
                           handleDelete(photo.id);
                         }}
-                        className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-error transition-transform"
+                        className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-surface/95 flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-error transition-transform"
                       >
-                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                        <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   </div>
@@ -317,7 +317,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
         })()}
 
         {/* Thumbnail Row (Slots 1-4) */}
-        <div className="grid grid-cols-4 gap-3 w-full shrink-0">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full shrink-0">
           {slots.slice(1).map((photo, index) => {
             const i = index + 1;
             const isOver = dragOverIndex === i;
@@ -355,8 +355,8 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                       </span>
                     )}
 
-                    <div className="absolute inset-0 bg-text/0 group-hover:bg-text/30 transition-all duration-300">
-                      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute inset-0 sm:group-hover:bg-text/30 transition-all duration-300">
+                      <div className="absolute top-1 right-1 flex gap-0.5 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                         {photo.id !== user.profile_picture_id && (
                           <button
                             type="button"
@@ -365,9 +365,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                               handleSetMain(photo.id);
                             }}
                             title="Set as main"
-                            className="w-5 h-5 rounded-full bg-surface flex items-center justify-center text-primary cursor-pointer shadow-sm hover:scale-110 transition-transform"
+                            className="w-6 h-6 rounded-full bg-surface/95 flex items-center justify-center text-primary cursor-pointer shadow-sm hover:scale-110 transition-transform"
                           >
-                            <Star className="w-2.5 h-2.5 fill-current" />
+                            <Star className="w-3 h-3 fill-current" />
                           </button>
                         )}
                         <button
@@ -377,9 +377,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                             setSelectedPhoto(photo);
                           }}
                           title="Edit photo"
-                          className="w-5 h-5 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-primary transition-transform"
+                          className="w-6 h-6 rounded-full bg-surface/95 flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-primary transition-transform"
                         >
-                          <Wand2 className="w-2.5 h-2.5" />
+                          <Wand2 className="w-3 h-3" />
                         </button>
                         <button
                           type="button"
@@ -387,9 +387,9 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                             e.stopPropagation();
                             handleDelete(photo.id);
                           }}
-                          className="w-5 h-5 rounded-full bg-surface flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-error transition-transform"
+                          className="w-6 h-6 rounded-full bg-surface/95 flex items-center justify-center text-text cursor-pointer shadow-sm hover:scale-110 hover:text-error transition-transform"
                         >
-                          <X className="w-2.5 h-2.5" />
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     </div>

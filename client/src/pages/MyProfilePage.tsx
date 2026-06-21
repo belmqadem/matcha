@@ -25,6 +25,7 @@ import { chatService } from '@/services/chatService';
 import { authService } from '@/services/authService';
 // import { mapService } from '@/services/mapService';
 import { useAuth } from '@/context/AuthContext';
+import { useProfileDrawer } from '@/hooks/useProfileDrawer';
 import type { UserProfile, Visitor, Liker } from '@/types/user';
 import type { BlockedUser } from '@/types/chat';
 import type { FullUser } from '@/types/auth';
@@ -55,15 +56,21 @@ function PersonRow({
   name,
   username,
   time,
+  onClick,
 }: {
   src: string | null;
   initials: string;
   name: string;
   username: string;
   time: string;
+  onClick: () => void;
 }) {
   return (
-    <div className="flex items-center gap-3 py-3 px-4 hover:bg-background rounded-2xl transition-colors">
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full flex items-center gap-3 py-3 px-4 hover:bg-background transition-colors text-left active:scale-[0.99]"
+    >
       <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
         {src ? (
           <img src={src} alt={name} className="w-full h-full object-cover" />
@@ -76,13 +83,14 @@ function PersonRow({
         <p className="text-xs text-text-muted">@{username}</p>
       </div>
       <span className="text-xs text-text-muted shrink-0">{time}</span>
-    </div>
+    </button>
   );
 }
 
 const MyProfilePage = () => {
   const navigate = useNavigate();
   const { logout: ctxLogout, updateUser } = useAuth();
+  const { openProfile } = useProfileDrawer();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -662,6 +670,7 @@ const MyProfilePage = () => {
                         name={`${v.first_name} ${v.last_name}`}
                         username={v.username}
                         time={timeAgo(v.visited_at)}
+                        onClick={() => openProfile(v.username)}
                       />
                     );
                   })}
@@ -697,6 +706,7 @@ const MyProfilePage = () => {
                         name={`${l.first_name} ${l.last_name}`}
                         username={l.username}
                         time={timeAgo(l.created_at)}
+                        onClick={() => openProfile(l.username)}
                       />
                     );
                   })}
@@ -730,23 +740,29 @@ const MyProfilePage = () => {
                         key={u.id}
                         className="flex items-center gap-3 py-3 px-4 hover:bg-background transition-colors"
                       >
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
-                          {u.profile_picture_url ? (
-                            <img
-                              src={u.profile_picture_url}
-                              alt={u.first_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-sm font-bold text-primary">{ini}</span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-text truncate">
-                            {u.first_name} {u.last_name}
-                          </p>
-                          <p className="text-xs text-text-muted">@{u.username}</p>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openProfile(u.username)}
+                          className="flex items-center gap-3 min-w-0 flex-1 text-left active:scale-[0.99]"
+                        >
+                          <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 border border-primary/20 shrink-0 flex items-center justify-center">
+                            {u.profile_picture_url ? (
+                              <img
+                                src={u.profile_picture_url}
+                                alt={u.first_name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-bold text-primary">{ini}</span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-semibold text-text truncate">
+                              {u.first_name} {u.last_name}
+                            </p>
+                            <p className="text-xs text-text-muted">@{u.username}</p>
+                          </div>
+                        </button>
                         <button
                           onClick={() => void handleUnblock(u.id)}
                           className="shrink-0 text-xs font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/10 px-3 py-1.5 rounded-full transition-colors"
