@@ -41,8 +41,8 @@ services:
         condition: service_healthy
       matcha_redis:
         condition: service_healthy
-      matcha_mailhog:
-        condition: service_started
+      # matcha_mailhog:
+      #   condition: service_started
     env_file:
       - .env
     # environment:
@@ -79,13 +79,13 @@ services:
       - /app/node_modules
     command: npm run dev -- --host
 
-  matcha_mailhog:
-    image: mailhog/mailhog:latest
-    container_name: matcha_mailhog
-    restart: unless-stopped
-    ports:
-      - "1025:1025" # SMTP — your server sends emails here
-      - "8025:8025" # Web UI — open http://localhost:8025 to read emails
+  # matcha_mailhog:
+  #   image: mailhog/mailhog:latest
+  #   container_name: matcha_mailhog
+  #   restart: unless-stopped
+  #   ports:
+  #     - "1025:1025" # SMTP — your server sends emails here
+  #     - "8025:8025" # Web UI — open http://localhost:8025 to read emails
 
   matcha_nginx:
     image: nginx:alpine
@@ -95,8 +95,10 @@ services:
       - "8080:80"
       - "8443:443"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certs:/etc/nginx/certs:ro
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/scripts/generate-cert.sh:/generate-cert.sh:ro
+      - nginx_certs:/etc/nginx/certs
+    entrypoint: ["/bin/sh", "/generate-cert.sh"]
     depends_on:
       matcha_server:
         condition: service_healthy
@@ -107,3 +109,4 @@ volumes:
   postgres_data:
   redis_data:
   uploads:
+  nginx_certs:
