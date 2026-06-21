@@ -43,19 +43,27 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
         width: 100%;
         max-width: 560px;
         padding-top: 24px;
-				padding-left: 12px;
-				padding-right: 12px;
+        padding-left: 12px;
+        padding-right: 12px;
       }
       .card {
         background: #ffffff;
         border: 1px solid #e5e7eb;
         padding: 24px;
       }
+      .card a {
+        color: #fff;
+        text-decoration: none;
+      }
       .logo {
         margin: 0 0 24px;
+      }
+      .logo-text {
         font-size: 24px;
         font-weight: 700;
         letter-spacing: -0.02em;
+        color: #1f2937;
+        line-height: 1;
       }
       .logo .brand-mark {
         color: #e94057;
@@ -92,7 +100,9 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
   <body>
     <div class="container">
       <div class="card">
-        <h1 class="logo"><span class="brand-mark">m</span>atcha<span class="brand-mark">.</span></h1>
+        <div class="logo">
+          <span class="logo-text">matcha<span class="brand-mark">.</span></span>
+        </div>
         <h2>${heading}</h2>
         <p>${message}</p>
         <p>
@@ -102,7 +112,7 @@ const createEmailHtml = ({ heading, message, actionText, actionUrl }) => `
         <div class="footer">
           <p>Thanks,</p>
           <p>The Matcha Team</p>
-          <p><a href="${CLIENT_URL}">matcha.1337.dev</a></p>
+          <p><a href="${CLIENT_URL}">matcha.1337.ma</a></p>
         </div>
       </div>
     </div>
