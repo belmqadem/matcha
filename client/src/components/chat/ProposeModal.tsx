@@ -22,7 +22,10 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!date) { toast.error('Please select a date.'); return; }
+    if (!date) {
+      toast.error('Please select a date.');
+      return;
+    }
     const selectedDate = new Date(
       date.getFullYear(),
       date.getMonth(),
@@ -31,7 +34,10 @@ export default function ProposeModal({ receiverName, onClose, onPropose }: Propo
       minute,
       0,
     );
-    if (selectedDate <= new Date()) { toast.error('Scheduled time must be in the future.'); return; }
+    if (selectedDate <= new Date()) {
+      toast.error('Scheduled time must be in the future.');
+      return;
+    }
 
     setLoading(true);
     try {

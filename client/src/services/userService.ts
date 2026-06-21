@@ -203,5 +203,4 @@ export const userService = {
       body: JSON.stringify({ reason: 'fake account' }),
       credentials: 'include',
     }).then((res) => handleResponse<void>(res)),
-
 };

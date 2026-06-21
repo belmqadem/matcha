@@ -34,8 +34,12 @@ export function useSwipe({
   // Keep latest callbacks in refs so onEnd doesn't need them as deps
   const onSwipeRightRef = useRef(onSwipeRight);
   const onSwipeLeftRef = useRef(onSwipeLeft);
-  useEffect(() => { onSwipeRightRef.current = onSwipeRight; }, [onSwipeRight]);
-  useEffect(() => { onSwipeLeftRef.current = onSwipeLeft; }, [onSwipeLeft]);
+  useEffect(() => {
+    onSwipeRightRef.current = onSwipeRight;
+  }, [onSwipeRight]);
+  useEffect(() => {
+    onSwipeLeftRef.current = onSwipeLeft;
+  }, [onSwipeLeft]);
 
   const onMove = useCallback(
     (clientX: number) => {

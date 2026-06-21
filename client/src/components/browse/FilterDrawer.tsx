@@ -28,9 +28,7 @@ const labelCls = 'block text-[0.65rem] font-bold tracking-widest uppercase text-
 
 function inputCls(hasError: boolean) {
   return `w-full bg-background border-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-text placeholder-text-muted outline-none transition-all ${
-    hasError
-      ? 'border-error focus:border-error'
-      : 'border-transparent focus:border-primary'
+    hasError ? 'border-error focus:border-error' : 'border-transparent focus:border-primary'
   }`;
 }
 
@@ -64,7 +62,14 @@ function validate(f: BrowseFilters): FilterErrors {
   return errs;
 }
 
-export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onReset }: FilterDrawerProps) {
+export function FilterDrawer({
+  isOpen,
+  onClose,
+  filters,
+  onChange,
+  onApply,
+  onReset,
+}: FilterDrawerProps) {
   const [errors, setErrors] = useState<FilterErrors>({});
 
   const set = <K extends keyof BrowseFilters>(key: K, value: BrowseFilters[K]) => {
@@ -127,7 +132,6 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-6">
-
           {/* Sort by */}
           <div>
             <span className={labelCls}>Sort by</span>
@@ -171,7 +175,9 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
           {/* Max distance */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className={labelCls} style={{ marginBottom: 0 }}>Max distance</span>
+              <span className={labelCls} style={{ marginBottom: 0 }}>
+                Max distance
+              </span>
               <span className="text-xs font-bold text-primary">
                 {filters.max_km != null ? `${filters.max_km} km` : 'Any'}
               </span>
@@ -219,15 +225,15 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
                 className={inputCls(!!errors.age)}
               />
             </div>
-            {errors.age && (
-              <p className="mt-1.5 text-xs text-error font-medium">{errors.age}</p>
-            )}
+            {errors.age && <p className="mt-1.5 text-xs text-error font-medium">{errors.age}</p>}
           </div>
 
           {/* Fame range */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className={labelCls} style={{ marginBottom: 0 }}>Fame range</span>
+              <span className={labelCls} style={{ marginBottom: 0 }}>
+                Fame range
+              </span>
               <span className={`text-xs font-bold ${errors.fame ? 'text-error' : 'text-primary'}`}>
                 {filters.fame_min ?? 0} – {filters.fame_max ?? 100}
               </span>
@@ -250,9 +256,7 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
                 className={`w-full ${errors.fame ? 'accent-error' : 'accent-primary'}`}
               />
             </div>
-            {errors.fame && (
-              <p className="mt-1.5 text-xs text-error font-medium">{errors.fame}</p>
-            )}
+            {errors.fame && <p className="mt-1.5 text-xs text-error font-medium">{errors.fame}</p>}
           </div>
 
           {/* Tags */}
@@ -265,9 +269,7 @@ export function FilterDrawer({ isOpen, onClose, filters, onChange, onApply, onRe
               onChange={(e) => set('tags', e.target.value || undefined)}
               className={inputCls(!!errors.tags)}
             />
-            {errors.tags && (
-              <p className="mt-1.5 text-xs text-error font-medium">{errors.tags}</p>
-            )}
+            {errors.tags && <p className="mt-1.5 text-xs text-error font-medium">{errors.tags}</p>}
           </div>
         </div>
 

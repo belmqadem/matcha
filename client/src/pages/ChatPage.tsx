@@ -43,11 +43,13 @@ export default function ChatPage() {
           String(c.id) === String(convoId) ? { ...c, ...patch } : c,
         );
         if (!patch.last_message_at) return updated;
-        return updated.slice().sort(
-          (a, b) =>
-            new Date(b.last_message_at || 0).getTime() -
-            new Date(a.last_message_at || 0).getTime(),
-        );
+        return updated
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.last_message_at || 0).getTime() -
+              new Date(a.last_message_at || 0).getTime(),
+          );
       });
     },
     [setConvos],

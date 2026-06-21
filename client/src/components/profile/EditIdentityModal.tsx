@@ -64,60 +64,62 @@ export function EditIdentityModal({ user, onUpdate, onClose }: Props) {
 
   return (
     <>
-    {showEmailConfirm && (
-      <ConfirmModal
-        title="Change email?"
-        message="Changing your email will sign you out. You will need to verify your new email before logging back in."
-        confirmLabel="Continue"
-        danger
-        onConfirm={() => {
-          setShowEmailConfirm(false);
-          void doSave(true);
-        }}
-        onClose={() => setShowEmailConfirm(false)}
-      />
-    )}
-    <EditModal title="Edit Identity" onClose={onClose}>
-      <div className="flex flex-col gap-4 sm:gap-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {(['first_name', 'last_name'] as const).map((f) => (
-            <div key={f}>
-              <label className={labelCls}>{f === 'first_name' ? 'First name' : 'Last name'}</label>
-              <input
-                value={form[f]}
-                onChange={(e) => setForm((p) => ({ ...p, [f]: e.target.value }))}
-                className={inputCls}
-              />
-            </div>
-          ))}
-        </div>
+      {showEmailConfirm && (
+        <ConfirmModal
+          title="Change email?"
+          message="Changing your email will sign you out. You will need to verify your new email before logging back in."
+          confirmLabel="Continue"
+          danger
+          onConfirm={() => {
+            setShowEmailConfirm(false);
+            void doSave(true);
+          }}
+          onClose={() => setShowEmailConfirm(false)}
+        />
+      )}
+      <EditModal title="Edit Identity" onClose={onClose}>
+        <div className="flex flex-col gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {(['first_name', 'last_name'] as const).map((f) => (
+              <div key={f}>
+                <label className={labelCls}>
+                  {f === 'first_name' ? 'First name' : 'Last name'}
+                </label>
+                <input
+                  value={form[f]}
+                  onChange={(e) => setForm((p) => ({ ...p, [f]: e.target.value }))}
+                  className={inputCls}
+                />
+              </div>
+            ))}
+          </div>
 
-        <div>
-          <label className={labelCls}>Username</label>
-          <input
-            value={form.username}
-            onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
-            className={inputCls}
-          />
-        </div>
+          <div>
+            <label className={labelCls}>Username</label>
+            <input
+              value={form.username}
+              onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
 
-        <div>
-          <label className={labelCls}>Email</label>
-          <input
-            value={form.email}
-            type="email"
-            onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-            className={inputCls}
-          />
-          <p className="text-[0.65rem] sm:text-xs font-bold text-error/80 mt-2 flex items-center gap-1.5 animate-fade-in-up">
-            <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Changing your email requires
-            re-verification.
-          </p>
-        </div>
+          <div>
+            <label className={labelCls}>Email</label>
+            <input
+              value={form.email}
+              type="email"
+              onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
+              className={inputCls}
+            />
+            <p className="text-[0.65rem] sm:text-xs font-bold text-error/80 mt-2 flex items-center gap-1.5 animate-fade-in-up">
+              <Shield className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Changing your email requires
+              re-verification.
+            </p>
+          </div>
 
-        <SaveBar saving={saving} error="" onSave={handleSave} onCancel={onClose} />
-      </div>
-    </EditModal>
+          <SaveBar saving={saving} error="" onSave={handleSave} onCancel={onClose} />
+        </div>
+      </EditModal>
     </>
   );
 }

@@ -25,11 +25,16 @@ type Filter = (typeof FILTERS)[number]['id'];
 function buildCssFilter(filter: Filter, intensity: number): string {
   const t = intensity / 100;
   switch (filter) {
-    case 'grayscale': return `grayscale(${t})`;
-    case 'sepia': return `sepia(${t})`;
-    case 'blur': return `blur(${(t * 8).toFixed(1)}px)`;
-    case 'brighten': return `brightness(${1 + t})`;
-    case 'darken': return `brightness(${1 - t * 0.9})`;
+    case 'grayscale':
+      return `grayscale(${t})`;
+    case 'sepia':
+      return `sepia(${t})`;
+    case 'blur':
+      return `blur(${(t * 8).toFixed(1)}px)`;
+    case 'brighten':
+      return `brightness(${1 + t})`;
+    case 'darken':
+      return `brightness(${1 - t * 0.9})`;
   }
 }
 
@@ -42,7 +47,9 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
   const isDirty = rotation !== 0 || activeFilter !== '';
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onClose]);
@@ -58,7 +65,8 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
     try {
       let current = photo;
       if (rotation !== 0) current = await userService.rotatePhoto(photo.id, rotation);
-      if (activeFilter !== '') current = await userService.applyFilter(photo.id, activeFilter, intensity);
+      if (activeFilter !== '')
+        current = await userService.applyFilter(photo.id, activeFilter, intensity);
       onSave({ ...current, url: `${current.url.split('?')[0]}?t=${Date.now()}` });
       onClose();
     } catch (e) {
@@ -77,10 +85,11 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
   return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-text/50 backdrop-blur-sm p-4 overflow-y-auto"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="bg-surface w-full max-w-xl rounded-3xl shadow-2xl animate-fade-in-up overflow-hidden my-auto">
-
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h3 className="text-base font-black text-text">Edit Photo</h3>
@@ -108,7 +117,6 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
 
         {/* Body */}
         <div className="flex flex-col sm:flex-row">
-
           {/* Preview — square container with object-contain so rotation never clips */}
           <div className="sm:w-[45%] bg-black/90 flex items-center justify-center p-5 sm:p-6">
             <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-black/60">
@@ -128,7 +136,6 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
 
           {/* Controls */}
           <div className="sm:w-[55%] p-5 sm:p-6 flex flex-col gap-5 border-t sm:border-t-0 sm:border-l border-border">
-
             {/* Rotate */}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2.5">
@@ -223,13 +230,15 @@ export function PhotoEditorModal({ photo, onClose, onSave }: PhotoEditorModalPro
             disabled={saving || !isDirty}
             className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-sm font-bold shadow-sm shadow-primary/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-40"
           >
-            {saving
-              ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
-              : 'Apply Changes'
-            }
+            {saving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…
+              </>
+            ) : (
+              'Apply Changes'
+            )}
           </button>
         </div>
-
       </div>
     </div>,
     document.body,

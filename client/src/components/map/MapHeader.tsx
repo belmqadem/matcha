@@ -30,7 +30,9 @@ export default function MapHeader({
           <div className="min-w-0">
             <h1 className="text-sm font-black text-text leading-none">Nearby</h1>
             <p className="text-[11px] text-text-muted mt-0.5 leading-none">
-              {loading ? 'Loading…' : `${userCount} ${userCount === 1 ? 'person' : 'people'} around you`}
+              {loading
+                ? 'Loading…'
+                : `${userCount} ${userCount === 1 ? 'person' : 'people'} around you`}
             </p>
           </div>
         </div>
@@ -40,9 +42,7 @@ export default function MapHeader({
           disabled={gpsLoading}
           className="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-bold bg-primary text-white hover:scale-[1.03] active:scale-[0.97] transition-all disabled:opacity-60 shrink-0 shadow-sm shadow-primary/20"
         >
-          {gpsLoading
-            ? <Loader2 size={13} className="animate-spin" />
-            : <Navigation size={13} />}
+          {gpsLoading ? <Loader2 size={13} className="animate-spin" /> : <Navigation size={13} />}
           <span className="hidden sm:inline">{gpsLoading ? 'Locating…' : 'Use GPS'}</span>
           <span className="sm:hidden">{gpsLoading ? '…' : 'GPS'}</span>
         </button>

@@ -34,7 +34,9 @@ export const mapService = {
       handleResponse<{ liked: false; connected: false }>(res),
     ),
 
-  forwardGeocode: async (city: string): Promise<{ lat: number; lng: number; displayName: string } | null> => {
+  forwardGeocode: async (
+    city: string,
+  ): Promise<{ lat: number; lng: number; displayName: string } | null> => {
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`,

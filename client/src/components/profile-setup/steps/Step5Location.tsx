@@ -114,7 +114,9 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
       {/* Divider */}
       <div className="flex items-center gap-3 my-4">
         <div className="flex-1 h-px bg-border" />
-        <span className="text-xs text-text-muted font-medium uppercase tracking-wider">or enter manually</span>
+        <span className="text-xs text-text-muted font-medium uppercase tracking-wider">
+          or enter manually
+        </span>
         <div className="flex-1 h-px bg-border" />
       </div>
 

@@ -1,3 +1,6 @@
+export type SortKey = 'fame' | 'age' | 'distance' | 'tags';
+export type OrderKey = 'asc' | 'desc';
+
 export interface SearchFilters {
   age_min: string;
   age_max: string;
@@ -7,10 +10,9 @@ export interface SearchFilters {
   max_km: string;
   city: string;
   tags: string;
+  sort?: SortKey;
+  order?: OrderKey;
 }
-
-export type SortKey = 'fame' | 'age' | 'distance' | 'tags';
-export type OrderKey = 'asc' | 'desc';
 
 export const DEFAULT_FILTERS: SearchFilters = {
   age_min: '',

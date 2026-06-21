@@ -26,7 +26,15 @@ function getPhoto(user: BrowseUser): string | null {
   return (main ?? user.photos[0])?.url ?? null;
 }
 
-export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, isTop }: SwipeCardProps) {
+export function SwipeCard({
+  user,
+  onLike,
+  onPass,
+  onViewProfile,
+  exitX,
+  style,
+  isTop,
+}: SwipeCardProps) {
   const [imgErr, setImgErr] = useState(false);
   const [busy, setBusy] = useState(false);
   const clickStartX = useRef(0);
@@ -168,9 +176,7 @@ export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, i
             <p className="text-white/80 text-sm flex items-center gap-1 mb-3 drop-shadow">
               <MapPin className="w-4 h-4 shrink-0" />
               {distanceLabel}
-              {distanceLabel && user.location_city && (
-                <span className="opacity-50 mx-0.5">·</span>
-              )}
+              {distanceLabel && user.location_city && <span className="opacity-50 mx-0.5">·</span>}
               {user.location_city}
             </p>
           )}
@@ -198,7 +204,7 @@ export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, i
             onClick={handlePass}
             disabled={busy}
             aria-label="Pass"
-						title='Pass'
+            title="Pass"
             className="flex h-13 w-13 items-center justify-center rounded-full border-2 border-border bg-surface text-text-muted shadow-md transition-all duration-150 hover:border-error hover:text-error  hover:shadow-lg active:scale-90 disabled:opacity-40"
           >
             <X className="w-6 h-6" />
@@ -209,7 +215,7 @@ export function SwipeCard({ user, onLike, onPass, onViewProfile, exitX, style, i
             onClick={handleLike}
             disabled={busy}
             aria-label="Like"
-						title='Like'
+            title="Like"
             className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white shadow-[0_6px_28px_rgba(233,64,87,0.45)] transition-all duration-150 hover:scale-110 hover:shadow-[0_8px_36px_rgba(233,64,87,0.65)] active:scale-95 disabled:opacity-40"
           >
             {busy ? (

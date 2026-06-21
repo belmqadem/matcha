@@ -76,15 +76,12 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     newSocket.on('connect', onConnect);
     newSocket.on('disconnect', onDisconnect);
     newSocket.on('chat:receive', () => setUnreadMessages((prev) => prev + 1));
-    newSocket.on(
-      'notification:new',
-      (data: { type: string; from: string; createdAt: string }) => {
-        setUnreadNotifications((prev) => prev + 1);
-        if (data.type === 'date_proposed') {
-          setPendingDates((prev) => prev + 1);
-        }
-      },
-    );
+    newSocket.on('notification:new', (data: { type: string; from: string; createdAt: string }) => {
+      setUnreadNotifications((prev) => prev + 1);
+      if (data.type === 'date_proposed') {
+        setPendingDates((prev) => prev + 1);
+      }
+    });
 
     return () => {
       newSocket.disconnect();

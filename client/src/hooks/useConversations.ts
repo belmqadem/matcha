@@ -66,11 +66,13 @@ export function useConversations(activeConvoId: string | null): UseConversations
               }
             : c,
         );
-        return updated.slice().sort(
-          (a, b) =>
-            new Date(b.last_message_at || 0).getTime() -
-            new Date(a.last_message_at || 0).getTime(),
-        );
+        return updated
+          .slice()
+          .sort(
+            (a, b) =>
+              new Date(b.last_message_at || 0).getTime() -
+              new Date(a.last_message_at || 0).getTime(),
+          );
       });
     };
 

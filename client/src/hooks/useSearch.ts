@@ -123,9 +123,7 @@ export function useSearch() {
   const like = useCallback(async (id: string) => {
     const res = await userService.like(id);
     setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u,
-      ),
+      prev.map((u) => (u.id === id ? { ...u, liked_by_me: true, is_connected: res.connected } : u)),
     );
     return { connected: res.connected };
   }, []);

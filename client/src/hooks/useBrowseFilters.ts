@@ -22,7 +22,9 @@ export function useBrowseFilters() {
     setApplied({ ...filters });
     try {
       localStorage.setItem(BROWSE_FILTERS_KEY, JSON.stringify(filters));
-    } catch { /* storage unavailable */ }
+    } catch {
+      /* storage unavailable */
+    }
   };
 
   const reset = () => {
@@ -30,7 +32,9 @@ export function useBrowseFilters() {
     setApplied(DEFAULT_BROWSE_FILTERS);
     try {
       localStorage.removeItem(BROWSE_FILTERS_KEY);
-    } catch { /* storage unavailable */ }
+    } catch {
+      /* storage unavailable */
+    }
   };
 
   const activeCount = (Object.keys(applied) as (keyof BrowseFilters)[]).filter(
