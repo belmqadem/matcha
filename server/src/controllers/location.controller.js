@@ -12,12 +12,12 @@ export const setManual = async (req, res) => {
 };
 
 export const setFromGps = async (req, res) => {
-  const { latitude, longitude } = req.body;
+  const { latitude, longitude, location_city } = req.body;
   const location = await locationService.setLocationFromCoords(
     req.user.id,
     latitude,
     longitude,
-    null,
+    location_city ?? null,
   );
   return res.status(200).json(location);
 };

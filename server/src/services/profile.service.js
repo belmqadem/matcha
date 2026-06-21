@@ -706,7 +706,16 @@ export const getBlocked = async (userId) => {
   return rows;
 };
 
-export const getPublicProfile = async (viewerId, targetId) => {
+export const getPublicProfile = async (viewerId, usernameOrId) => {
+  const lookupRes = await query(
+    "SELECT id FROM users WHERE username = $1 OR id::text = $1",
+    [usernameOrId],
+  );
+  if (!lookupRes.rows.length) {
+    throw new AppError("User not found", HTTP_STATUS.NOT_FOUND);
+  }
+  const targetId = lookupRes.rows[0].id;
+
   const isSelf = viewerId === targetId;
   let isBlockedByMe = false;
 

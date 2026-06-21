@@ -1,7 +1,6 @@
 import { Router } from "express";
 import authenticate from "../middleware/authenticate.js";
 import validate from "../middleware/validate.js";
-import validateUUID from "../middleware/validateUUID.js";
 import * as usersController from "../controllers/users.controller.js";
 import * as profileController from "../controllers/profile.controller.js";
 import { updateUserSchema } from "../validators/users.validator.js";
@@ -19,9 +18,8 @@ router.patch(
 );
 
 router.get(
-  "/:id",
+  "/:username",
   authenticate,
-  validateUUID(),
   asyncHandler(profileController.getPublicProfile),
 );
 

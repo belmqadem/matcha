@@ -99,11 +99,43 @@ Example index.css:
 @import "tailwindcss";
 
 :root {
+  /* Default is Dark Theme - Elevated Deep Space */
+  --color-primary: #ec737e;
+  --color-background: #080910;
+  --color-surface: #12141f;
+  --color-text: #f0f1f8;
+  --color-text-muted: #9ba3c2;
+  --color-border: #2a2d3e;
+  --body-gradient: linear-gradient(
+    135deg,
+    #080910 0%,
+    #0e1018 25%,
+    #160d1e 50%,
+    #0e1018 75%,
+    #080910 100%
+  );
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
+}
+
+.light-theme {
+  /* Light Theme Override */
   --color-primary: #e94057;
-  --color-background: #f7f7f7;
+  --color-background: #fff5f7;
+  --color-surface: #ffffff;
   --color-text: #1a1a2e;
-  --color-text-muted: #6b7280;
-  --color-border: #e5e7eb;
+  --color-text-muted: #8c6a70;
+  --color-border: #ffdbe0;
+  --body-gradient: linear-gradient(
+    135deg,
+    #fff9fa 0%,
+    #fff0f3 25%,
+    #ffe6eb 50%,
+    #fff0f3 75%,
+    #fff9fa 100%
+  );
+  --color-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
 }
 ```
 

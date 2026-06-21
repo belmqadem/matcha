@@ -1,0 +1,28 @@
+// src/components/profile-setup/steps/Step2Preference.tsx
+import type { ProfileFormData } from '../../../types/profileSetup';
+import { PREFERENCES } from '../profileSetupConstants';
+import { OptionButton } from '../../ui/OptionButton';
+
+interface Step2PreferenceProps {
+  form: ProfileFormData;
+  setForm: React.Dispatch<React.SetStateAction<ProfileFormData>>;
+}
+
+export const Step2Preference = ({ form, setForm }: Step2PreferenceProps) => {
+  return (
+    <div className="flex flex-col gap-3 sm:gap-4 w-full">
+      <p className="text-xs sm:text-sm text-text-muted mb-2 italic">
+        Who are you interested in meeting?
+      </p>
+
+      {PREFERENCES.map(({ value, label }) => (
+        <OptionButton
+          key={value}
+          label={label}
+          selected={form.sexual_preference === value}
+          onClick={() => setForm((p) => ({ ...p, sexual_preference: value }))}
+        />
+      ))}
+    </div>
+  );
+};

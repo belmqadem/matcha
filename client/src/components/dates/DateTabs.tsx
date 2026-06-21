@@ -1,0 +1,52 @@
+// src/components/dates/DateTabs.tsx
+import type { DateEntry } from '@/types/date';
+
+export type TabFilter = 'upcoming' | 'pending' | 'past' | 'all';
+
+interface DateTabsProps {
+  tab: TabFilter;
+  setTab: (_t: TabFilter) => void;
+  dates: DateEntry[];
+  upcomingCount: number;
+}
+
+export default function DateTabs({ tab, setTab, dates, upcomingCount }: DateTabsProps) {
+  const pendingCount = dates.filter((d) => d.status === 'pending').length;
+
+  const TABS: { key: TabFilter; label: string; count?: number }[] = [
+    { key: 'upcoming', label: 'Upcoming', count: upcomingCount },
+    { key: 'pending', label: 'Pending', count: pendingCount },
+    { key: 'past', label: 'Past' },
+    { key: 'all', label: 'All', count: dates.length },
+  ];
+
+  return (
+    <div className="flex gap-1 p-1.5 rounded-full bg-surface border border-border/60">
+      {TABS.map((t) => {
+        const active = tab === t.key;
+        return (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex-1 flex items-center justify-center gap-1 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 cursor-pointer ${
+              active
+                ? 'bg-primary text-white shadow-md'
+                : 'text-text-muted hover:bg-background hover:text-text'
+            }`}
+          >
+            {t.label}
+            {t.count !== undefined && t.count > 0 && (
+              <span
+                className={`text-[10px] min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center ${
+                  active ? 'bg-surface/20 text-surface' : 'bg-border text-text-muted'
+                }`}
+              >
+                {t.count > 99 ? '99+' : t.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

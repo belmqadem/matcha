@@ -22,5 +22,6 @@ export const gpsLocationSchema = z
   .object({
     latitude: latSchema,
     longitude: lngSchema,
+    location_city: z.string().max(LOCATION_CITY_MAX_LENGTH).optional(),
   })
   .strict();

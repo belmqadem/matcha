@@ -62,9 +62,10 @@ server/coverage/
 # ========================
 # Uploads (user files — never commit)
 # ========================
+uploads/
 server/uploads/
 
 # ========================
-# Certificates 
+# Certificates
 # ========================
 certs/
