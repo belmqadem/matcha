@@ -3,6 +3,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { MapPin, Loader2, Shield } from 'lucide-react';
 import { userService } from '@/services/userService';
+import { mapService } from '@/services/mapService';
 import type { UserProfile } from '@/types/user';
 import { EditModal } from './EditModal';
 import { SaveBar } from './SaveBar';
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export function EditLocationModal({ user, onUpdate, onClose }: Props) {
-  const [cityInput] = useState(user.location_city ?? '');
+  const [resolvedCity, setResolvedCity] = useState(user.location_city ?? '');
   const [gpsLoading, setGpsLoading] = useState(false);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(
     user.latitude && user.longitude ? { lat: user.latitude, lng: user.longitude } : null,
@@ -36,8 +37,10 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
     setGpsLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const city = await mapService.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        setResolvedCity(city ?? '');
         setGpsLoading(false);
       },
       () => {
@@ -62,14 +65,14 @@ export function EditLocationModal({ user, onUpdate, onClose }: Props) {
       await userService.updateLocation({
         latitude: finalLat,
         longitude: finalLng,
-        location_city: cityInput.trim() || undefined,
+        location_city: resolvedCity.trim() || undefined,
       });
 
       onUpdate({
         ...user,
         latitude: finalLat,
         longitude: finalLng,
-        location_city: cityInput.trim() || user.location_city,
+        location_city: resolvedCity.trim() || user.location_city,
       });
       onClose();
     } catch (e) {

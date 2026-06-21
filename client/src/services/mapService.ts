@@ -14,14 +14,14 @@ export const mapService = {
       handleResponse<MapResponse>(res),
     ),
 
-  updateGpsLocation: (latitude: number, longitude: number) =>
+  updateGpsLocation: (latitude: number, longitude: number, location_city?: string | null) =>
     fetch('/api/profile/me/location/gps', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ latitude, longitude }),
+      body: JSON.stringify({ latitude, longitude, ...(location_city ? { location_city } : {}) }),
     }).then((res) =>
-      handleResponse<{ latitude: number; longitude: number; location_city: string }>(res),
+      handleResponse<{ latitude: number; longitude: number; location_city: string | null }>(res),
     ),
 
   likeUser: (id: string) =>

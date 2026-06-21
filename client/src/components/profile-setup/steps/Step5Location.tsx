@@ -23,12 +23,13 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
     setGpsLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
+        const city = await mapService.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
         setForm((p) => ({
           ...p,
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
-          location_city: '',
+          location_city: city ?? '',
         }));
         setGpsLoading(false);
       },

@@ -22,12 +22,12 @@ export function useNotifications() {
     const now = Date.now();
     const timeSinceLast = now - lastFetchTime.current;
 
-    if (timeSinceLast < 1500) {
+    if (timeSinceLast < 300) {
       if (fetchTimeout.current) return;
       fetchTimeout.current = setTimeout(() => {
         fetchTimeout.current = null;
         fetchNotificationsRef.current();
-      }, 1500 - timeSinceLast);
+      }, 300 - timeSinceLast);
       return;
     }
 
@@ -89,15 +89,16 @@ export function useNotifications() {
 
   const markOneAsRead = useCallback(
     async (id: number) => {
+      const target = notifications.find((n) => n.id === id);
       setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
-      decrementNotifications();
+      if (target && !target.is_read) decrementNotifications();
       try {
         await notificationService.markOneAsRead(id);
       } catch {
         // optimistic update already applied — ignore API failure
       }
     },
-    [decrementNotifications],
+    [notifications, decrementNotifications],
   );
 
   const deleteOne = useCallback(

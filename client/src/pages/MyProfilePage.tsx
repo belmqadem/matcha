@@ -17,14 +17,13 @@ import {
   Tag,
   CheckCircle2,
   AlertTriangle,
-  Navigation,
   UserX,
 } from 'lucide-react';
 
 import { userService } from '@/services/userService';
 import { chatService } from '@/services/chatService';
 import { authService } from '@/services/authService';
-import { mapService } from '@/services/mapService';
+// import { mapService } from '@/services/mapService';
 import { useAuth } from '@/context/AuthContext';
 import type { UserProfile, Visitor, Liker } from '@/types/user';
 import type { BlockedUser } from '@/types/chat';
@@ -104,8 +103,8 @@ const MyProfilePage = () => {
   const [blockedLoading, setBlockedLoading] = useState(false);
   const [blockedLoaded, setBlockedLoaded] = useState(false);
 
-  const [gpsLoading, setGpsLoading] = useState(false);
-  const [gpsError, setGpsError] = useState('');
+  // const [gpsLoading, setGpsLoading] = useState(false);
+  // const [gpsError, setGpsError] = useState('');
 
   const handleUpdateUser = (updated: UserProfile) => {
     setUser(updated);
@@ -194,32 +193,33 @@ const MyProfilePage = () => {
     navigate('/login');
   };
 
-  const handleGpsLocation = () => {
-    if (!navigator.geolocation) {
-      setGpsError('Geolocation is not supported by your browser');
-      return;
-    }
-    setGpsLoading(true);
-    setGpsError('');
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          await mapService.updateGpsLocation(pos.coords.latitude, pos.coords.longitude);
-          const updated = await userService.getMe();
-          handleUpdateUser(updated);
-        } catch {
-          setGpsError('Failed to update location');
-        } finally {
-          setGpsLoading(false);
-        }
-      },
-      () => {
-        setGpsError('GPS denied — please enter your city manually');
-        setGpsLoading(false);
-        setEditModal('location');
-      },
-    );
-  };
+  // const handleGpsLocation = () => {
+  //   if (!navigator.geolocation) {
+  //     setGpsError('Geolocation is not supported by your browser');
+  //     return;
+  //   }
+  //   setGpsLoading(true);
+  //   setGpsError('');
+  //   navigator.geolocation.getCurrentPosition(
+  //     async (pos) => {
+  //       try {
+  //         const city = await mapService.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+  //         await mapService.updateGpsLocation(pos.coords.latitude, pos.coords.longitude, city);
+  //         const updated = await userService.getMe();
+  //         handleUpdateUser(updated);
+  //       } catch {
+  //         setGpsError('Failed to update location');
+  //       } finally {
+  //         setGpsLoading(false);
+  //       }
+  //     },
+  //     () => {
+  //       setGpsError('GPS denied — please enter your city manually');
+  //       setGpsLoading(false);
+  //       setEditModal('location');
+  //     },
+  //   );
+  // };
 
   const handleUnblock = async (id: string) => {
     try {
@@ -474,7 +474,7 @@ const MyProfilePage = () => {
                 </div>
 
                 {/* Location */}
-                <div className="bg-surface border border-border/80 rounded-2xl p-4">
+                {/* <div className="bg-surface border border-border/80 rounded-2xl p-4">
                   <div className="flex items-center mb-3">
                     <h2 className={`${sectionLabel} flex items-center gap-1.5`}>
                       <MapPin size={12} /> Location
@@ -522,7 +522,7 @@ const MyProfilePage = () => {
                       <AlertTriangle size={11} className="shrink-0" /> {gpsError}
                     </p>
                   )}
-                </div>
+                </div> */}
               </div>
 
               {/* Right column */}

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { ChevronDown, Info, MapPin, Loader2, Shield } from 'lucide-react';
 import { userService } from '@/services/userService';
+import { mapService } from '@/services/mapService';
 import type { UserProfile } from '@/types/user';
 import { GENDERS, PREFERENCES } from './profileConstants';
 import { EditModal } from './EditModal';
@@ -48,8 +49,10 @@ export function EditAboutModal({ user, onUpdate, onClose }: Props) {
     setGpsLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        const city = await mapService.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        if (city) setCityInput(city);
         setGpsLoading(false);
       },
       () => {

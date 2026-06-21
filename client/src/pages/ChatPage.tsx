@@ -38,9 +38,17 @@ export default function ChatPage() {
 
   const onConvoUpdate = useCallback(
     (convoId: string, patch: Partial<Conversation>) => {
-      setConvos((prev) =>
-        prev.map((c) => (String(c.id) === String(convoId) ? { ...c, ...patch } : c)),
-      );
+      setConvos((prev) => {
+        const updated = prev.map((c) =>
+          String(c.id) === String(convoId) ? { ...c, ...patch } : c,
+        );
+        if (!patch.last_message_at) return updated;
+        return updated.slice().sort(
+          (a, b) =>
+            new Date(b.last_message_at || 0).getTime() -
+            new Date(a.last_message_at || 0).getTime(),
+        );
+      });
     },
     [setConvos],
   );

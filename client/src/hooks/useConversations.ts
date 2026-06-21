@@ -53,9 +53,8 @@ export function useConversations(activeConvoId: string | null): UseConversations
     if (!socket) return;
 
     const onReceive = (msg: { id: number; from: string; content: string; sentAt: string }) => {
-      setConvos((prev) =>
-        prev.map((c) =>
-          // String() coercion — msg.from is string, c.id is now always string
+      setConvos((prev) => {
+        const updated = prev.map((c) =>
           String(c.id) === String(msg.from)
             ? {
                 ...c,
@@ -66,8 +65,13 @@ export function useConversations(activeConvoId: string | null): UseConversations
                   String(c.id) === String(activeConvoIdRef.current) ? 0 : c.unread_count + 1,
               }
             : c,
-        ),
-      );
+        );
+        return updated.slice().sort(
+          (a, b) =>
+            new Date(b.last_message_at || 0).getTime() -
+            new Date(a.last_message_at || 0).getTime(),
+        );
+      });
     };
 
     socket.on('chat:receive', onReceive);

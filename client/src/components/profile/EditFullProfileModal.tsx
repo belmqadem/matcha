@@ -135,9 +135,10 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
     }
     setGpsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
+      async (pos) => {
         setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setResolvedCity('');
+        const city = await mapService.reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+        setResolvedCity(city ?? '');
         setGpsLoading(false);
       },
       () => {

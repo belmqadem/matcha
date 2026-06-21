@@ -54,7 +54,8 @@ export function useMapData(initialRadius: RadiusKm = 50): UseMapDataReturn {
     navigator.geolocation.getCurrentPosition(
       async ({ coords }) => {
         try {
-          await mapService.updateGpsLocation(coords.latitude, coords.longitude);
+          const city = await mapService.reverseGeocode(coords.latitude, coords.longitude);
+          await mapService.updateGpsLocation(coords.latitude, coords.longitude, city);
           await fetchMapData(radiusKm);
         } catch (e) {
           toast.error(e instanceof Error ? e.message : 'Failed to update location');
