@@ -1,0 +1,39 @@
+// src/components/profile/SaveBar.tsx
+import { Check, Loader2 } from 'lucide-react';
+
+interface SaveBarProps {
+  saving: boolean;
+  error?: string;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+export function SaveBar({ saving, onSave, onCancel }: SaveBarProps) {
+  return (
+    <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 sm:pt-5 mt-4 sm:mt-5 border-t-2 border-background">
+      <div className="flex w-full sm:w-auto gap-3">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 sm:flex-none px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-xl border-2 border-border bg-surface text-text-muted hover:bg-background hover:text-text transition-all active:scale-95"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          onClick={(e) => {
+            const form = e.currentTarget.closest('form');
+            if (!form) {
+              onSave();
+            }
+          }}
+          disabled={saving}
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-xl bg-primary text-white cursor-pointer hover:bg-primary-hover hover:shadow-md transition-all disabled:opacity-60 active:scale-95"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}{' '}
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}

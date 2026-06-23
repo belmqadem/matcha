@@ -1,0 +1,578 @@
+/* src/index.css */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap');
+@import 'tailwindcss';
+
+:root {
+  /* Default is Dark Theme - Elevated Deep Space */
+  --color-primary: #ec737e;
+  --color-background: #080910;
+  --color-surface: #12141f;
+  --color-text: #f0f1f8;
+  --color-text-muted: #9ba3c2;
+  --color-border: #2a2d3e;
+  --body-gradient: linear-gradient(
+    135deg,
+    #080910 0%,
+    #0e1018 25%,
+    #160d1e 50%,
+    #0e1018 75%,
+    #080910 100%
+  );
+  --color-scrollbar-thumb: rgba(255, 255, 255, 0.16);
+  --color-scrollbar-thumb-hover: rgba(255, 255, 255, 0.32);
+}
+
+.light-theme {
+  /* Light Theme Override */
+  --color-primary: #e94057;
+  --color-background: #fff5f7;
+  --color-surface: #ffffff;
+  --color-text: #1a1a2e;
+  --color-text-muted: #8c6a70;
+  --color-border: #ffdbe0;
+  --body-gradient: linear-gradient(
+    135deg,
+    #fff9fa 0%,
+    #fff0f3 25%,
+    #ffe6eb 50%,
+    #fff0f3 75%,
+    #fff9fa 100%
+  );
+  --color-scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --color-scrollbar-thumb-hover: rgba(0, 0, 0, 0.3);
+}
+
+@theme {
+  --color-primary: #e94057;
+  --color-primary-hover: #d83548;
+  --color-primary-light: #f27183;
+  --color-primary-accent: #ff758c;
+  --color-on-primary: #ffffff;
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-text: var(--color-text);
+  --color-text-muted: var(--color-text-muted);
+  --color-border: var(--color-border);
+  --color-error: #dc2626;
+  --color-success: #10b981;
+
+  /* Typography Tokens */
+  --font-primary: 'Fraunces', serif;
+
+  /* Premium Shadows */
+  --shadow-premium: 0 20px 40px -15px rgba(233, 64, 87, 0.12), 0 1px 3px rgba(233, 64, 87, 0.04);
+  --shadow-glow: 0 0 20px rgba(233, 64, 87, 0.3);
+
+  /* Tailwind v4 Animation Registrations */
+  --animate-float-heart: floatHeart 18s linear infinite;
+  --animate-fade-in-up: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-auth-drift: authDrift 10s linear infinite;
+  --animate-auth-twinkle: authTwinkle 4s ease-in-out infinite;
+  --animate-auth-pop-in: authPopIn 0.5s ease-out forwards;
+  --animate-gradient-move: gradientMove 15s ease infinite;
+  --animate-heart-beat: heartBeat 1.5s ease-in-out infinite;
+  --animate-float-slow: floatSlow 8s ease-in-out infinite;
+  --animate-page-transition: pageTransition 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-jello: jello 0.8s ease-in-out both;
+  --animate-float-cute: floatCute 3s ease-in-out infinite;
+  --animate-bear-bob: bearBob 3s ease-in-out infinite;
+  --animate-float-bob: floatBob 2.8s ease-in-out infinite;
+  --animate-heart-pulse: heartPulse 1.8s ease-in-out infinite;
+  --animate-slide-in-left: slideInLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fadeIn 0.9s ease both;
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-40px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes bearBob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes floatBob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+
+  @keyframes heartPulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.12);
+    }
+  }
+
+  @keyframes gradientMove {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes heartBeat {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.06);
+    }
+  }
+
+  @keyframes floatSlow {
+    0%,
+    100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-6px) rotate(1.5deg);
+    }
+  }
+
+  @keyframes jello {
+    11.1% {
+      transform: skewX(0deg) skewY(0deg);
+    }
+    22.2% {
+      transform: skewX(-12.5deg) skewY(-12.5deg);
+    }
+    33.3% {
+      transform: skewX(6.25deg) skewY(6.25deg);
+    }
+    44.4% {
+      transform: skewX(-3.125deg) skewY(-3.125deg);
+    }
+    55.5% {
+      transform: skewX(1.5625deg) skewY(1.5625deg);
+    }
+    66.6% {
+      transform: skewX(-0.78125deg) skewY(-0.78125deg);
+    }
+    77.7% {
+      transform: skewX(0.390625deg) skewY(0.390625deg);
+    }
+    88.8% {
+      transform: skewX(-0.1953125deg) skewY(-0.1953125deg);
+    }
+    100% {
+      transform: skewX(0deg) skewY(0deg);
+    }
+  }
+
+  @keyframes floatCute {
+    0%,
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-4px) rotate(3deg);
+    }
+  }
+
+  @keyframes pulseSlow {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes floatHeart {
+    0% {
+      transform: translateY(105vh) translateX(0) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.8;
+    }
+    50% {
+      transform: translateY(50vh) translateX(20px) rotate(180deg);
+    }
+    75% {
+      transform: translateY(25vh) translateX(-20px) rotate(270deg);
+    }
+    90% {
+      opacity: 0.8;
+    }
+    100% {
+      transform: translateY(-10vh) translateX(0) rotate(360deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pageTransition {
+    0% {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes authDrift {
+    0% {
+      transform: translateY(0) translateX(0) rotate(0deg);
+      opacity: 0.9;
+    }
+    33% {
+      transform: translateY(-18px) translateX(7px) rotate(14deg);
+      opacity: 0.7;
+    }
+    66% {
+      transform: translateY(-34px) translateX(-5px) rotate(-10deg);
+      opacity: 0.35;
+    }
+    100% {
+      transform: translateY(-55px) translateX(3px) rotate(18deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes authTwinkle {
+    0%,
+    100% {
+      opacity: 0.15;
+      transform: scale(0.8);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.25);
+    }
+  }
+
+  @keyframes authPopIn {
+    0% {
+      transform: scale(0.92) translateY(12px);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.02) translateY(-2px);
+    }
+    100% {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    font-family: var(--font-primary);
+  }
+
+  body {
+    background: var(--body-gradient);
+    background-size: 400% 400%;
+    animation: var(--animate-gradient-move);
+    background-attachment: fixed;
+    color: var(--color-text);
+    font-family: var(--font-primary);
+    transition:
+      background 0.4s ease,
+      color 0.4s ease,
+      border-color 0.4s ease,
+      box-shadow 0.4s ease;
+  }
+
+  /* Transition helper to smooth color changes during theme toggling */
+  body,
+  header,
+  div,
+  p,
+  span,
+  button,
+  input,
+  select,
+  textarea,
+  svg {
+    transition:
+      background-color 0.3s ease,
+      border-color 0.3s ease,
+      color 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .bg-primary:not(:disabled) {
+    background: linear-gradient(135deg, #f27183 0%, #e94057 100%) !important;
+    border-color: transparent !important;
+  }
+  .bg-primary:not(:disabled):hover {
+    background: linear-gradient(135deg, #e75b6e 0%, #d83548 100%) !important;
+  }
+
+  /* Allow main layout sub-page containers to be transparent so the background gradient and floating hearts show through */
+  main > div.bg-background,
+  main > div[class*='bg-background'],
+  main > div.min-h-\[100dvh\],
+  .bg-transparent-override {
+    background: transparent !important;
+    background-color: transparent !important;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font-family: inherit;
+    outline: none;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--color-primary) 80%, transparent);
+    color: var(--color-white);
+  }
+
+  /* Global Custom Scrollbar for all scrollable containers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-scrollbar-thumb);
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-scrollbar-thumb-hover);
+  }
+
+  /* Firefox Support */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-scrollbar-thumb) transparent;
+  }
+}
+
+@layer utilities {
+  /* Replaced plain CSS with standard Tailwind utilities pattern */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 9999px;
+  }
+
+  .logo-42 {
+    filter: invert(1);
+    transition: filter 0.3s ease;
+  }
+  .light-theme .logo-42 {
+    filter: invert(0);
+  }
+
+  /* Disable transitions on Leaflet elements to prevent dragging/panning lag */
+  .leaflet-container,
+  .leaflet-container *,
+  .leaflet-pane,
+  .leaflet-pane *,
+  .leaflet-tile,
+  .leaflet-marker-icon,
+  .leaflet-marker-shadow {
+    transition: none !important;
+  }
+
+  /* Make map tiles dark and beautiful in dark theme, normal in light theme */
+  .leaflet-tile-container {
+    filter: invert(90%) hue-rotate(180deg) brightness(90%) contrast(90%);
+  }
+  .light-theme .leaflet-tile-container {
+    filter: none;
+  }
+}
+
+/* ── Rolling Theme Switch ──────────────────────────────────── */
+/*
+ * font-size drives all dimensions (em units).
+ * 1.5rem → track height = 1.5em × 1.5rem = 36px = h-9, matching adjacent icon buttons.
+ */
+.ts {
+  display: block;
+  position: relative;
+  font-size: 1.5rem;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ts__track {
+  display: block;
+  width: 2.75em;
+  height: 1.5em;
+  border-radius: 0.75em;
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  transition:
+    background-color 0.6s,
+    border-color 0.6s;
+}
+.ts__track:checked {
+  background-color: var(--color-background);
+}
+.ts__track:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Outer icons (left = sun, right = moon) */
+.ts__icon {
+  color: var(--color-text-muted);
+  pointer-events: none;
+  position: absolute;
+  top: 0.375em;
+  left: 0.375em;
+  width: 0.75em;
+  height: 0.75em;
+  transition:
+    color 0.6s,
+    transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.ts__icon:nth-of-type(2) {
+  left: auto;
+  right: 0.375em;
+}
+
+/* Inner pill container — overflow clips the sliding fill */
+.ts__pill,
+.ts__pill-icons {
+  border-radius: 0.5em;
+  display: block;
+  overflow: hidden;
+  position: absolute;
+  top: 0.25em;
+  left: 0.25em;
+  width: 2.25em;
+  height: 1em;
+  pointer-events: none;
+}
+
+/* Fill and icon panel both start shifted left (light = unchecked) */
+.ts__pill::before,
+.ts__pill-icons {
+  transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  transform: translateX(-1.25em);
+}
+
+/* Colored fill */
+.ts__pill::before {
+  background-color: var(--color-primary);
+  border-radius: inherit;
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Icons inside the sliding pill */
+.ts__pill-icons .ts__icon {
+  color: #fff;
+  top: 0.125em;
+  left: 0.125em;
+  width: 0.75em;
+  height: 0.75em;
+  transform: translateX(1.25em);
+}
+.ts__pill-icons .ts__icon:nth-of-type(2) {
+  left: auto;
+  right: 0.125em;
+}
+
+/* ── Checked = dark mode ── */
+.ts__track:checked ~ .ts__icon {
+  color: color-mix(in srgb, var(--color-text-muted) 40%, transparent);
+}
+.ts__track:checked ~ .ts__pill::before,
+.ts__track:checked ~ .ts__pill-icons {
+  transform: translateX(1.25em);
+}
+
+/* Active outer icon spins */
+.ts__track:not(:checked) ~ .ts__icon:first-of-type {
+  transform: rotate(360deg);
+}
+.ts__track:checked ~ .ts__icon:nth-of-type(2) {
+  transform: rotate(360deg);
+}
+
+/* Inner icons roll (counter-rotate while pill slides) */
+.ts__track:checked ~ .ts__pill-icons .ts__icon:first-of-type {
+  transform: translateX(-1.25em) rotate(-360deg);
+}
+.ts__track:checked ~ .ts__pill-icons .ts__icon:nth-of-type(2) {
+  transform: translateX(-1.25em) rotate(360deg);
+}
+
+/* Screen-reader only label */
+.ts__sr {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
