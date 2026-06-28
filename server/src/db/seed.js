@@ -38,6 +38,31 @@ const TAGS = [
 ];
 const GENDERS = ["male", "female", "non-binary", "other"];
 const PREFERENCES = ["heterosexual", "homosexual", "bisexual"];
+
+const MOROCCO_CITIES = [
+  { name: "Casablanca", lat: 33.5731, lng: -7.5898, weight: 30 },
+  { name: "Rabat",      lat: 33.9716, lng: -6.8498, weight: 15 },
+  { name: "Marrakech",  lat: 31.6295, lng: -7.9811, weight: 15 },
+  { name: "Fes",        lat: 34.0181, lng: -5.0078, weight: 10 },
+  { name: "Tangier",    lat: 35.7595, lng: -5.8340, weight: 10 },
+  { name: "Agadir",     lat: 30.4278, lng: -9.5981, weight: 8  },
+  { name: "Meknes",     lat: 33.8935, lng: -5.5473, weight: 6  },
+  { name: "Oujda",      lat: 34.6814, lng: -1.9086, weight: 3  },
+  { name: "Ben Guerir", lat: 32.2333, lng: -7.9500, weight: 3  },
+];
+
+const pickCity = () => {
+  const total = MOROCCO_CITIES.reduce((sum, c) => sum + c.weight, 0);
+  let r = Math.random() * total;
+  for (const city of MOROCCO_CITIES) {
+    r -= city.weight;
+    if (r <= 0) return city;
+  }
+  return MOROCCO_CITIES[0];
+};
+
+const jitter = (coord, maxDelta = 0.08) =>
+  parseFloat((coord + (Math.random() - 0.5) * 2 * maxDelta).toFixed(6));
 const SEED_PHOTOS = {
   female: [
     "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80",
@@ -177,12 +202,9 @@ async function seed() {
     for (let i = 0; i < TOTAL_USERS; i++) {
       const gender = faker.helpers.arrayElement(GENDERS);
       const preference = faker.helpers.arrayElement(PREFERENCES);
-      const latitude = parseFloat(
-        faker.location.latitude({ min: 33, max: 36 }),
-      );
-      const longitude = parseFloat(
-        faker.location.longitude({ min: -6, max: 0 }),
-      );
+      const city = pickCity();
+      const latitude = jitter(city.lat);
+      const longitude = jitter(city.lng);
       const fame = parseFloat((Math.random() * 100).toFixed(2));
 
       const { rows } = await client.query(
@@ -206,7 +228,7 @@ async function seed() {
           fame,
           latitude,
           longitude,
-          faker.location.city(),
+          city.name,
         ],
       );
 
