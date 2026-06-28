@@ -15,7 +15,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    allowedHosts: ['matcha.1337.dev', 'localhost'],
+    allowedHosts: ['matcha.1337.ma', 'localhost'],
     proxy: {
       '/api': {
         target: 'http://matcha_server:3000',
