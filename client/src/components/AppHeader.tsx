@@ -36,7 +36,7 @@ const MAIN_NAV: NavLinkProps[] = [
 
 const BOTTOM_NAV: NavLinkProps[] = [
   { to: '/browse', label: 'Browse', Icon: Compass },
-  { to: '/search', label: 'Search', Icon: Search },
+  { to: '/map', label: 'Map', Icon: MapPin },
   { to: '/chat', label: 'Messages', Icon: MessageCircle, badge: 'messages' as BadgeKey },
   { to: '/dates', label: 'Dates', Icon: CalendarDays, badge: 'dates' as BadgeKey },
   { to: '/profile/me', label: 'Profile', Icon: User },
@@ -149,14 +149,14 @@ export default function AppHeader() {
           </nav>
 
           {/* Right actions */}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-3 lg:gap-2">
             {/* Theme toggle */}
             <ThemeToggle isDark={theme === 'dark'} onToggle={toggleTheme} />
 
-            {/* Search link (desktop) */}
+            {/* Search link */}
             <NavLink
               to="/search"
-              className={`hidden lg:flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
+              className={`flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${
                 isActive('/search')
                   ? 'text-primary border-primary/30 bg-primary/5'
                   : 'text-text-muted border-border hover:bg-border/50 hover:text-text'

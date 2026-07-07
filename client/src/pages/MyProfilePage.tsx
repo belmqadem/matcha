@@ -620,25 +620,6 @@ const MyProfilePage = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Fame rating card */}
-                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className={`${sectionLabel} flex items-center gap-1.5`}>
-                      <Flame size={12} /> Fame Rating
-                    </span>
-                    <span className="text-lg font-black text-primary">{Math.round(fame)}/100</span>
-                  </div>
-                  <div className="w-full h-2 bg-background rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all duration-700"
-                      style={{ width: `${fame}%` }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-text-muted mt-2">
-                    Increased by likes and profile views. Decreased by blocks.
-                  </p>
-                </div>
               </div>
             </div>
           )}

@@ -28,21 +28,6 @@ const passwordSchema = z
 
 export const registerSchema = z
   .object({
-    email: z.string().email("Please enter a valid email address"),
-    username: z
-      .string()
-      .min(
-        USERNAME_MIN_LENGTH,
-        `Username must be at least ${USERNAME_MIN_LENGTH} characters`,
-      )
-      .max(
-        USERNAME_MAX_LENGTH,
-        `Username must be at most ${USERNAME_MAX_LENGTH} characters`,
-      )
-      .regex(
-        USERNAME_REGEX,
-        "Username can only contain letters, numbers, dots, underscores, or hyphens",
-      ),
     first_name: z
       .string()
       .min(NAME_MIN_LENGTH, "First name is required")
@@ -65,6 +50,21 @@ export const registerSchema = z
         NAME_REGEX,
         "Last name may contain letters, spaces, apostrophes, hyphens, or periods",
       ),
+    username: z
+      .string()
+      .min(
+        USERNAME_MIN_LENGTH,
+        `Username must be at least ${USERNAME_MIN_LENGTH} characters`,
+      )
+      .max(
+        USERNAME_MAX_LENGTH,
+        `Username must be at most ${USERNAME_MAX_LENGTH} characters`,
+      )
+      .regex(
+        USERNAME_REGEX,
+        "Username can only contain letters, numbers, dots, underscores, or hyphens",
+      ),
+    email: z.string().email("Please enter a valid email address"),
     password: passwordSchema,
   })
   .strict();

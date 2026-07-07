@@ -50,9 +50,6 @@ export default function MapHeader({
 
       {/* Row 2 — radius pills */}
       <div className="flex items-center gap-2 mt-3">
-        <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider shrink-0">
-          Radius
-        </span>
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
           {RADIUS_OPTIONS.map((km) => (
             <button

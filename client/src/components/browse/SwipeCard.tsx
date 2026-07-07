@@ -139,10 +139,10 @@ export function SwipeCard({
         {/* LIKE color-wash */}
         {likeOpacity > 0 && (
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-primary/40 rounded-3xl"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-primary/80 rounded-3xl"
             style={{ opacity: likeOpacity }}
           >
-            <span className="text-4xl font-black tracking-widest text-white drop-shadow-lg">
+            <span className="text-6xl font-black tracking-widest text-white drop-shadow-lg">
               LIKE
             </span>
           </div>
@@ -151,10 +151,10 @@ export function SwipeCard({
         {/* SKIP color-wash */}
         {passOpacity > 0 && (
           <div
-            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-text/40 rounded-3xl"
+            className="absolute inset-0 pointer-events-none flex items-center justify-center bg-text/50 rounded-3xl"
             style={{ opacity: passOpacity }}
           >
-            <span className="text-4xl font-black tracking-widest text-white drop-shadow-lg">
+            <span className="text-6xl font-black tracking-widest text-white drop-shadow-lg">
               SKIP
             </span>
           </div>

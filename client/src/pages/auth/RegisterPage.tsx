@@ -63,23 +63,6 @@ const RegisterPage = () => {
     <AuthLayout header="Create your account and find your person">
       <form onSubmit={handleSubmit}>
         <Input
-          id="email"
-          type="email"
-          label="Email"
-          value={form.email}
-          onChange={handleChange('email')}
-          required
-          icon={Mail}
-        />
-        <Input
-          id="username"
-          label="Username"
-          value={form.username}
-          onChange={handleChange('username')}
-          required
-          icon={User}
-        />
-        <Input
           id="firstName"
           label="First Name"
           value={form.firstName}
@@ -94,6 +77,23 @@ const RegisterPage = () => {
           onChange={handleChange('lastName')}
           required
           icon={User}
+        />
+        <Input
+          id="username"
+          label="Username"
+          value={form.username}
+          onChange={handleChange('username')}
+          required
+          icon={User}
+        />
+        <Input
+          id="email"
+          type="email"
+          label="Email"
+          value={form.email}
+          onChange={handleChange('email')}
+          required
+          icon={Mail}
         />
         <Input
           id="password"

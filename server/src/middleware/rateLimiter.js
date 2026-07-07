@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import jwt from "jsonwebtoken";
 import { HTTP_STATUS } from "../constants/httpStatus.js";
 import AppError from "../utils/AppError.js";
@@ -17,7 +17,7 @@ const keyGenerator = (req) => {
   } catch {
     // fall through
   }
-  return req.ip;
+  return ipKeyGenerator(req.ip);
 };
 
 const createRateLimiter = (options = {}) => {
