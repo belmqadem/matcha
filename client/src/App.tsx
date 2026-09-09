@@ -24,7 +24,7 @@ import ProfilePage from './pages/ProfilePage';
 import DatesPage from './pages/DatesPage';
 
 // Setup page
-import ProfileSetupPage from './pages/Profilesetuppage';
+import ProfileSetupPage from './pages/ProfileSetupPage';
 
 // Not Found page
 import NotFoundPage from './pages/NotFoundPage';
