@@ -256,7 +256,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                     className="w-full h-full object-cover select-none pointer-events-none"
                   />
                   {photo.id === user.profile_picture_id && (
-                    <span className="absolute top-3 left-3 bg-primary text-surface text-[0.6rem] sm:text-[9px] font-black px-2 py-0.5 sm:py-1 rounded-full tracking-widest shadow-md">
+                    <span className="absolute top-3 left-3 bg-primary text-white text-[0.6rem] sm:text-[9px] font-black px-2 py-0.5 sm:py-1 rounded-full tracking-widest shadow-md">
                       MAIN
                     </span>
                   )}
@@ -350,7 +350,7 @@ export function PhotosPanel({ user, onUpdate }: Props) {
                       className="w-full h-full object-cover select-none pointer-events-none"
                     />
                     {photo.id === user.profile_picture_id && (
-                      <span className="absolute top-1 left-1 bg-primary text-surface text-[7px] font-black px-1.5 py-0.5 rounded-full tracking-widest shadow-md scale-90">
+                      <span className="absolute top-1 left-1 bg-primary text-white text-[7px] font-black px-1.5 py-0.5 rounded-full tracking-widest shadow-md scale-90">
                         MAIN
                       </span>
                     )}

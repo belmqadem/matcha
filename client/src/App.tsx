@@ -52,7 +52,7 @@ const App = () => {
               duration: 4000,
               style: {
                 background: 'var(--color-surface)',
-                color: 'var(--color-text)',
+                color: 'var(--color-tex)',
                 border: '1px solid var(--color-border)',
                 borderRadius: '12px',
                 fontSize: '0.875rem',
