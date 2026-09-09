@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import Logo, { Heart } from '@/components/Logo';
-import { Link } from 'react-router-dom';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import CtaLink from '@/components/ui/CtaLink';
 
 interface FloatHeart {
   x: string;
@@ -257,25 +257,20 @@ const LandingPage = () => {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-transparent text-text font-primary">
+    <main className="relative min-h-screen overflow-hidden text-text font-primary">
       {/* NAVBAR */}
       <nav className="relative z-20 flex items-center justify-between px-4 md:px-8 lg:px-12 py-6">
         <Logo size="lg" />
         <div className="hidden items-center gap-3 md:flex">
           <ThemeToggle isDark={theme === 'dark'} onToggle={toggleTheme} />
 
-          <Link
-            to="/login"
-            className="rounded-full border border-border px-5 py-2 text-sm font-medium text-text-muted bg-surface transition-colors hover:border-primary hover:text-primary"
-          >
+          <CtaLink to="/login" variant="primary" size="sm">
             Log In
-          </Link>
-          <Link
-            to="/register"
-            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-premium transition-transform hover:scale-105"
-          >
+          </CtaLink>
+
+          <CtaLink to="/register" variant="secondary" size="sm">
             Sign Up
-          </Link>
+          </CtaLink>
         </div>
         <button
           type="button"
@@ -292,7 +287,7 @@ const LandingPage = () => {
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleThemeToggle}
-                className="flex items-center justify-between rounded-2xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-text transition-colors hover:border-primary/20 hover:text-primary"
+                className="flex items-center justify-between rounded-full border border-border bg-background px-4 py-3 text-left text-sm font-medium text-text transition-colors hover:border-primary/20 hover:text-primary"
               >
                 <span className="flex items-center gap-2">
                   {theme === 'dark' ? (
@@ -303,20 +298,12 @@ const LandingPage = () => {
                   {theme === 'dark' ? 'Light mode' : 'Dark mode'}
                 </span>
               </button>
-              <Link
-                to="/login"
-                onClick={closeMenu}
-                className="rounded-2xl border border-border px-4 py-3 text-sm font-medium text-text-muted transition-colors hover:border-primary hover:text-primary"
-              >
+              <CtaLink to="/login" variant="secondary" size="sm" fullWidth onClick={closeMenu}>
                 Log In
-              </Link>
-              <Link
-                to="/register"
-                onClick={closeMenu}
-                className="rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-premium transition-transform hover:scale-[1.01]"
-              >
+              </CtaLink>
+              <CtaLink to="/register" variant="primary" size="sm" fullWidth onClick={closeMenu}>
                 Sign Up
-              </Link>
+              </CtaLink>
             </div>
           </div>
         ) : null}
@@ -415,34 +402,16 @@ const LandingPage = () => {
           </h1>
 
           <p className="mb-8 max-w-90 text-[0.97rem] leading-relaxed text-text-muted">
-            Matcha matches you with people who just{' '}
-            <span className="text-text font-medium italic">get it</span> — your humor, your pace,
-            your vibe. Real connections, no noise.
+            Matcha finds people who actually get you. Same humor, same pace, same weird taste in
+            movies. Less noise, more real.
           </p>
 
           {/* CTA */}
           <div className="flex flex-wrap items-center gap-4 mb-10">
-            <Link
-              to="/register"
-              className="inline-flex items-center gap-2.5 rounded-full bg-primary px-8 py-3.5 text-[0.95rem] font-semibold text-white shadow-premium transition-all hover:scale-105 hover:shadow-glow active:scale-100"
-            >
-              <Heart size={15} color="white" />
+            <CtaLink to="/register" variant="primary" icon={<Heart size={15} color="white" />}>
               Find my match
-            </Link>
+            </CtaLink>
           </div>
-
-          {/* Stat pills */}
-          {/* <div className="flex flex-wrap gap-2.5">
-            {STAT_PILLS.map((pill) => (
-              <div
-                key={pill.label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3.5 py-1.5 text-xs font-medium text-text-muted"
-              >
-                <span>{pill.emoji}</span>
-                {pill.label}
-              </div>
-            ))}
-          </div> */}
         </div>
       </div>
     </main>
