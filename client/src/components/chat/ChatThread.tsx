@@ -1,4 +1,4 @@
-// src/pages/chat/ChatThread.tsx
+// src/components/chat/ChatThread.tsx
 import { useRef, useState } from 'react';
 import {
   ArrowLeft,
