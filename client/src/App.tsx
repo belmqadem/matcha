@@ -24,7 +24,7 @@ import ProfilePage from './pages/ProfilePage';
 import DatesPage from './pages/DatesPage';
 
 // Setup page
-import ProfileSetupPage from './pages/Profilesetuppage';
+import ProfileSetupPage from './pages/ProfileSetupPage';
 
 // Not Found page
 import NotFoundPage from './pages/NotFoundPage';
@@ -85,11 +85,9 @@ const App = () => {
                   <Route path="/chat" element={<ChatPage />} />
                   <Route path="/chat/:username" element={<ChatPage />} />
                   <Route path="/notifications" element={<NotificationsPage />} />
-                  {/* <Route path="/visitors" element={<VisitorsPage />} /> */}
                   <Route path="/map" element={<MapPage />} />
                   <Route path="/dates" element={<DatesPage />} />
                   <Route path="/profile/me" element={<MyProfilePage />} />
-                  {/* <Route path="/profile/edit" element={<EditProfilePage />} /> */}
                   <Route path="/profile/:username" element={<ProfilePage />} />
                 </Route>
               </Route>

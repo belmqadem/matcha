@@ -11,8 +11,8 @@ import { useChatDeepLink } from '@/hooks/useChatDeepLink';
 
 import ConfirmModal from '@/components/chat/ConfirmModal';
 import ProposeModal from '@/components/chat/ProposeModal';
-import ChatSidebar from '@/pages/chat/ChatSidebar';
-import ChatThread, { NoConvoState } from '@/pages/chat/ChatThread';
+import ChatSidebar from '@/components/chat/ChatSidebar';
+import ChatThread, { NoConvoState } from '@/components/chat/ChatThread';
 import type { Conversation, ConfirmAction, SidebarTab } from '@/types/chat';
 
 export default function ChatPage() {

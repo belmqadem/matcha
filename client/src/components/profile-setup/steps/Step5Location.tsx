@@ -151,7 +151,7 @@ export const Step5Location = ({ form, setForm }: Step5LocationProps) => {
       {locationSet && form.location_city && (
         <div className="mt-4 p-3 sm:p-4 bg-primary/10 rounded-2xl border border-primary/20 flex items-center gap-2 animate-fade-in-up">
           <MapPin className="w-4 h-4 text-primary shrink-0" />
-          <p className="text-xs sm:text-sm text-primary font-semibold">{form.location_city} ✓</p>
+          <p className="text-xs sm:text-sm text-primary font-semibold">{form.location_city}</p>
         </div>
       )}
     </div>

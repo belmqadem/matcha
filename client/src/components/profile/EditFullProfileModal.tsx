@@ -566,7 +566,7 @@ export function EditFullProfileModal({ user, onUpdate, onClose, initialTab = 'id
                 {gpsCoords && resolvedCity && (
                   <div className="flex items-center gap-2 px-3 py-2.5 bg-primary/10 border border-primary/20 rounded-2xl animate-fade-in-up">
                     <MapPin className="w-4 h-4 text-primary shrink-0" />
-                    <span className="text-sm font-bold text-primary">{resolvedCity} ✓</span>
+                    <span className="text-sm font-bold text-primary">{resolvedCity}</span>
                   </div>
                 )}
 
